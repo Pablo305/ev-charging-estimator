@@ -4,7 +4,6 @@ import {
   ManualReviewTrigger,
 } from './types';
 import {
-  TESLA_SUPERCHARGER_PACKAGES,
   TESLA_UWC_ITEMS,
   CHARGEPOINT_ITEMS,
   PEDESTAL_PRICING,
@@ -14,33 +13,38 @@ import {
 } from './catalog';
 
 // ============================================================
-// Helpers
+// Helpers — Counter factory for request-scoped IDs
 // ============================================================
 
-let lineItemCounter = 0;
-let reviewCounter = 0;
-
-function resetCounters(): void {
-  lineItemCounter = 0;
-  reviewCounter = 0;
+interface IdCounters {
+  nextLineId: () => string;
+  nextReviewId: () => string;
 }
 
-function nextLineId(): string {
-  lineItemCounter += 1;
-  return `LI-${String(lineItemCounter).padStart(3, '0')}`;
+function createCounters(): IdCounters {
+  let lineItemCounter = 0;
+  let reviewCounter = 0;
+  return {
+    nextLineId() {
+      lineItemCounter += 1;
+      return `LI-${String(lineItemCounter).padStart(3, '0')}`;
+    },
+    nextReviewId() {
+      reviewCounter += 1;
+      return `MR-${String(reviewCounter).padStart(3, '0')}`;
+    },
+  };
 }
 
-function nextReviewId(): string {
-  reviewCounter += 1;
-  return `MR-${String(reviewCounter).padStart(3, '0')}`;
-}
+// Module-level counters scoped per generateEstimate call
+let _counters: IdCounters = createCounters();
 
 function line(
   partial: Omit<EstimateLineItem, 'id' | 'extendedPrice'>,
 ): EstimateLineItem {
   return {
     ...partial,
-    id: nextLineId(),
+    id: _counters.nextLineId(),
     extendedPrice: partial.quantity * partial.unitPrice,
   };
 }
@@ -48,7 +52,7 @@ function line(
 function review(
   partial: Omit<ManualReviewTrigger, 'id'>,
 ): ManualReviewTrigger {
-  return { ...partial, id: nextReviewId() };
+  return { ...partial, id: _counters.nextReviewId() };
 }
 
 // ============================================================
@@ -1337,10 +1341,25 @@ function installLaborRules(
 export function runAllRules(
   input: EstimateInput,
 ): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
-  resetCounters();
+  // Create fresh counters per invocation (safe for concurrent requests)
+  _counters = createCounters();
 
   const allItems: EstimateLineItem[] = [];
   const allReviews: ManualReviewTrigger[] = [];
+
+  // Guard: zero charger count
+  if (!input.charger?.count || input.charger.count <= 0) {
+    allReviews.push(
+      review({
+        field: 'charger.count',
+        condition: 'Zero or missing charger count',
+        severity: 'critical',
+        message:
+          'Charger count is 0 or not provided. Estimate cannot be generated without knowing the number of chargers.',
+      }),
+    );
+    return { items: allItems, reviews: allReviews };
+  }
 
   const rulesets = [
     chargerHardwareRules,

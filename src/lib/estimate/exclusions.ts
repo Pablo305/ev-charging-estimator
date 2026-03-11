@@ -56,8 +56,10 @@ const EXCLUSION_TEMPLATES: readonly ExclusionTemplate[] = [
     text: 'Fire suppression system modifications, including sprinkler relocation, fire alarm integration, and fire-rated assembly work beyond immediate penetrations.',
     category: 'Fire/Safety',
     isStandard: true,
-    condition: (input) => input.parkingEnvironment.type !== 'parking_garage',
-    reason: 'Standard exclusion - fire systems require specialized contractor. For garage installs, fire-rated penetrations may be included.',
+    condition: (input) =>
+      input.parkingEnvironment.type === 'parking_garage' ||
+      input.parkingEnvironment.type === 'mixed',
+    reason: 'Garage and mixed environments may involve fire suppression systems. Fire system modifications require a specialized contractor.',
   },
   {
     id: 'excl-lighting',
