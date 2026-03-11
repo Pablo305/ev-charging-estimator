@@ -1,0 +1,274 @@
+{
+  "catalog_version": "2026-03-11",
+  "notes": "Compiled from Monday.com SOW board dropdowns and Tesla Supercharger Pricing Sheet. L2 charger pricing is NOT available in any existing workbook.",
+  "brands": [
+    {
+      "brand": "Tesla",
+      "brand_type": "L3 Supercharger",
+      "monday_dropdown_value": "Tesla Supercharger",
+      "packages": [
+        {
+          "package_id": "tesla-sc-4",
+          "name": "4-Stall Supercharger Package",
+          "stall_count": 4,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": 178000,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Minimum Supercharger configuration. MSRP value observed but exact figure needs verification from workbook."
+        },
+        {
+          "package_id": "tesla-sc-6",
+          "name": "6-Stall Supercharger Package",
+          "stall_count": 6,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis. Need workbook re-read."
+        },
+        {
+          "package_id": "tesla-sc-8",
+          "name": "8-Stall Supercharger Package",
+          "stall_count": 8,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis."
+        },
+        {
+          "package_id": "tesla-sc-10",
+          "name": "10-Stall Supercharger Package",
+          "stall_count": 10,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis."
+        },
+        {
+          "package_id": "tesla-sc-12",
+          "name": "12-Stall Supercharger Package",
+          "stall_count": 12,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis."
+        },
+        {
+          "package_id": "tesla-sc-16",
+          "name": "16-Stall Supercharger Package",
+          "stall_count": 16,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis."
+        },
+        {
+          "package_id": "tesla-sc-20",
+          "name": "20-Stall Supercharger Package",
+          "stall_count": 20,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis."
+        },
+        {
+          "package_id": "tesla-sc-24",
+          "name": "24-Stall Supercharger Package",
+          "stall_count": 24,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": null,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Exact prices exist in workbook but were not extracted in analysis."
+        },
+        {
+          "package_id": "tesla-sc-28",
+          "name": "28-Stall Supercharger Package",
+          "stall_count": 28,
+          "charger_level": "L3",
+          "connector_type": "NACS",
+          "bulk_price_usd": 672500,
+          "msrp_price_usd": null,
+          "price_status": "priced",
+          "source": "Tesla Supercharger Pricing Sheet",
+          "notes": "Maximum observed configuration. MSRP value exists in workbook but exact figure needs verification."
+        }
+      ]
+    },
+    {
+      "brand": "Tesla",
+      "brand_type": "L2 Wall Connector",
+      "monday_dropdown_value": "Tesla",
+      "models": [
+        {
+          "model_id": "tesla-uwc",
+          "name": "Universal Wall Connector (UWC)",
+          "monday_model_value": "UWC",
+          "charger_level": "L2",
+          "connector_type": "NACS (J1772 adapter available)",
+          "max_amperage": 48,
+          "max_power_kw": 11.5,
+          "voltage": "208/240V",
+          "mounting": "Wall",
+          "port_type": "Single",
+          "unit_price_usd": null,
+          "price_status": "unknown",
+          "source": null,
+          "notes": "NOT priced in any existing workbook. Public MSRP ~$475-$595 but Bullet Energy's cost is unknown."
+        }
+      ]
+    },
+    {
+      "brand": "ChargePoint",
+      "brand_type": "L2",
+      "monday_dropdown_value": "ChargePoint",
+      "model_families": [
+        {
+          "family": "CT4000",
+          "description": "Commercial Level 2, legacy model line",
+          "models": [
+            { "model_id": "cp-ct4011", "name": "CT4011", "monday_model_value": "CT4011", "port_type": "Single", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-ct4021", "name": "CT4021", "monday_model_value": "CT4021", "port_type": "Dual", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-ct4025", "name": "CT4025", "monday_model_value": "CT4025", "port_type": "Single", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-ct4013", "name": "CT4013", "monday_model_value": "CT4013", "port_type": "Single", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-ct4023", "name": "CT4023", "monday_model_value": "CT4023", "port_type": "Dual", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-ct4027", "name": "CT4027", "monday_model_value": "CT4027", "port_type": "Dual", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" }
+          ]
+        },
+        {
+          "family": "CPF50",
+          "description": "ChargePoint Flex, newer commercial L2",
+          "models": [
+            { "model_id": "cp-cpf50", "name": "CPF50", "monday_model_value": "ChargePoint CPF50", "port_type": "Single or Dual", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" }
+          ]
+        },
+        {
+          "family": "CP6000",
+          "description": "ChargePoint 6000 series, commercial L2, multiple amperage options",
+          "models": [
+            { "model_id": "cp-6613b-50a", "name": "CP6613B-50A", "monday_model_value": "CP6613B-50A", "port_type": "Single", "amperage": 50, "mounting": "Pedestal", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6623b-50a", "name": "CP6623B-50A", "monday_model_value": "CP6623B-50A", "port_type": "Dual", "amperage": 50, "mounting": "Pedestal", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6611b-50a", "name": "CP6611B-50A", "monday_model_value": "CP6611B-50A", "port_type": "Single", "amperage": 50, "mounting": "Wall", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6621b-50a", "name": "CP6621B-50A", "monday_model_value": "CP6621B-50A", "port_type": "Dual", "amperage": 50, "mounting": "Wall", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6613b-80a", "name": "CP6613B-80A", "monday_model_value": "CP6613B-80A", "port_type": "Single", "amperage": 80, "mounting": "Pedestal", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6013b-80a", "name": "CP6013B-80A", "monday_model_value": "CP6013B-80A", "port_type": "Single", "amperage": 80, "mounting": "Pedestal", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6623b-80a", "name": "CP6623B-80A", "monday_model_value": "CP6623B-80A", "port_type": "Dual", "amperage": 80, "mounting": "Pedestal", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6023b-80a", "name": "CP6023B-80A", "monday_model_value": "CP6023B-80A", "port_type": "Dual", "amperage": 80, "mounting": "Pedestal", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6611b-80a", "name": "CP6611B-80A", "monday_model_value": "CP6611B-80A", "port_type": "Single", "amperage": 80, "mounting": "Wall", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6011b-80a", "name": "CP6011B-80A", "monday_model_value": "CP6011B-80A", "port_type": "Single", "amperage": 80, "mounting": "Wall", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6621b-80a", "name": "CP6621B-80A", "monday_model_value": "CP6621B-80A", "port_type": "Dual", "amperage": 80, "mounting": "Wall", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" },
+            { "model_id": "cp-6021b-80a", "name": "CP6021B-80A", "monday_model_value": "CP6021B-80A", "port_type": "Dual", "amperage": 80, "mounting": "Wall", "charger_level": "L2", "unit_price_usd": null, "price_status": "unknown" }
+          ],
+          "naming_convention": {
+            "description": "CP6[port][mounting][variant]-[amperage]A",
+            "port_digit": { "6": "single", "2": "dual" },
+            "mounting_digit": { "1": "wall", "3": "pedestal" },
+            "notes": "Pattern inferred from model numbers. 'B' suffix likely denotes generation/variant."
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Xeal",
+      "brand_type": "L2",
+      "monday_dropdown_value": "Xeal",
+      "models": [],
+      "price_status": "unknown",
+      "notes": "Listed in Monday.com brand dropdown. No specific models or pricing in any workbook."
+    },
+    {
+      "brand": "SWTCH",
+      "brand_type": "L2",
+      "monday_dropdown_value": "SWTCH",
+      "models": [],
+      "price_status": "unknown",
+      "notes": "Listed in Monday.com brand dropdown. No specific models or pricing in any workbook."
+    },
+    {
+      "brand": "Ford",
+      "brand_type": "L2",
+      "monday_dropdown_value": "Ford",
+      "models": [],
+      "price_status": "unknown",
+      "notes": "Listed in Monday.com brand dropdown. Likely Ford Pro Charge Station. No pricing in any workbook."
+    },
+    {
+      "brand": "EV Connect",
+      "brand_type": "L2",
+      "monday_dropdown_value": "EV Connect",
+      "models": [],
+      "price_status": "unknown",
+      "notes": "Listed in Monday.com brand dropdown. No specific models or pricing in any workbook."
+    },
+    {
+      "brand": "EV Passport",
+      "brand_type": "L2 and L3",
+      "monday_dropdown_values": ["EV Passport", "EV Passport L3"],
+      "models": [],
+      "price_status": "unknown",
+      "notes": "Listed in Monday.com brand dropdown with separate L2 and L3 entries. No pricing in any workbook."
+    },
+    {
+      "brand": "Blink",
+      "brand_type": "L2",
+      "monday_dropdown_value": "Blink",
+      "models": [],
+      "price_status": "unknown",
+      "notes": "Listed in Monday.com brand dropdown and R&R brand dropdown. No pricing in any workbook."
+    }
+  ],
+  "service_fees": {
+    "tesla_services": {
+      "description": "Network activation, software licensing, commissioning for Supercharger packages",
+      "pricing": "Included in Tesla Supercharger package price (not broken out separately)",
+      "price_status": "bundled",
+      "source": "Tesla Supercharger Pricing Sheet"
+    },
+    "chargepoint_cloud": {
+      "description": "ChargePoint Cloud network management platform",
+      "monthly_per_charger_usd": null,
+      "price_status": "unknown",
+      "notes": "Known to exist but not priced in any workbook"
+    },
+    "network_fees_other": {
+      "description": "Monthly network/software fees for non-Tesla, non-ChargePoint brands",
+      "monthly_per_charger_usd": null,
+      "price_status": "unknown",
+      "notes": "ROI Calculator has an input field for this but no default values per brand"
+    }
+  },
+  "r_and_r_brands": {
+    "description": "Brands listed in (R&R) Charger Brand dropdown for Remove & Replace projects. These are existing installed brands that may be removed.",
+    "brands": ["Blink", "EV Connect", "EV Passport", "Ford", "SWTCH", "Tesla", "Xeal", "ChargePoint", "Enviro Spark", "Clipper Creek", "Enphase"],
+    "notes": "Enviro Spark, Clipper Creek, and Enphase appear only in R&R (not in new charger brand dropdown)"
+  },
+  "pricing_summary": {
+    "total_catalog_items": 31,
+    "priced": 9,
+    "priced_description": "9 Tesla Supercharger packages (Bulk prices; MSRP prices exist but exact figures need workbook re-read)",
+    "unknown": 22,
+    "unknown_description": "All L2 charger models (Tesla UWC, all ChargePoint models, Xeal, SWTCH, Ford, EV Connect, EV Passport, Blink) have no pricing in any workbook"
+  }
+}

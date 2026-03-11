@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bulletenergy.com/schemas/ev-charging-estimate-input.json",
+  "title": "EV Charging Estimate Input",
+  "description": "Normalized input model for the Bullet Energy EV Charging Estimator. Combines Monday.com SOW data with additional fields required for automated estimate generation.",
+  "type": "object",
+  "required": ["project", "site", "charger", "responsibilities"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["name", "projectType", "isNewConstruction"],
+      "properties": {
+        "name": { "type": "string", "description": "Project name/identifier" },
+        "salesRep": { "type": "string", "description": "Assigned sales representative" },
+        "projectType": {
+          "type": "string",
+          "enum": ["full_turnkey", "full_turnkey_connectivity", "remove_replace", "install_commission", "equipment_purchase", "equipment_install_commission", "commission_only", "service_work", "supercharger"],
+          "description": "Primary scope classifier"
+        },
+        "isNewConstruction": {
+          "type": "string",
+          "enum": ["yes", "no", "other"],
+          "description": "Whether the site is new construction"
+        },
+        "timeline": { "type": "string", "description": "Project timeline (free text or standardized)" },
+        "pricingTier": {
+          "type": "string",
+          "enum": ["bulk", "msrp", "negotiated"],
+          "description": "Pricing tier for Tesla Supercharger packages"
+        }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "billingAddress": {
+          "type": "object",
+          "properties": {
+            "street": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string", "maxLength": 2 },
+            "zip": { "type": "string", "pattern": "^\\d{5}(-\\d{4})?$" }
+          }
+        },
+        "poNumber": { "type": "string" }
+      }
+    },
+    "site": {
+      "type": "object",
+      "required": ["address", "siteType"],
+      "properties": {
+        "address": {
+          "type": "object",
+          "required": ["street", "city", "state", "zip"],
+          "properties": {
+            "street": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string", "maxLength": 2 },
+            "zip": { "type": "string", "pattern": "^\\d{5}(-\\d{4})?$" },
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "siteType": {
+          "type": "string",
+          "enum": ["airport", "apartment", "event_venue", "fleet_dealer", "hospital", "hotel", "industrial", "mixed_use", "fuel_station", "municipal", "office", "parking_structure", "police_gov", "recreational", "campground", "restaurant", "retail", "school", "other"]
+        },
+        "indoorOutdoor": {
+          "type": "string",
+          "enum": ["indoor", "outdoor", "both"]
+        },
+        "accessRestrictions": { "type": "string" },
+        "adaComplianceRequired": { "type": "boolean", "default": true },
+        "numberOfUnits": { "type": "integer", "minimum": 0, "description": "Apartment/hotel unit count" }
+      }
+    },
+    "parkingEnvironment": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["surface_lot", "parking_garage", "covered_parking", "mixed", "other"]
+        },
+        "surfaceType": {
+          "type": "string",
+          "enum": ["asphalt", "concrete", "gravel", "dirt", "paver"],
+          "description": "Required when type is surface_lot"
+        },
+        "floorLevel": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Required when type is parking_garage. 0 = ground level."
+        },
+        "ceilingHeight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "In feet. Required for garage + wall mount."
+        },
+        "postTensioned": {
+          "type": "string",
+          "enum": ["yes", "no", "tbd"],
+          "description": "Required when type is parking_garage"
+        },
+        "spacesAffected": { "type": "integer", "minimum": 0 },
+        "installationLocationDescription": { "type": "string" }
+      },
+      "if": { "properties": { "type": { "const": "parking_garage" } } },
+      "then": { "required": ["postTensioned", "floorLevel"] }
+    },
+    "charger": {
+      "type": "object",
+      "properties": {
+        "new": {
+          "type": "object",
+          "required": ["brand", "count", "portType", "mountingType"],
+          "properties": {
+            "brand": {
+              "type": "string",
+              "enum": ["tesla", "chargepoint", "xeal", "swtch", "ford", "ev_connect", "ev_passport", "blink", "tesla_supercharger", "ev_passport_l3"]
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["UWC", "Supercharger", "ChargePoint CPF50", "CT4011", "CT4021", "CT4025", "CT4013", "CT4023", "CT4027", "CP6613B-50A", "CP6623B-50A", "CP6611B-50A", "CP6621B-50A", "CP6613B-80A", "CP6013B-80A", "CP6623B-80A", "CP6023B-80A", "CP6611B-80A", "CP6011B-80A", "CP6621B-80A", "CP6021B-80A", "Other"]
+              }
+            },
+            "chargerLevel": {
+              "type": "string",
+              "enum": ["l2", "l3"]
+            },
+            "count": { "type": "integer", "minimum": 1 },
+            "pedestalCount": { "type": "integer", "minimum": 0 },
+            "portType": {
+              "type": "string",
+              "enum": ["dual", "single", "other", "mix"]
+            },
+            "mountingType": {
+              "type": "string",
+              "enum": ["pedestal", "wall", "other", "tbd", "mix"]
+            },
+            "amperage": { "type": "number", "minimum": 0, "description": "Amps per charger" },
+            "voltage": {
+              "type": "string",
+              "enum": ["208v", "240v", "277v", "480v"]
+            },
+            "powerOutputKw": { "type": "number", "minimum": 0 },
+            "connectorType": {
+              "type": "string",
+              "enum": ["j1772", "ccs", "nacs", "chademo"]
+            },
+            "unitPriceOverride": { "type": "number", "minimum": 0, "description": "Manual price override in USD" },
+            "cableManagement": { "type": "boolean", "default": false },
+            "superchargerPackage": {
+              "type": "string",
+              "enum": ["4_stall", "6_stall", "8_stall", "10_stall", "12_stall", "16_stall", "20_stall", "24_stall", "28_stall"],
+              "description": "Required when brand is tesla_supercharger"
+            }
+          }
+        },
+        "existing": {
+          "type": "object",
+          "description": "For Remove & Replace projects",
+          "properties": {
+            "count": { "type": "integer", "minimum": 0 },
+            "portType": {
+              "type": "string",
+              "enum": ["dual", "single", "tbd", "mix"]
+            },
+            "brands": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["blink", "ev_connect", "ev_passport", "ford", "swtch", "tesla", "xeal", "chargepoint", "enviro_spark", "clipper_creek", "enphase"]
+              }
+            },
+            "mountingStyle": {
+              "type": "string",
+              "enum": ["pedestal", "wall", "tbd"]
+            },
+            "ampsPerCharger": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "electrical": {
+      "type": "object",
+      "properties": {
+        "serviceVoltage": {
+          "type": "string",
+          "enum": ["120_208v", "120_240v", "277_480v", "other"]
+        },
+        "serviceAmperage": { "type": "number", "minimum": 0 },
+        "availablePanelCapacity": { "type": "number", "minimum": 0 },
+        "availableBreakerSpaces": { "type": "integer", "minimum": 0 },
+        "panelUpgradeNeeded": {
+          "type": "string",
+          "enum": ["no", "yes", "tbd"]
+        },
+        "newPanelRequired": { "type": "boolean" },
+        "transformerUpgradeNeeded": {
+          "type": "string",
+          "enum": ["no", "yes", "tbd", "unknown"]
+        },
+        "transformerSizeKva": {
+          "type": "string",
+          "enum": ["75", "112.5", "150", "225", "300", "500", "750", "other"]
+        },
+        "utilityCoordinationNeeded": { "type": "boolean" },
+        "meterType": {
+          "type": "string",
+          "enum": ["existing", "new_dedicated", "sub_meter"]
+        },
+        "conduitRouting": {
+          "type": "string",
+          "enum": ["underground", "surface_exposed", "in_wall", "overhead", "mixed"]
+        },
+        "conduitDistanceFeet": { "type": "number", "minimum": 0 },
+        "wirePullComplexity": {
+          "type": "string",
+          "enum": ["straight_run", "multiple_bends", "through_floors", "long_pull_200ft_plus"]
+        },
+        "loadManagementEvems": { "type": "boolean", "default": false },
+        "roomDescription": { "type": "string" }
+      }
+    },
+    "civil": {
+      "type": "object",
+      "properties": {
+        "trenchingRequired": {
+          "type": "string",
+          "enum": ["yes", "no", "tbd"]
+        },
+        "trenchLengthFeet": { "type": "number", "minimum": 0 },
+        "trenchSurfaceRestoration": {
+          "type": "string",
+          "enum": ["asphalt_patch", "concrete_patch", "full_repave", "none"]
+        },
+        "boringRequired": {
+          "type": "string",
+          "enum": ["yes", "no", "tbd"]
+        },
+        "boringDistanceFeet": { "type": "number", "minimum": 0 },
+        "coreDrillingRequired": {
+          "type": "string",
+          "enum": ["yes", "no", "tbd"]
+        },
+        "numberOfCores": { "type": "integer", "minimum": 0 },
+        "trafficControlNeeded": {
+          "type": "string",
+          "enum": ["yes", "no", "tbd"]
+        },
+        "stripingNeeded": { "type": "boolean" },
+        "concretePadRequired": {
+          "type": "string",
+          "enum": ["yes", "no"]
+        },
+        "padDimensions": { "type": "string", "description": "Format: L x W x D in feet/inches" }
+      }
+    },
+    "permit": {
+      "type": "object",
+      "properties": {
+        "responsibility": {
+          "type": "string",
+          "enum": ["bullet", "client", "tbd"]
+        },
+        "feeAllowance": { "type": "number", "minimum": 0 },
+        "typesNeeded": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["electrical", "building", "encroachment", "fire", "none"]
+          }
+        },
+        "ahj": { "type": "string" },
+        "estimatedTimeline": {
+          "type": "string",
+          "enum": ["1_2_weeks", "2_4_weeks", "4_8_weeks", "8_plus_weeks"]
+        }
+      }
+    },
+    "designEngineering": {
+      "type": "object",
+      "properties": {
+        "responsibility": {
+          "type": "string",
+          "enum": ["bullet", "client", "tbd"]
+        },
+        "planType": {
+          "type": "string",
+          "enum": ["electrical_only", "full_construction_set", "as_built_only", "none"]
+        },
+        "structuralEngineeringNeeded": { "type": "boolean" },
+        "loadCalculationRequired": { "type": "boolean" }
+      }
+    },
+    "network": {
+      "type": "object",
+      "properties": {
+        "connectionType": {
+          "type": "string",
+          "enum": ["wifi", "cellular", "ethernet", "none"]
+        },
+        "managementPlatform": {
+          "type": "string",
+          "enum": ["chargepoint_cloud", "tesla_fleet", "swtch_platform", "blink_network", "open_charge", "other", "none"]
+        },
+        "wifiInstallResponsibility": {
+          "type": "string",
+          "enum": ["bullet", "client", "na", "tbd"]
+        },
+        "cellularModemNeeded": { "type": "boolean" },
+        "ethernetRunNeeded": { "type": "boolean" },
+        "ethernetDistanceFeet": { "type": "number", "minimum": 0 },
+        "paymentSystemType": {
+          "type": "string",
+          "enum": ["rfid", "app_based", "credit_card", "free_charging", "mixed"]
+        },
+        "monthlyFeePerCharger": { "type": "number", "minimum": 0 }
+      }
+    },
+    "accessories": {
+      "type": "object",
+      "properties": {
+        "signageNeeded": { "type": "boolean" },
+        "signageTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["wayfinding", "regulatory", "reserved_parking", "ada", "custom"]
+          }
+        },
+        "signageQuantity": { "type": "integer", "minimum": 0 },
+        "bollardsNeeded": { "type": "boolean" },
+        "bollardType": {
+          "type": "string",
+          "enum": ["steel_pipe", "concrete_filled", "flexible", "removable"]
+        },
+        "bollardQuantity": { "type": "integer", "minimum": 0 },
+        "wheelStopQuantity": { "type": "integer", "minimum": 0 },
+        "lightingNeeded": { "type": "boolean" }
+      }
+    },
+    "estimateControls": {
+      "type": "object",
+      "properties": {
+        "markupPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "taxRate": { "type": "number", "minimum": 0, "maximum": 15 },
+        "contingencyPercent": { "type": "number", "minimum": 0, "maximum": 20, "default": 10 },
+        "prevailingWage": { "type": "boolean", "default": false },
+        "unionLabor": { "type": "boolean", "default": false },
+        "bondingRequired": { "type": "boolean", "default": false },
+        "paymentTerms": {
+          "type": "string",
+          "enum": ["net_30", "net_45", "net_60", "50_50", "progress_billing"]
+        }
+      }
+    },
+    "responsibilities": {
+      "type": "object",
+      "required": ["makeReady", "permits", "designEngineering", "purchasingChargers", "chargerInstall"],
+      "properties": {
+        "makeReady": { "type": "string", "enum": ["bullet", "client", "tbd"] },
+        "permits": { "type": "string", "enum": ["bullet", "client", "tbd"] },
+        "designEngineering": { "type": "string", "enum": ["bullet", "client", "tbd"] },
+        "purchasingChargers": { "type": "string", "enum": ["bullet", "client", "tbd"] },
+        "chargerInstall": { "type": "string", "enum": ["bullet", "client", "tbd"] },
+        "concreteWork": { "type": "string", "enum": ["bullet", "client", "tbd", "na"] },
+        "trenching": { "type": "string", "enum": ["bullet", "client", "tbd", "na"] },
+        "surfaceRestoration": { "type": "string", "enum": ["bullet", "client", "tbd", "na"] }
+      }
+    },
+    "notes": {
+      "type": "object",
+      "properties": {
+        "additionalNotes": { "type": "string" },
+        "actionItems": { "type": "string" },
+        "aerialViewFiles": {
+          "type": "array",
+          "items": { "type": "string", "description": "File URL or reference" }
+        },
+        "relatedDocuments": {
+          "type": "array",
+          "items": { "type": "string", "description": "File URL or reference" }
+        }
+      }
+    }
+  }
+}

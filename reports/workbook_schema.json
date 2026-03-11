@@ -1,0 +1,186 @@
+{
+  "workbooks": [
+    {
+      "name": "Tesla Supercharger Pricing Sheet",
+      "purpose": "Hardware package pricing for Tesla L3 Supercharger installations",
+      "relevance": "HIGH",
+      "sheets": [
+        {
+          "name": "Package Pricing",
+          "description": "9 Supercharger package configurations with Bulk and MSRP pricing tiers",
+          "columns": [
+            {
+              "header": "Package Configuration",
+              "type": "string",
+              "description": "Package identifier (e.g., 4-stall, 8-stall, etc.)",
+              "example_values": ["4-Stall Package", "8-Stall Package", "12-Stall Package"]
+            },
+            {
+              "header": "Number of Stalls",
+              "type": "integer",
+              "description": "Number of Supercharger stalls in the package",
+              "known_values": [4, 6, 8, 10, 12, 16, 20, 24, 28],
+              "notes": "28+ is the largest observed configuration"
+            },
+            {
+              "header": "Bulk Price",
+              "type": "currency_usd",
+              "description": "Volume/bulk pricing tier",
+              "range": { "min": 178000, "max": 672500 },
+              "notes": "Requires volume commitment (exact threshold undocumented)"
+            },
+            {
+              "header": "MSRP Price",
+              "type": "currency_usd",
+              "description": "Standard single-project pricing tier",
+              "range": { "min": "higher_than_bulk", "max": "higher_than_bulk" },
+              "notes": "Always higher than Bulk for same configuration"
+            }
+          ],
+          "row_count": 9,
+          "pricing_model": {
+            "description": "Four-bucket model per package",
+            "buckets": [
+              {
+                "name": "Hardware",
+                "description": "Supercharger cabinets, posts, cables, connectors",
+                "pricing": "Included in package price"
+              },
+              {
+                "name": "Installation",
+                "description": "Labor and materials for physical installation",
+                "pricing": "Site-specific, NOT included in package price, no line-item template"
+              },
+              {
+                "name": "Tesla Services",
+                "description": "Network activation, software licensing, commissioning",
+                "pricing": "Fixed per package configuration, included in package price"
+              },
+              {
+                "name": "Host Pricing",
+                "description": "Revenue share or flat fee arrangement with site host",
+                "pricing": "Negotiable, separate from installation estimate"
+              }
+            ]
+          }
+        }
+      ],
+      "limitations": [
+        "No L2 (UWC) pricing included",
+        "Installation costs described as 'site-specific' with no breakdown",
+        "Bulk pricing threshold not documented",
+        "No per-component pricing (only package totals)",
+        "Tesla Services fees not broken out separately from hardware"
+      ]
+    },
+    {
+      "name": "ROI Calculator",
+      "purpose": "Client-facing financial model for EV charging investment returns",
+      "relevance": "MEDIUM",
+      "sheets": [
+        {
+          "name": "Inputs",
+          "description": "User-configurable parameters for ROI calculation",
+          "fields": [
+            {
+              "name": "State",
+              "type": "dropdown",
+              "description": "US state selection, drives electricity rate",
+              "options": "All 50 US states"
+            },
+            {
+              "name": "Number of Chargers",
+              "type": "integer",
+              "description": "Total charger count for the project"
+            },
+            {
+              "name": "Charger Type",
+              "type": "dropdown",
+              "description": "Level of charging",
+              "options": ["L2", "L3 (DCFC)"]
+            },
+            {
+              "name": "Installation Cost Scenario",
+              "type": "dropdown",
+              "description": "Rough installation complexity tier",
+              "options": ["Low", "Medium", "High"],
+              "notes": "NOT line-item based, uses preset cost ranges"
+            },
+            {
+              "name": "Utilization Band",
+              "type": "percentage",
+              "description": "Expected percentage of time chargers are in use",
+              "range": { "min": 0, "max": 100 }
+            },
+            {
+              "name": "Electricity Rate",
+              "type": "currency_usd_per_kwh",
+              "description": "Commercial electricity rate, auto-populated by state",
+              "notes": "Can be manually overridden"
+            },
+            {
+              "name": "Revenue per kWh",
+              "type": "currency_usd_per_kwh",
+              "description": "Price charged to EV drivers per kWh"
+            },
+            {
+              "name": "Monthly Network Fees",
+              "type": "currency_usd",
+              "description": "Per-charger monthly software/network cost"
+            }
+          ]
+        },
+        {
+          "name": "Reference Data",
+          "description": "Lookup tables and reference values",
+          "tables": [
+            {
+              "name": "State Electricity Rates",
+              "description": "Average commercial electricity rates by US state",
+              "columns": ["State", "Rate ($/kWh)"],
+              "row_count": 50,
+              "notes": "Useful reference data for estimator"
+            },
+            {
+              "name": "Installation Cost Ranges",
+              "description": "Rough cost ranges by complexity scenario",
+              "columns": ["Scenario", "L2 Cost Range", "L3 Cost Range"],
+              "rows": [
+                {
+                  "scenario": "Low",
+                  "description": "Minimal site work, short conduit runs, existing capacity"
+                },
+                {
+                  "scenario": "Medium",
+                  "description": "Moderate trenching, standard panel work"
+                },
+                {
+                  "scenario": "High",
+                  "description": "Major electrical upgrades, long runs, complex civil"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Outputs",
+          "description": "Calculated financial projections",
+          "calculated_fields": [
+            { "name": "Monthly Electricity Cost", "type": "currency_usd" },
+            { "name": "Monthly Revenue", "type": "currency_usd" },
+            { "name": "Monthly Net Operating Income", "type": "currency_usd" },
+            { "name": "Payback Period", "type": "months" },
+            { "name": "5-Year ROI", "type": "percentage" },
+            { "name": "Break-Even Utilization Rate", "type": "percentage" }
+          ]
+        }
+      ],
+      "limitations": [
+        "Uses rough cost ranges, not line-item estimates",
+        "No material or labor breakdown",
+        "Installation scenarios are subjective classifications",
+        "Does not account for permit, design, or soft costs"
+      ]
+    }
+  ]
+}

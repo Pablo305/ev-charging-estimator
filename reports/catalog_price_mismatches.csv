@@ -1,0 +1,18 @@
+package_id,package_name,stall_count,bulk_price_usd,msrp_price_usd,price_difference_usd,difference_pct,notes
+tesla-sc-4,4-Stall Supercharger Package,4,178000,,,,Bulk price observed. MSRP exists in workbook but exact value not extracted during analysis.
+tesla-sc-6,6-Stall Supercharger Package,6,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-8,8-Stall Supercharger Package,8,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-10,10-Stall Supercharger Package,10,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-12,12-Stall Supercharger Package,12,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-16,16-Stall Supercharger Package,16,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-20,20-Stall Supercharger Package,20,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-24,24-Stall Supercharger Package,24,,,,,Both Bulk and MSRP exist in workbook but exact values not extracted during analysis.
+tesla-sc-28,28-Stall Supercharger Package,28,672500,,,,Bulk price observed. MSRP exists in workbook but exact value not extracted during analysis.
+,,,,,,,
+,NOTES:,,,,,,
+,"1. Only the min ($178K for 4-stall) and max ($672.5K for 28-stall) Bulk prices were captured from the context provided.",,,,,,
+,"2. All 9 packages have both Bulk and MSRP pricing in the Tesla Supercharger Pricing Sheet workbook.",,,,,,
+,"3. MSRP is always higher than Bulk for the same configuration. The exact percentage difference is not documented.",,,,,,
+,"4. To complete this table, the Tesla Supercharger Pricing Sheet workbook needs to be re-read with exact cell values extracted.",,,,,,
+,"5. No line-item estimate template exists to compare against, so this file documents only the Bulk vs MSRP tier differences.",,,,,,
+,"6. L2 charger pricing (Tesla UWC, all ChargePoint models, etc.) is NOT in any workbook - cannot be compared.",,,,,,

@@ -1,0 +1,39 @@
+monday_field_name,monday_column_id,monday_field_type,normalized_field_path,spreadsheet_tab,spreadsheet_cell_or_range,estimate_section,mapping_type,transformation_logic,required_for_automation,manual_review_if_missing,notes
+Name,name,text,project.name,--,--,Header,direct,None - pass through,yes,no,Used as estimate title
+Sales Rep,multiple_person_mkrdtaay,people,project.salesRep,--,--,Header,transform,"Extract person name from Monday people object",yes,no,Monday API returns user ID; resolve to display name
+Site Address,location_mkq17q59,location,site.address,--,--,Header,transform,"Parse Monday location object into {street,city,state,zip,lat,lng}",yes,yes,"Address determines tax rate, permit jurisdiction, labor rates"
+"New Construction?",color_mkq1fm6a,status,project.isNewConstruction,--,--,Header,transform,"Map status label to enum: Yes->yes, No->no, Other->other",yes,no,Affects assumptions about existing infrastructure
+Project Timeline,text_mkq1b6sk,text,project.timeline,--,--,Header,direct,None - pass through (free text),no,no,Informational only; does not affect pricing
+Project Type,color_mkq1t9d,status,project.projectType,--,--,Scope,transform,"Map status label to snake_case enum. 'Full Turnkey'->'full_turnkey', 'Remove & Replace'->'remove_replace', etc.",yes,yes,"Primary scope classifier. Determines which estimate sections are included."
+Site Type,single_select6785b7b,status,site.siteType,--,--,Site,transform,"Map status label to snake_case enum. 'Fleet/Dealer'->'fleet_dealer', 'Police/Gov'->'police_gov', etc.",yes,yes,"0% fill rate observed. ALWAYS triggers manual review when missing."
+New Charger Brand,dropdown_mkqswef4,dropdown,charger.new.brand,Tesla Supercharger Pricing,--,Hardware,transform,"Map dropdown to snake_case enum. 'Tesla Supercharger'->'tesla_supercharger', etc.",yes,yes,Determines which catalog to look up
+Specific Charger Model,multi_selectwzq4zbsy,dropdown_multi,charger.new.models,--,--,Hardware,direct,"Array of selected model strings",yes,yes,"Maps to catalog for pricing. 'Other' triggers manual review."
+Number of Chargers,numeric_mkq1f1kg,numbers,charger.new.count,--,--,Hardware,direct,Integer pass-through,yes,yes,Core quantity for estimate line items
+Number of Pedestals,numeric_mkqe2fj6,numbers,charger.new.pedestalCount,--,--,Hardware,direct,Integer pass-through,no,no,May differ from charger count for dual-port units
+Port type,color_mkq1bf8b,status,charger.new.portType,--,--,Hardware,transform,"Map status label to lowercase enum",yes,no,Affects charger count vs pedestal count calculation
+Mounting type,color_mkq17yas,status,charger.new.mountingType,--,--,Hardware + Civil,transform,"Map status label to lowercase enum",yes,yes,"Determines pedestal/pad vs wall mount scope"
+Make Ready,dropdown_mkq1ce91,dropdown,responsibilities.makeReady,--,--,Scope,transform,"Map to lowercase enum",yes,yes,"'Bullet' includes electrical make-ready in estimate; 'Client' excludes it"
+Permits,dropdown_mkq1ws3,dropdown,responsibilities.permits,--,--,Scope,transform,"Map to lowercase enum",yes,yes,"'Bullet' includes permit line items; 'Client' excludes them"
+Design & Engineering,dropdown_mkq1nyx6,dropdown,responsibilities.designEngineering,--,--,Scope,transform,"Map to lowercase enum",yes,yes,"'Bullet' includes D&E line items; 'Client' excludes them"
+Purchasing Chargers,dropdown_mkq1yysm,dropdown,responsibilities.purchasingChargers,--,--,Scope,transform,"Map to lowercase enum",yes,yes,"'Bullet' includes hardware in estimate; 'Client' shows as 'by others'"
+Charger Install,dropdown_mkq12g4b,dropdown,responsibilities.chargerInstall,--,--,Scope,transform,"Map to lowercase enum",yes,yes,"'Bullet' includes install labor; 'Client' excludes it"
+Wifi Install,multi_select01zypan0,dropdown_multi,network.wifiInstallResponsibility,--,--,Network,transform,"Take first value from multi-select. Map to lowercase enum.",no,no,"'N/A' means no wifi needed"
+"Signage & Bollards",dropdown_mkq15p5a,dropdown_multi,accessories.signageNeeded + accessories.bollardsNeeded,--,--,Accessories,transform,"Parse multi-select: if includes 'Signage' -> signageNeeded=true; if includes 'Bollards' -> bollardsNeeded=true; 'None' -> both false",no,no,Quantity fields do not exist in Monday; default to charger count or manual entry
+Post-Tensioned,color_mkqzzcq3,status,parkingEnvironment.postTensioned,--,--,Civil,transform,"Map status label to lowercase enum",no,yes,"0% fill rate. Critical for garage projects - affects core drilling method and cost."
+Installation location,text_mkq13wmf,text,parkingEnvironment.installationLocationDescription,--,--,Site,direct,None - pass through,no,yes,Free text; used for manual review context
+"Electrical room or main panel setup",text_mkq1qk6q,text,electrical.roomDescription,--,--,Electrical,direct,None - pass through,no,yes,Free text; used for manual review context
+"Approximate distance from electrical room/main panel to charger location",text_mkq1yy5,text,electrical.conduitDistanceFeet,--,--,Electrical,transform,"Parse numeric value from free text. Strip units (ft, feet, '). If not parseable, flag for manual review.",yes,yes,"0% fill rate. Critical for wire/conduit cost calculation."
+Additional notes & comments,long_text_mkq1n1nf,long_text,notes.additionalNotes,--,--,Notes,direct,None - pass through,no,no,Displayed in estimate notes section
+"Action Items & Next Steps",long_text_mkq296dg,long_text,notes.actionItems,--,--,Internal,direct,None - pass through,no,no,Internal use only; not shown on estimate
+Aerial View,file_mksn7ncj,file,notes.aerialViewFiles,--,--,Attachments,transform,"Extract file URLs from Monday file column",no,no,Reference for manual review
+"Related Documents / Photos",file_mkqehy82,file,notes.relatedDocuments,--,--,Attachments,transform,"Extract file URLs from Monday file column",no,no,Reference for manual review
+"(R&R) Number of Chargers",numeric_mkq19jsg,numbers,charger.existing.count,--,--,R&R,direct,Integer pass-through,conditional,yes,Required when projectType = remove_replace
+"(R&R) Port type",color_mkq19jar,status,charger.existing.portType,--,--,R&R,transform,"Map status label to lowercase enum",conditional,no,Required when projectType = remove_replace
+"(R&R) Charger Brand",multi_selecttt4bf0xk,dropdown_multi,charger.existing.brands,--,--,R&R,transform,"Map dropdown values to snake_case enum array",conditional,no,Required when projectType = remove_replace
+"(R&R) Mounting Style",color_mkq136xm,status,charger.existing.mountingStyle,--,--,R&R,transform,"Map status label to lowercase enum",conditional,no,Required when projectType = remove_replace
+"(R&R) Amps drawn to each charger",long_text_mkq1tm3d,long_text,charger.existing.ampsPerCharger,--,--,R&R,transform,"Parse numeric value from long text. If not parseable, flag for manual review.",conditional,yes,Free text field; should be numeric
+Send Email,button_mksg5eyk,button,--,--,--,--,ignore,Not mapped - automation button,no,no,Monday.com automation; irrelevant to estimator
+"# Of Units",numberaq2a9gzt,numbers,site.numberOfUnits,--,--,Site,direct,Integer pass-through,no,no,Apartment/hotel unit count; informational
+"Single select",single_selectoo30hnc,status,parkingEnvironment.type,--,--,Site,transform,"Map: 'Parking Lot'->'surface_lot', 'Parking Garage'->'parking_garage', 'Other'->'other'",yes,yes,"0% fill rate. Poorly named. Should be required."
+--,--,--,charger.new.superchargerPackage,Tesla Supercharger Pricing,Package row lookup,"Hardware",derived,"When brand=tesla_supercharger, map charger count to nearest package config (4/6/8/10/12/16/20/24/28 stalls)",conditional,yes,No Monday field - derived from brand + count
+--,--,--,project.pricingTier,Tesla Supercharger Pricing,Bulk vs MSRP column,"Hardware",manual,"Must be specified by user - no Monday field exists",conditional,yes,Required for Supercharger pricing
