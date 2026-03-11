@@ -1,0 +1,562 @@
+{
+  "board": {
+    "id": 8940346166,
+    "name": "SOW Link | Commercial EV",
+    "workspace": {
+      "id": 7395896,
+      "name": "Bullet Energy"
+    },
+    "created_by": "Tara Rezapour",
+    "item_count": 312,
+    "groups": [
+      { "title": "SOW Forms - In Progress" },
+      { "title": "Bid Submitted" }
+    ]
+  },
+  "columns": [
+    {
+      "id": "name",
+      "title": "Name",
+      "type": "text",
+      "settings": {},
+      "labels": null,
+      "notes": "Project name, used as item title"
+    },
+    {
+      "id": "multiple_person_mkrdtaay",
+      "title": "Sales Rep",
+      "type": "people",
+      "settings": {},
+      "labels": null,
+      "notes": "Monday.com user reference"
+    },
+    {
+      "id": "location_mkq17q59",
+      "title": "Site Address",
+      "type": "location",
+      "settings": {},
+      "labels": null,
+      "notes": "Structured location with lat/lng/address"
+    },
+    {
+      "id": "color_mkq1fm6a",
+      "title": "New Construction?",
+      "type": "status",
+      "settings": {},
+      "labels": ["No", "Yes", "Other"],
+      "notes": null
+    },
+    {
+      "id": "text_mkq1b6sk",
+      "title": "Project Timeline",
+      "type": "text",
+      "settings": {},
+      "labels": null,
+      "notes": "Free-form text. Should be date or dropdown."
+    },
+    {
+      "id": "color_mkq1t9d",
+      "title": "Project Type",
+      "type": "status",
+      "settings": {},
+      "labels": [
+        "Remove & Replace",
+        "Full Turnkey",
+        "Install & Commission",
+        "Equipment Purchase",
+        "Full Turnkey + Connectivity",
+        "Equipment + Install & Commission",
+        "Commission Only",
+        "Service Work",
+        "Supercharger"
+      ],
+      "notes": "Primary scope classifier"
+    },
+    {
+      "id": "single_select6785b7b",
+      "title": "Site Type",
+      "type": "status",
+      "settings": {},
+      "labels": [
+        "Airport", "Apartment", "Event Venue", "Fleet/Dealer", "Hospital",
+        "Hotel", "Industrial", "Mixed Use", "Fuel Station", "Municipal",
+        "Office", "Parking Structure", "Police/Gov", "Recreational",
+        "Campground", "Restaurant", "Retail", "School", "Other"
+      ],
+      "notes": "NULL in all 10 samples despite 19 options"
+    },
+    {
+      "id": "dropdown_mkqswef4",
+      "title": "New Charger Brand",
+      "type": "dropdown",
+      "settings": {},
+      "labels": [
+        "Tesla", "ChargePoint", "Xeal", "SWTCH", "Ford",
+        "EV Connect", "EV Passport", "Blink", "Tesla Supercharger", "EV Passport L3"
+      ],
+      "notes": "Tesla and Tesla Supercharger are separate options (L2 vs L3)"
+    },
+    {
+      "id": "multi_selectwzq4zbsy",
+      "title": "Specific Charger Model",
+      "type": "dropdown_multi",
+      "settings": {},
+      "labels": [
+        "UWC", "Supercharger", "ChargePoint CPF50",
+        "CT4011", "CT4021", "CT4025", "CT4013", "CT4023", "CT4027",
+        "CP6613B-50A", "CP6623B-50A", "CP6611B-50A", "CP6621B-50A",
+        "CP6613B-80A", "CP6013B-80A", "CP6623B-80A", "CP6023B-80A",
+        "CP6611B-80A", "CP6011B-80A", "CP6621B-80A", "CP6021B-80A",
+        "Other"
+      ],
+      "notes": "22 model options. UWC = Tesla Universal Wall Connector. CP6xxx = ChargePoint CP6000 series."
+    },
+    {
+      "id": "numeric_mkq1f1kg",
+      "title": "Number of Chargers",
+      "type": "numbers",
+      "settings": {},
+      "labels": null,
+      "notes": "Integer count of new charger units"
+    },
+    {
+      "id": "numeric_mkqe2fj6",
+      "title": "Number of Pedestals",
+      "type": "numbers",
+      "settings": {},
+      "labels": null,
+      "notes": "Integer count of pedestals (may differ from charger count for dual-port)"
+    },
+    {
+      "id": "color_mkq1bf8b",
+      "title": "Port type",
+      "type": "status",
+      "settings": {},
+      "labels": ["Dual", "Single", "Other", "Mix"],
+      "notes": null
+    },
+    {
+      "id": "color_mkq17yas",
+      "title": "Mounting type",
+      "type": "status",
+      "settings": {},
+      "labels": ["Pedestal", "Wall", "Other", "TBD", "Mix"],
+      "notes": null
+    },
+    {
+      "id": "dropdown_mkq1ce91",
+      "title": "Make Ready",
+      "type": "dropdown",
+      "settings": {},
+      "labels": ["Bullet", "Client", "TBD"],
+      "notes": "Responsibility assignment"
+    },
+    {
+      "id": "dropdown_mkq1ws3",
+      "title": "Permits",
+      "type": "dropdown",
+      "settings": {},
+      "labels": ["Bullet", "Client", "TBD"],
+      "notes": "Responsibility assignment"
+    },
+    {
+      "id": "dropdown_mkq1nyx6",
+      "title": "Design & Engineering",
+      "type": "dropdown",
+      "settings": {},
+      "labels": ["Bullet", "Client", "TBD"],
+      "notes": "Responsibility assignment"
+    },
+    {
+      "id": "dropdown_mkq1yysm",
+      "title": "Purchasing Chargers",
+      "type": "dropdown",
+      "settings": {},
+      "labels": ["Bullet", "Client", "TBD"],
+      "notes": "Responsibility assignment"
+    },
+    {
+      "id": "dropdown_mkq12g4b",
+      "title": "Charger Install",
+      "type": "dropdown",
+      "settings": {},
+      "labels": ["Bullet", "Client", "TBD"],
+      "notes": "Responsibility assignment"
+    },
+    {
+      "id": "multi_select01zypan0",
+      "title": "Wifi Install",
+      "type": "dropdown_multi",
+      "settings": {},
+      "labels": ["Bullet", "Client", "N/A", "TBD"],
+      "notes": "Multi-select responsibility"
+    },
+    {
+      "id": "dropdown_mkq15p5a",
+      "title": "Signage & Bollards",
+      "type": "dropdown_multi",
+      "settings": {},
+      "labels": ["Signage", "Bollards", "None", "TBD"],
+      "notes": "Multi-select: which accessories are needed"
+    },
+    {
+      "id": "color_mkqzzcq3",
+      "title": "Post-Tensioned",
+      "type": "status",
+      "settings": {},
+      "labels": ["No", "Yes", "TBD"],
+      "notes": "NULL in all 10 samples. Relevant only for parking structures."
+    },
+    {
+      "id": "text_mkq13wmf",
+      "title": "Installation location",
+      "type": "text",
+      "settings": {},
+      "labels": null,
+      "notes": "Free-form. Examples: 'Parking lot', '6th floor parking garage NW corner'"
+    },
+    {
+      "id": "text_mkq1qk6q",
+      "title": "Electrical room or main panel setup",
+      "type": "text",
+      "settings": {},
+      "labels": null,
+      "notes": "Free-form. Example: 'Electrical room in hotel lobby, transformer at back of hotel'"
+    },
+    {
+      "id": "text_mkq1yy5",
+      "title": "Approximate distance from electrical room/main panel to charger location",
+      "type": "text",
+      "settings": {},
+      "labels": null,
+      "notes": "Free-form. NULL in all 10 samples. Should be numeric (feet)."
+    },
+    {
+      "id": "long_text_mkq1n1nf",
+      "title": "Additional notes & comments",
+      "type": "long_text",
+      "settings": {},
+      "labels": null,
+      "notes": "Free-form notes"
+    },
+    {
+      "id": "long_text_mkq296dg",
+      "title": "Action Items & Next Steps",
+      "type": "long_text",
+      "settings": {},
+      "labels": null,
+      "notes": "Internal tracking"
+    },
+    {
+      "id": "file_mksn7ncj",
+      "title": "Aerial View",
+      "type": "file",
+      "settings": {},
+      "labels": null,
+      "notes": "Image upload of site aerial view"
+    },
+    {
+      "id": "file_mkqehy82",
+      "title": "Related Documents / Photos",
+      "type": "file",
+      "settings": {},
+      "labels": null,
+      "notes": "Supporting documents and photos"
+    },
+    {
+      "id": "numeric_mkq19jsg",
+      "title": "(R&R) Number of Chargers",
+      "type": "numbers",
+      "settings": {},
+      "labels": null,
+      "notes": "Remove & Replace: count of existing chargers to remove"
+    },
+    {
+      "id": "color_mkq19jar",
+      "title": "(R&R) Port type",
+      "type": "status",
+      "settings": {},
+      "labels": ["Dual", "Single", "TBD", "Mix"],
+      "notes": "Remove & Replace: existing port configuration"
+    },
+    {
+      "id": "multi_selecttt4bf0xk",
+      "title": "(R&R) Charger Brand",
+      "type": "dropdown_multi",
+      "settings": {},
+      "labels": [
+        "Blink", "EV Connect", "EV Passport", "Ford", "SWTCH",
+        "Tesla", "Xeal", "ChargePoint", "Enviro Spark", "Clipper Creek", "Enphase"
+      ],
+      "notes": "Remove & Replace: existing charger brand(s)"
+    },
+    {
+      "id": "color_mkq136xm",
+      "title": "(R&R) Mounting Style",
+      "type": "status",
+      "settings": {},
+      "labels": ["Pedestal", "Wall", "TBD"],
+      "notes": "Remove & Replace: existing mounting"
+    },
+    {
+      "id": "long_text_mkq1tm3d",
+      "title": "(R&R) Amps drawn to each charger",
+      "type": "long_text",
+      "settings": {},
+      "labels": null,
+      "notes": "Free-form. Should be numeric."
+    },
+    {
+      "id": "button_mksg5eyk",
+      "title": "Send Email",
+      "type": "button",
+      "settings": {},
+      "labels": null,
+      "notes": "Automation trigger button"
+    },
+    {
+      "id": "numberaq2a9gzt",
+      "title": "# Of Units",
+      "type": "numbers",
+      "settings": {},
+      "labels": null,
+      "notes": "Number of residential/hotel units at site"
+    },
+    {
+      "id": "single_selectoo30hnc",
+      "title": "Single select",
+      "type": "status",
+      "settings": {},
+      "labels": ["Parking Lot", "Parking Garage", "Other"],
+      "notes": "Poorly named. NULL in all 10 samples. Overlaps with Installation location free text."
+    }
+  ],
+  "sample_items": [
+    {
+      "_note": "Sanitized sample items. Actual project names and addresses redacted.",
+      "item_index": 1,
+      "name": "[Sample Hotel Project - TX]",
+      "project_type": "Full Turnkey",
+      "new_construction": "No",
+      "charger_brand": "ChargePoint",
+      "charger_model": ["CP6623B-50A"],
+      "num_chargers": 10,
+      "num_pedestals": 5,
+      "port_type": "Dual",
+      "mounting_type": "Pedestal",
+      "make_ready": "Bullet",
+      "permits": "Bullet",
+      "design_engineering": "Bullet",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": "Surface parking lot - all next to each other - 5 spots",
+      "electrical_room": "Electrical room in the hotel lobby, but there's a transformer at the back of the hotel"
+    },
+    {
+      "item_index": 2,
+      "name": "[Sample Parking Garage - CA]",
+      "project_type": "Full Turnkey + Connectivity",
+      "new_construction": "No",
+      "charger_brand": "Tesla",
+      "charger_model": ["UWC"],
+      "num_chargers": 20,
+      "num_pedestals": null,
+      "port_type": "Single",
+      "mounting_type": "Wall",
+      "make_ready": "Bullet",
+      "permits": "Bullet",
+      "design_engineering": "Bullet",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": "behind the gate on the 6th floor of the parking garage, northwest corner",
+      "electrical_room": null
+    },
+    {
+      "item_index": 3,
+      "name": "[Sample Apartment Complex - FL]",
+      "project_type": "Equipment + Install & Commission",
+      "new_construction": "Yes",
+      "charger_brand": "ChargePoint",
+      "charger_model": ["CT4021"],
+      "num_chargers": 4,
+      "num_pedestals": 4,
+      "port_type": "Single",
+      "mounting_type": "Pedestal",
+      "make_ready": "Client",
+      "permits": "Client",
+      "design_engineering": "Client",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": "Parking lot",
+      "electrical_room": null
+    },
+    {
+      "item_index": 4,
+      "name": "[Sample Supercharger Site - AZ]",
+      "project_type": "Supercharger",
+      "new_construction": "No",
+      "charger_brand": "Tesla Supercharger",
+      "charger_model": ["Supercharger"],
+      "num_chargers": 8,
+      "num_pedestals": null,
+      "port_type": null,
+      "mounting_type": null,
+      "make_ready": "Bullet",
+      "permits": "Bullet",
+      "design_engineering": "Bullet",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    },
+    {
+      "item_index": 5,
+      "name": "[Sample Remove & Replace - NY]",
+      "project_type": "Remove & Replace",
+      "new_construction": "No",
+      "charger_brand": "ChargePoint",
+      "charger_model": ["CP6613B-80A"],
+      "num_chargers": 6,
+      "num_pedestals": 3,
+      "port_type": "Dual",
+      "mounting_type": "Pedestal",
+      "make_ready": "Bullet",
+      "permits": "Bullet",
+      "design_engineering": "TBD",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "rr_num_chargers": 6,
+      "rr_port_type": "Dual",
+      "rr_brand": ["Blink"],
+      "rr_mounting": "Pedestal",
+      "rr_amps": null,
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    },
+    {
+      "item_index": 6,
+      "name": "[Sample Office Building - TX]",
+      "project_type": "Full Turnkey",
+      "new_construction": "No",
+      "charger_brand": "Tesla",
+      "charger_model": ["UWC"],
+      "num_chargers": 8,
+      "num_pedestals": null,
+      "port_type": "Single",
+      "mounting_type": "Wall",
+      "make_ready": "Bullet",
+      "permits": "Bullet",
+      "design_engineering": "Bullet",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    },
+    {
+      "item_index": 7,
+      "name": "[Sample Fleet Depot - CO]",
+      "project_type": "Install & Commission",
+      "new_construction": "No",
+      "charger_brand": "SWTCH",
+      "charger_model": ["Other"],
+      "num_chargers": 12,
+      "num_pedestals": null,
+      "port_type": "Single",
+      "mounting_type": "Wall",
+      "make_ready": "Client",
+      "permits": "Client",
+      "design_engineering": "Client",
+      "purchasing": "Client",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    },
+    {
+      "item_index": 8,
+      "name": "[Sample Retail Center - GA]",
+      "project_type": "Full Turnkey",
+      "new_construction": "No",
+      "charger_brand": "ChargePoint",
+      "charger_model": ["CT4025"],
+      "num_chargers": 4,
+      "num_pedestals": 4,
+      "port_type": "Single",
+      "mounting_type": "Pedestal",
+      "make_ready": "Bullet",
+      "permits": "TBD",
+      "design_engineering": "TBD",
+      "purchasing": "Bullet",
+      "charger_install": "Bullet",
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    },
+    {
+      "item_index": 9,
+      "name": "[Sample Commission Only - WA]",
+      "project_type": "Commission Only",
+      "new_construction": "No",
+      "charger_brand": "EV Connect",
+      "charger_model": ["Other"],
+      "num_chargers": 6,
+      "num_pedestals": null,
+      "port_type": null,
+      "mounting_type": null,
+      "make_ready": null,
+      "permits": null,
+      "design_engineering": null,
+      "purchasing": null,
+      "charger_install": null,
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    },
+    {
+      "item_index": 10,
+      "name": "[Sample Service Work - TX]",
+      "project_type": "Service Work",
+      "new_construction": "No",
+      "charger_brand": null,
+      "charger_model": null,
+      "num_chargers": null,
+      "num_pedestals": null,
+      "port_type": null,
+      "mounting_type": null,
+      "make_ready": null,
+      "permits": null,
+      "design_engineering": null,
+      "purchasing": null,
+      "charger_install": null,
+      "site_type": null,
+      "post_tensioned": null,
+      "electrical_distance": null,
+      "installation_location": null,
+      "electrical_room": null
+    }
+  ]
+}
