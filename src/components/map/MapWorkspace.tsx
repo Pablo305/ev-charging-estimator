@@ -15,6 +15,7 @@ import { measureRunLength } from '@/lib/map/measurements';
 import { generatePatches, applyPatches } from '@/lib/map/sync';
 import { generateEquipmentLabel } from './EquipmentLayer';
 import { SiteMap } from './SiteMap';
+import { StreetViewPanel } from './StreetViewPanel';
 import { DrawingToolbar } from './DrawingToolbar';
 import { SiteInfoPanel } from './SiteInfoPanel';
 import { PatchReviewPanel } from './PatchReviewPanel';
@@ -99,11 +100,25 @@ function nextId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idCounter}`;
 }
 
+type CenterView = 'satellite' | 'streetview';
+
+interface StreetViewAnalysisResult {
+  siteDescription?: string;
+  inferredFields?: Record<string, unknown>;
+  observations?: Record<string, string>;
+  mountRecommendation?: { type: string | null; reason: string; suggestedLocations: string };
+  concerns?: string[];
+  confidence?: number;
+}
+
 export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspaceProps) {
   const [mapState, dispatch] = useReducer(mapReducer, undefined, initialState);
   const [patchBatch, setPatchBatch] = useState<PatchBatch | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [centerView, setCenterView] = useState<CenterView>('satellite');
+  const [isAnalyzingStreetView, setIsAnalyzingStreetView] = useState(false);
+  const [streetViewAnalysis, setStreetViewAnalysis] = useState<StreetViewAnalysisResult | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load address from input
@@ -288,6 +303,33 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
     });
   }, [patchBatch]);
 
+  // ── Street View AI analysis ──
+
+  const handleStreetViewAnalyze = useCallback(async (imageUrl: string) => {
+    setIsAnalyzingStreetView(true);
+    setStreetViewAnalysis(null);
+    try {
+      const res = await fetch('/api/ai/analyze-streetview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Street View analysis failed:', errData);
+        return;
+      }
+      const data = await res.json();
+      if (data.analysis) {
+        setStreetViewAnalysis(data.analysis as StreetViewAnalysisResult);
+      }
+    } catch (err) {
+      console.error('Street View analysis error:', err);
+    } finally {
+      setIsAnalyzingStreetView(false);
+    }
+  }, []);
+
   // ── Delete selected feature ──
 
   useEffect(() => {
@@ -326,7 +368,7 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
         )}
       </div>
 
-      {/* Center - Map + Toolbar */}
+      {/* Center - Map/StreetView + Toolbar */}
       <div className="relative flex-1">
         {/* Toggle buttons */}
         <div className="absolute left-2 top-2 z-10 flex gap-1">
@@ -338,6 +380,33 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
             {leftPanelOpen ? '<' : '>'}
           </button>
         </div>
+
+        {/* View toggle (satellite / street view) */}
+        <div className="absolute left-1/2 top-2 z-10 -translate-x-1/2">
+          <div className="flex rounded-lg bg-white shadow">
+            <button
+              onClick={() => setCenterView('satellite')}
+              className={`rounded-l-lg px-4 py-1.5 text-xs font-medium transition ${
+                centerView === 'satellite'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Satellite Map
+            </button>
+            <button
+              onClick={() => setCenterView('streetview')}
+              className={`rounded-r-lg px-4 py-1.5 text-xs font-medium transition ${
+                centerView === 'streetview'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Street View
+            </button>
+          </div>
+        </div>
+
         <div className="absolute right-2 top-2 z-10 flex gap-1">
           <button
             onClick={() => setRightPanelOpen((v) => !v)}
@@ -348,35 +417,46 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
           </button>
         </div>
 
-        {/* Floating toolbar */}
-        <div className="absolute left-2 top-12 z-10">
-          <DrawingToolbar
-            selectedTool={mapState.selectedTool}
-            onSelectTool={handleSelectTool}
+        {centerView === 'satellite' ? (
+          <>
+            {/* Floating toolbar */}
+            <div className="absolute left-2 top-12 z-10">
+              <DrawingToolbar
+                selectedTool={mapState.selectedTool}
+                onSelectTool={handleSelectTool}
+              />
+            </div>
+
+            {/* Active tool indicator */}
+            {mapState.selectedTool && (
+              <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
+                {mapState.selectedTool.replace('_', ' ')} mode — Click to draw, double-click to finish
+              </div>
+            )}
+
+            <SiteMap
+              siteCoordinates={mapState.siteCoordinates}
+              runs={mapState.runs}
+              equipment={mapState.equipment}
+              selectedTool={mapState.selectedTool}
+              selectedFeatureId={mapState.selectedFeatureId}
+              onRunCreate={handleRunCreate}
+              onRunUpdate={handleRunUpdate}
+              onRunDelete={handleRunDelete}
+              onEquipmentPlace={handleEquipmentPlace}
+              onEquipmentUpdate={handleEquipmentUpdate}
+              onEquipmentDelete={handleEquipmentDelete}
+              onFeatureSelect={handleFeatureSelect}
+            />
+          </>
+        ) : (
+          <StreetViewPanel
+            coordinates={mapState.siteCoordinates}
+            equipment={mapState.equipment}
+            onAnalyze={handleStreetViewAnalyze}
+            isAnalyzing={isAnalyzingStreetView}
           />
-        </div>
-
-        {/* Active tool indicator */}
-        {mapState.selectedTool && (
-          <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
-            {mapState.selectedTool.replace('_', ' ')} mode — Click to draw, double-click to finish
-          </div>
         )}
-
-        <SiteMap
-          siteCoordinates={mapState.siteCoordinates}
-          runs={mapState.runs}
-          equipment={mapState.equipment}
-          selectedTool={mapState.selectedTool}
-          selectedFeatureId={mapState.selectedFeatureId}
-          onRunCreate={handleRunCreate}
-          onRunUpdate={handleRunUpdate}
-          onRunDelete={handleRunDelete}
-          onEquipmentPlace={handleEquipmentPlace}
-          onEquipmentUpdate={handleEquipmentUpdate}
-          onEquipmentDelete={handleEquipmentDelete}
-          onFeatureSelect={handleFeatureSelect}
-        />
       </div>
 
       {/* Right Panel - Patches + Estimate */}
@@ -400,6 +480,76 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
             />
 
             <EstimateImpactPanel estimate={estimate} />
+
+            {/* Street View Analysis Results */}
+            {streetViewAnalysis && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <div className="mb-2 text-sm font-semibold text-blue-900">
+                  Street View AI Analysis
+                </div>
+                {streetViewAnalysis.confidence != null && (
+                  <div className="mb-2 text-xs text-blue-700">
+                    Confidence: {Math.round(streetViewAnalysis.confidence * 100)}%
+                  </div>
+                )}
+                {streetViewAnalysis.siteDescription && (
+                  <p className="mb-2 text-xs text-gray-700">
+                    {streetViewAnalysis.siteDescription}
+                  </p>
+                )}
+
+                {streetViewAnalysis.observations && (
+                  <div className="mb-2">
+                    <div className="mb-1 text-xs font-medium text-blue-800">Observations</div>
+                    <div className="space-y-1">
+                      {Object.entries(streetViewAnalysis.observations).map(([key, value]) => (
+                        <div key={key} className="text-xs text-gray-600">
+                          <span className="font-medium capitalize text-gray-700">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}:
+                          </span>{' '}
+                          {value}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {streetViewAnalysis.mountRecommendation?.type && (
+                  <div className="mb-2 rounded bg-white p-2">
+                    <div className="text-xs font-medium text-blue-800">Mount Recommendation</div>
+                    <div className="text-xs text-gray-700">
+                      <span className="font-medium">{streetViewAnalysis.mountRecommendation.type}</span>
+                      {streetViewAnalysis.mountRecommendation.reason && (
+                        <> — {streetViewAnalysis.mountRecommendation.reason}</>
+                      )}
+                    </div>
+                    {streetViewAnalysis.mountRecommendation.suggestedLocations && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {streetViewAnalysis.mountRecommendation.suggestedLocations}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {streetViewAnalysis.concerns && streetViewAnalysis.concerns.length > 0 && (
+                  <div>
+                    <div className="mb-1 text-xs font-medium text-amber-700">Concerns</div>
+                    <ul className="list-inside list-disc space-y-0.5">
+                      {streetViewAnalysis.concerns.map((c, i) => (
+                        <li key={i} className="text-xs text-gray-600">{c}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setStreetViewAnalysis(null)}
+                  className="mt-2 text-xs text-blue-600 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

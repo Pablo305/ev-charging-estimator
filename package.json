@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^2.0.2",
     "@supabase/supabase-js": "^2.99.1",
     "@turf/distance": "^7.3.4",
     "@turf/helpers": "^7.3.4",
