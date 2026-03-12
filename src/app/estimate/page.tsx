@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { EstimateInput, EstimateOutput, EstimateLineItem, ManualReviewTrigger } from '@/lib/estimate/types';
 import { generateEstimate } from '@/lib/estimate/engine';
+import { exportEstimatePDF } from '@/lib/estimate/export-pdf';
 import { SCENARIOS } from '@/lib/estimate/scenarios';
 import { useViewMode } from '@/lib/viewMode';
 import { ViewModeToggle } from '@/components/ViewModeToggle';
@@ -910,7 +911,7 @@ function EstimateResults({
             <p className="mt-1 text-sm text-gray-500">{output.input.customer.companyName} | {output.input.site.address}</p>
             <p className="mt-1 text-xs text-gray-400">Generated {new Date(metadata.generatedAt).toLocaleString()} | Engine {metadata.engineVersion}</p>
           </div>
-          <div className="flex flex-wrap gap-3 text-right">
+          <div className="flex flex-wrap items-start gap-3 text-right">
             <div className="rounded-lg bg-gray-50 px-4 py-2">
               <p className="text-xs text-gray-500">Input Completeness</p>
               <p className={`text-lg font-bold ${metadata.inputCompleteness >= 70 ? 'text-green-600' : metadata.inputCompleteness >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
@@ -927,6 +928,12 @@ function EstimateResults({
               <p className="text-xs text-gray-500">Total</p>
               <p className="text-lg font-bold text-gray-900">{fmt(summary.total)}</p>
             </div>
+            <button
+              onClick={() => exportEstimatePDF(output)}
+              className="rounded-lg bg-[#0B1220] px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 print:hidden"
+            >
+              Download PDF
+            </button>
           </div>
         </div>
       </div>
