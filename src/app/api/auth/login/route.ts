@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 
-const VALID_EMAIL = 'charging@bulletv.com';
-const VALID_PASSWORD = 'Electric1';
+const VALID_USERNAME = 'Admin';
+const VALID_PASSWORD = 'Admin';
 const SESSION_TOKEN = 'bulletev-session-v1';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { username, password } = await request.json();
 
-    if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
       const response = NextResponse.json({ success: true });
       response.cookies.set('bulletev-auth', SESSION_TOKEN, {
         httpOnly: true,
