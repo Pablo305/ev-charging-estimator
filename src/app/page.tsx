@@ -1,15 +1,19 @@
 import Link from 'next/link';
+import { LogoutButton } from '@/components/LogoutButton';
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#0B1220] text-white">
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          <h1 className="text-3xl font-bold">
-            BulletEV Estimate Generator
-          </h1>
-          <p className="mt-1 text-sm text-blue-300">Test Prototype v0.1.0</p>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
+          <div>
+            <h1 className="text-3xl font-bold">
+              BulletEV Estimate Generator
+            </h1>
+            <p className="mt-1 text-sm text-blue-300">Test Prototype v0.1.0</p>
+          </div>
+          <LogoutButton />
         </div>
       </header>
 
