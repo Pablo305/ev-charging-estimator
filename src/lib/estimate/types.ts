@@ -166,13 +166,16 @@ export type EstimateCategory =
   | 'PEDESTAL'
   | 'CIVIL'
   | 'DES/ENG'
-  | 'ELEC_LBR'
-  | 'ELEC_MAT'
+  | 'ELEC'
+  | 'ELEC LBR'
+  | 'ELEC LBR MAT'
+  | 'ELEC MAT'
   | 'MATERIAL'
+  | 'MISC'
   | 'NETWORK'
   | 'PERMIT'
   | 'SAFETY'
-  | 'SITE_WORK'
+  | 'SITE WORK'
   | 'SOFTWARE'
   | 'SERVICE_FEE'
   | 'EXCLUSION';
@@ -186,8 +189,10 @@ export interface EstimateLineItem {
   unitPrice: number;
   extendedPrice: number;
   pricingSource:
+    | 'catalog'
     | 'catalog_bulk'
     | 'catalog_msrp'
+    | 'catalog_override'
     | 'calculated'
     | 'allowance'
     | 'manual_override'

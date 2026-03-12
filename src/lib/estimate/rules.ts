@@ -4,12 +4,14 @@ import {
   ManualReviewTrigger,
 } from './types';
 import {
-  TESLA_UWC_ITEMS,
-  CHARGEPOINT_ITEMS,
-  PEDESTAL_PRICING,
-  INSTALLATION_COSTS,
-  ACCESSORY_PRICES,
+  PRICEBOOK,
+  findPricebookItem,
   findSuperchargerPackage,
+  resolvePrice,
+  KNOWN_OVERRIDES,
+  TESLA_SUPERCHARGER_PACKAGES,
+  SERVICE_FEES,
+  PricebookItem,
 } from './catalog';
 
 // ============================================================
@@ -36,7 +38,6 @@ function createCounters(): IdCounters {
   };
 }
 
-// Module-level counters scoped per generateEstimate call
 let _counters: IdCounters = createCounters();
 
 function line(
@@ -45,7 +46,7 @@ function line(
   return {
     ...partial,
     id: _counters.nextLineId(),
-    extendedPrice: partial.quantity * partial.unitPrice,
+    extendedPrice: Math.round(partial.quantity * partial.unitPrice * 100) / 100,
   };
 }
 
@@ -55,29 +56,72 @@ function review(
   return { ...partial, id: _counters.nextReviewId() };
 }
 
+/** Helper to generate a line from a pricebook item */
+function pricebookLine(
+  item: PricebookItem,
+  quantity: number,
+  overrides?: {
+    unitPrice?: number;
+    pricingSource?: EstimateLineItem['pricingSource'];
+    ruleName?: string;
+    ruleReason?: string;
+    sourceInputs?: string[];
+    manualReviewRequired?: boolean;
+    manualReviewReason?: string;
+    confidence?: 'high' | 'medium' | 'low';
+  },
+): EstimateLineItem {
+  const resolved = resolvePrice(item, true);
+  const unitPrice = overrides?.unitPrice ?? resolved.price ?? 0;
+  const source =
+    overrides?.pricingSource ??
+    (resolved.source === 'override'
+      ? 'catalog_override'
+      : resolved.source === 'catalog'
+        ? 'catalog'
+        : 'tbd');
+
+  return line({
+    category: item.category,
+    description: item.description,
+    quantity,
+    unit: item.unit,
+    unitPrice,
+    pricingSource: source as EstimateLineItem['pricingSource'],
+    ruleName: overrides?.ruleName ?? `${item.category} auto-select`,
+    ruleReason: overrides?.ruleReason ?? `Selected from pricebook: ${item.description}`,
+    sourceInputs: overrides?.sourceInputs ?? [],
+    manualReviewRequired:
+      overrides?.manualReviewRequired ?? (resolved.price === null),
+    manualReviewReason:
+      resolved.price === null
+        ? `No catalog price for: ${item.description}`
+        : overrides?.manualReviewReason,
+    confidence: overrides?.confidence ?? (resolved.price !== null ? 'high' : 'low'),
+  });
+}
+
 // ============================================================
 // Rule Categories
 // ============================================================
 
-// ── 1. Charger Hardware Rules ────────────────────────────────
+// ── 1. Charger Hardware Rules ──────────────────────────────────
 
 function chargerHardwareRules(
   input: EstimateInput,
 ): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
-  const { charger, estimateControls, purchasingChargers } = input;
-  const isBulk = estimateControls.pricingTier === 'bulk_discount';
+  const { charger, purchasingChargers, estimateControls } = input;
 
-  // If customer supplies chargers, skip hardware but note it
+  // Customer supplies chargers — skip hardware
   if (charger.isCustomerSupplied || purchasingChargers.responsibility === 'client') {
     reviews.push(
       review({
         field: 'charger.isCustomerSupplied',
         condition: 'Customer-supplied chargers',
         severity: 'info',
-        message:
-          'Charger hardware excluded from estimate - customer is supplying equipment.',
+        message: 'Charger hardware excluded — customer is supplying equipment. Install labor still included.',
       }),
     );
     return { items, reviews };
@@ -86,80 +130,51 @@ function chargerHardwareRules(
   const brandLower = charger.brand.toLowerCase();
   const modelLower = charger.model.toLowerCase();
 
-  // ── Tesla Supercharger ──
+  // ── Tesla Supercharger (L3 DCFC) ──
   if (
     brandLower.includes('tesla') &&
     (modelLower.includes('supercharger') || charger.chargingLevel === 'l3_dcfc')
   ) {
     const pkg = findSuperchargerPackage(charger.count);
     if (pkg) {
-      const price = isBulk
-        ? pkg.bulkPrice ?? pkg.msrpPrice ?? 0
-        : pkg.msrpPrice ?? 0;
+      const isBulk = estimateControls.pricingTier === 'bulk_discount';
+      const price = isBulk ? pkg.bulkPrice : pkg.msrpPrice;
       items.push(
         line({
           category: 'CHARGER',
           description: `${pkg.description} (${isBulk ? 'Bulk' : 'MSRP'})`,
           quantity: 1,
-          unit: 'package',
+          unit: 'PKG',
           unitPrice: price,
           pricingSource: isBulk ? 'catalog_bulk' : 'catalog_msrp',
-          ruleName: 'charger-supercharger-package',
-          ruleReason: `Selected ${pkg.model} package for ${charger.count} stalls. Price from Tesla commercial workbook.`,
-          sourceInputs: [
-            'charger.brand',
-            'charger.model',
-            'charger.count',
-            'estimateControls.pricingTier',
-          ],
-          manualReviewRequired: false,
-          confidence: 'high',
+          ruleName: 'Supercharger package selection',
+          ruleReason: `Selected ${pkg.stallCount}-stall package for ${charger.count} requested stalls. Price tier: ${isBulk ? 'Bulk Discount' : 'MSRP'}.`,
+          sourceInputs: ['charger.brand', 'charger.count', 'estimateControls.pricingTier'],
+          manualReviewRequired: pkg.stallCount !== charger.count,
+          manualReviewReason:
+            pkg.stallCount !== charger.count
+              ? `No exact ${charger.count}-stall package. Using ${pkg.stallCount}-stall.`
+              : undefined,
+          confidence: pkg.stallCount === charger.count ? 'high' : 'medium',
         }),
       );
-      if (pkg.availability !== 'available') {
+      if (pkg.availability === 'roadmap') {
         reviews.push(
           review({
             field: 'charger.model',
-            condition: `Package availability: ${pkg.availability}`,
+            condition: 'Roadmap product selected',
             severity: 'warning',
-            message: `${pkg.model} is not yet available (${pkg.availability}). Verify delivery timeline.`,
-          }),
-        );
-      }
-      if (pkg.stallCount !== charger.count) {
-        reviews.push(
-          review({
-            field: 'charger.count',
-            condition: `Requested ${charger.count} stalls, nearest package is ${pkg.stallCount}`,
-            severity: 'warning',
-            message: `No exact ${charger.count}-stall package exists. Using ${pkg.stallCount}-stall package. Verify with customer.`,
+            message: `${pkg.description} is not yet available (${pkg.availabilityNote}). Requires approval to quote.`,
           }),
         );
       }
     } else {
-      items.push(
-        line({
-          category: 'CHARGER',
-          description: `Tesla Supercharger - ${charger.count} stalls (custom configuration)`,
-          quantity: 1,
-          unit: 'package',
-          unitPrice: 0,
-          pricingSource: 'tbd',
-          ruleName: 'charger-supercharger-custom',
-          ruleReason:
-            'No standard package matches this stall count. Requires custom Tesla quote.',
-          sourceInputs: ['charger.brand', 'charger.count'],
-          manualReviewRequired: true,
-          manualReviewReason: 'No matching Supercharger package - needs custom quote',
-          confidence: 'low',
-        }),
-      );
       reviews.push(
         review({
           field: 'charger.count',
           condition: 'No matching Supercharger package',
           severity: 'critical',
-          message: `No standard Supercharger package for ${charger.count} stalls. Must obtain custom quote from Tesla.`,
+          message: `No Supercharger package fits ${charger.count} stalls. Custom quote required.`,
         }),
       );
     }
@@ -167,124 +182,129 @@ function chargerHardwareRules(
   }
 
   // ── Tesla UWC (L2) ──
-  if (
-    brandLower.includes('tesla') &&
-    (modelLower.includes('uwc') ||
-      modelLower.includes('wall connector') ||
-      modelLower.includes('universal'))
-  ) {
-    const uwc = TESLA_UWC_ITEMS[0];
-    const price = isBulk
-      ? uwc.bulkPrice ?? uwc.msrpPrice ?? 0
-      : uwc.msrpPrice ?? 0;
-    items.push(
-      line({
-        category: 'CHARGER',
-        description: `${uwc.description} (${isBulk ? 'Bulk Est.' : 'MSRP Est.'})`,
-        quantity: charger.count,
-        unit: 'each',
-        unitPrice: price,
-        pricingSource: 'industry_standard',
-        ruleName: 'charger-tesla-uwc',
-        ruleReason:
-          'Tesla UWC pricing is an industry estimate (not in Tesla commercial workbook). Verify with Tesla rep.',
-        sourceInputs: [
-          'charger.brand',
-          'charger.model',
-          'charger.count',
-          'estimateControls.pricingTier',
-        ],
-        manualReviewRequired: true,
-        manualReviewReason: 'UWC pricing is estimated - verify with Tesla',
-        confidence: 'medium',
-      }),
-    );
-    return { items, reviews };
-  }
-
-  // ── ChargePoint ──
-  if (brandLower.includes('chargepoint')) {
-    const match = CHARGEPOINT_ITEMS.find((cp) =>
-      modelLower.includes(cp.model.toLowerCase()),
-    );
-    if (match) {
-      const price = match.msrpPrice ?? 0;
+  if (brandLower.includes('tesla')) {
+    const uwcItem = findPricebookItem('charger-tesla-uwc-gen3');
+    if (uwcItem) {
       items.push(
-        line({
-          category: 'CHARGER',
-          description: `${match.description}`,
-          quantity: charger.count,
-          unit: 'each',
-          unitPrice: price,
-          pricingSource: price > 0 ? 'industry_standard' : 'tbd',
-          ruleName: 'charger-chargepoint-model',
-          ruleReason: `ChargePoint ${match.model} pricing is an industry estimate. Verify with ChargePoint rep.`,
+        pricebookLine(uwcItem, charger.count, {
+          ruleName: 'Tesla UWC hardware',
+          ruleReason: `${charger.count}x Tesla Universal Wall Connector at $${uwcItem.catalogPrice}/ea from pricebook`,
           sourceInputs: ['charger.brand', 'charger.model', 'charger.count'],
-          manualReviewRequired: true,
-          manualReviewReason:
-            'ChargePoint pricing is estimated - verify with rep',
-          confidence: 'medium',
-        }),
-      );
-    } else {
-      items.push(
-        line({
-          category: 'CHARGER',
-          description: `ChargePoint ${charger.model} (pricing TBD)`,
-          quantity: charger.count,
-          unit: 'each',
-          unitPrice: 0,
-          pricingSource: 'tbd',
-          ruleName: 'charger-chargepoint-unknown',
-          ruleReason:
-            'Unknown ChargePoint model - no catalog pricing available.',
-          sourceInputs: ['charger.brand', 'charger.model'],
-          manualReviewRequired: true,
-          manualReviewReason: 'Unknown model - needs manual pricing',
-          confidence: 'low',
-        }),
-      );
-      reviews.push(
-        review({
-          field: 'charger.model',
-          condition: 'Unknown ChargePoint model',
-          severity: 'critical',
-          message: `ChargePoint model "${charger.model}" not found in catalog. Manual pricing required.`,
         }),
       );
     }
     return { items, reviews };
   }
 
-  // ── Other / Unknown brand ──
-  items.push(
-    line({
-      category: 'CHARGER',
-      description: `${charger.brand} ${charger.model} (pricing TBD)`,
-      quantity: charger.count,
-      unit: 'each',
-      unitPrice: 0,
-      pricingSource: 'tbd',
-      ruleName: 'charger-unknown-brand',
-      ruleReason: `Brand "${charger.brand}" is not in the pricing catalog. Manual quote required.`,
-      sourceInputs: ['charger.brand', 'charger.model', 'charger.count'],
-      manualReviewRequired: true,
-      manualReviewReason: `No catalog pricing for ${charger.brand}`,
-      confidence: 'low',
-    }),
+  // ── ChargePoint ──
+  if (brandLower.includes('chargepoint')) {
+    // Try to match specific model from pricebook
+    const cpItems = PRICEBOOK.filter(
+      (p) => p.category === 'CHARGER' && p.description.toLowerCase().includes('chargepoint'),
+    );
+    let matched: PricebookItem | undefined;
+
+    // Match by model number and mount/port type
+    const mountKey = charger.mountType === 'wall' ? 'wall' : 'pedestal';
+    const portKey = charger.portType === 'dual' ? 'dual' : 'single';
+
+    if (modelLower.includes('cpf50')) {
+      if (portKey === 'dual') {
+        matched = findPricebookItem('charger-cp-cpf50-dual-cmk');
+      } else if (mountKey === 'wall') {
+        matched = findPricebookItem('charger-cp-cpf50-wall-single');
+      } else {
+        matched = findPricebookItem('charger-cp-cpf50-ped-single');
+      }
+    } else if (modelLower.includes('ct4011')) {
+      matched = findPricebookItem('charger-cp-ct4011-wall-single');
+    } else if (modelLower.includes('ct4021')) {
+      matched = findPricebookItem('charger-cp-ct4021-wall-dual');
+    } else if (modelLower.includes('ct4013')) {
+      matched = findPricebookItem('charger-cp-ct4013-ped-single');
+    } else if (modelLower.includes('ct4023')) {
+      matched = findPricebookItem('charger-cp-ct4023-ped-dual');
+    } else if (modelLower.includes('ct6013')) {
+      matched = findPricebookItem('charger-cp-ct6013-ped-single');
+    } else if (modelLower.includes('ct6023')) {
+      matched = findPricebookItem('charger-cp-ct6023-ped-dual');
+    } else {
+      // Generic ChargePoint match by mount+port
+      matched = cpItems.find((p) => {
+        const d = p.description.toLowerCase();
+        return d.includes(mountKey) && d.includes(portKey);
+      });
+    }
+
+    if (matched) {
+      items.push(
+        pricebookLine(matched, charger.count, {
+          ruleName: 'ChargePoint hardware',
+          ruleReason: `${charger.count}x ${matched.description}`,
+          sourceInputs: ['charger.brand', 'charger.model', 'charger.count', 'charger.mountType', 'charger.portType'],
+        }),
+      );
+      if (matched.catalogPrice === null) {
+        reviews.push(
+          review({
+            field: 'charger.model',
+            condition: 'No catalog price',
+            severity: 'critical',
+            message: `${matched.description} has no price in the pricebook. Manual pricing required.`,
+          }),
+        );
+      }
+    } else {
+      reviews.push(
+        review({
+          field: 'charger.model',
+          condition: 'ChargePoint model not found in pricebook',
+          severity: 'critical',
+          message: `Could not match ChargePoint model "${charger.model}" to pricebook. Manual selection required.`,
+        }),
+      );
+    }
+    return { items, reviews };
+  }
+
+  // ── Other brands (Blink, SWTCH, EV Connect, Xeal, etc.) ──
+  const otherBrandItems = PRICEBOOK.filter(
+    (p) => p.category === 'CHARGER' && p.description.toLowerCase().includes(brandLower),
   );
-  reviews.push(
-    review({
-      field: 'charger.brand',
-      condition: 'Brand not in catalog',
-      severity: 'critical',
-      message: `Brand "${charger.brand}" not found in pricing catalog. Must obtain quote.`,
-    }),
-  );
+  if (otherBrandItems.length > 0) {
+    const matched = otherBrandItems[0];
+    items.push(
+      pricebookLine(matched, charger.count, {
+        ruleName: `${charger.brand} hardware`,
+        ruleReason: `${charger.count}x ${matched.description}`,
+        sourceInputs: ['charger.brand', 'charger.count'],
+      }),
+    );
+    if (matched.catalogPrice === null) {
+      reviews.push(
+        review({
+          field: 'charger.model',
+          condition: 'No catalog price',
+          severity: 'critical',
+          message: `${matched.description} has no price in the pricebook. Manual pricing required.`,
+        }),
+      );
+    }
+  } else {
+    reviews.push(
+      review({
+        field: 'charger.brand',
+        condition: 'Brand not in pricebook',
+        severity: 'critical',
+        message: `Brand "${charger.brand}" not found in pricebook. Manual charger selection required.`,
+      }),
+    );
+  }
+
   return { items, reviews };
 }
 
-// ── 2. Pedestal Rules ────────────────────────────────────────
+// ── 2. Pedestal Rules ──────────────────────────────────────────
 
 function pedestalRules(
   input: EstimateInput,
@@ -293,36 +313,29 @@ function pedestalRules(
   const reviews: ManualReviewTrigger[] = [];
   const { charger } = input;
 
-  if (
-    charger.mountType === 'pedestal' ||
-    charger.mountType === 'mix' ||
-    charger.pedestalCount > 0
-  ) {
-    const qty =
-      charger.pedestalCount > 0 ? charger.pedestalCount : charger.count;
-    const isTesla = charger.brand.toLowerCase().includes('tesla');
-    const price = isTesla
-      ? PEDESTAL_PRICING.tesla_roi.price
-      : PEDESTAL_PRICING.l2_typical_mid.price;
-    const source = isTesla ? 'Tesla ROI calculator' : 'industry mid-range';
+  if (charger.mountType !== 'pedestal' && charger.mountType !== 'mix') {
+    return { items, reviews };
+  }
 
+  const pedCount = charger.pedestalCount > 0 ? charger.pedestalCount : charger.count;
+  const pedItem = findPricebookItem('pedestal-tesla-wc');
+
+  if (pedItem && input.charger.brand.toLowerCase().includes('tesla')) {
     items.push(
-      line({
-        category: 'PEDESTAL',
-        description: `Charger Pedestal/Mounting Post (${source})`,
-        quantity: qty,
-        unit: 'each',
-        unitPrice: price,
-        pricingSource: 'industry_standard',
-        ruleName: 'pedestal-mount',
-        ruleReason: `${qty} pedestals based on mount type "${charger.mountType}" and pedestal count. Price from ${source}.`,
-        sourceInputs: [
-          'charger.mountType',
-          'charger.pedestalCount',
-          'charger.brand',
-        ],
-        manualReviewRequired: false,
-        confidence: 'medium',
+      pricebookLine(pedItem, pedCount, {
+        ruleName: 'Tesla pedestal',
+        ruleReason: `${pedCount}x Tesla pedestal at $${pedItem.catalogPrice}/ea. Mount type: ${charger.mountType}.`,
+        sourceInputs: ['charger.mountType', 'charger.pedestalCount', 'charger.brand'],
+      }),
+    );
+  } else if (charger.mountType === 'pedestal' || charger.mountType === 'mix') {
+    // Non-Tesla pedestal — no pricebook entry, needs manual review
+    reviews.push(
+      review({
+        field: 'charger.mountType',
+        condition: 'Non-Tesla pedestal needed',
+        severity: 'warning',
+        message: `Pedestal mount required for ${charger.brand} but no pedestal item in pricebook. Manual pricing needed.`,
       }),
     );
   }
@@ -330,265 +343,73 @@ function pedestalRules(
   return { items, reviews };
 }
 
-// ── 3. Parking Environment / Civil Rules ─────────────────────
+// ── 3. Install Labor Rules ─────────────────────────────────────
 
-function civilRules(
+function installLaborRules(
   input: EstimateInput,
 ): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
-  const { parkingEnvironment, electrical, charger } = input;
-  const costs = INSTALLATION_COSTS;
+  const { charger, chargerInstall } = input;
 
-  // Mixed environment → force manual review on all civil items
-  if (parkingEnvironment.type === 'mixed') {
+  // Skip if Supercharger (install handled differently)
+  if (
+    charger.brand.toLowerCase().includes('tesla') &&
+    (charger.model.toLowerCase().includes('supercharger') || charger.chargingLevel === 'l3_dcfc')
+  ) {
+    return { items, reviews };
+  }
+
+  if (chargerInstall.responsibility === 'client') {
     reviews.push(
       review({
-        field: 'parkingEnvironment.type',
-        condition: 'Mixed parking environment',
-        severity: 'critical',
-        message:
-          'Mixed parking environment (garage + surface lot) requires site visit for accurate civil estimate. All civil line items flagged for manual review.',
+        field: 'chargerInstall.responsibility',
+        condition: 'Client installs chargers',
+        severity: 'info',
+        message: 'Charger installation excluded — client responsibility.',
+      }),
+    );
+    return { items, reviews };
+  }
+
+  // Determine correct install labor item
+  const isWall = charger.mountType === 'wall';
+  const isDual = charger.portType === 'dual';
+  const isXeal = charger.brand.toLowerCase().includes('xeal');
+
+  let installItemId: string;
+  if (isXeal && isDual) {
+    installItemId = 'eleclbr-install-xeal-ped-dual';
+  } else if (isWall && isDual) {
+    installItemId = 'eleclbr-install-wall-dual';
+  } else if (isWall) {
+    installItemId = 'eleclbr-install-wall-single';
+  } else if (isDual) {
+    installItemId = 'eleclbr-install-ped-dual';
+  } else {
+    installItemId = 'eleclbr-install-ped-single';
+  }
+
+  // For wall mount, default to wall; for pedestal, default to pedestal
+  if (charger.mountType === null || charger.mountType === 'other') {
+    installItemId = isDual ? 'eleclbr-install-wall-dual' : 'eleclbr-install-wall-single';
+    reviews.push(
+      review({
+        field: 'charger.mountType',
+        condition: 'Mount type unknown',
+        severity: 'warning',
+        message: 'Mount type not specified — defaulting to wall-mounted install labor. Verify before finalizing.',
       }),
     );
   }
 
-  // ── Garage-specific ──
-  if (
-    parkingEnvironment.type === 'parking_garage' ||
-    parkingEnvironment.type === 'mixed'
-  ) {
-    // PT Slab scan
-    if (
-      parkingEnvironment.hasPTSlab === true ||
-      parkingEnvironment.hasPTSlab === null
-    ) {
-      items.push(
-        line({
-          category: 'CIVIL',
-          description: 'Post-Tension Slab Scan (GPR)',
-          quantity: 1,
-          unit: 'lump sum',
-          unitPrice: costs.slabScan.mid,
-          pricingSource: 'industry_standard',
-          ruleName: 'civil-slab-scan',
-          ruleReason:
-            parkingEnvironment.hasPTSlab === null
-              ? 'PT slab status unknown - including slab scan as precaution. If confirmed non-PT, this can be removed.'
-              : 'PT slab confirmed or suspected - GPR scan required before any penetrations.',
-          sourceInputs: [
-            'parkingEnvironment.type',
-            'parkingEnvironment.hasPTSlab',
-          ],
-          manualReviewRequired: parkingEnvironment.hasPTSlab === null,
-          manualReviewReason:
-            parkingEnvironment.hasPTSlab === null
-              ? 'PT slab status unknown - verify before finalizing'
-              : undefined,
-          confidence: parkingEnvironment.hasPTSlab === null ? 'low' : 'medium',
-        }),
-      );
-      if (parkingEnvironment.hasPTSlab === null) {
-        reviews.push(
-          review({
-            field: 'parkingEnvironment.hasPTSlab',
-            condition: 'PT slab status unknown',
-            severity: 'warning',
-            message:
-              'Post-tension slab status is unknown. If the garage has PT cables, core drilling locations are restricted. Request structural drawings.',
-          }),
-        );
-      }
-    }
-
-    // Core drilling
-    if (
-      parkingEnvironment.coringRequired === true ||
-      parkingEnvironment.coringRequired === null
-    ) {
-      const coreQty = Math.max(charger.count, 2);
-      items.push(
-        line({
-          category: 'CIVIL',
-          description: 'Core Drilling Through Concrete Deck',
-          quantity: coreQty,
-          unit: 'each',
-          unitPrice: costs.coreDrilling.mid,
-          pricingSource: 'industry_standard',
-          ruleName: 'civil-core-drilling',
-          ruleReason: `Estimated ${coreQty} core penetrations for conduit routing through garage deck.`,
-          sourceInputs: [
-            'parkingEnvironment.coringRequired',
-            'charger.count',
-          ],
-          manualReviewRequired: parkingEnvironment.type === 'mixed',
-          manualReviewReason:
-            parkingEnvironment.type === 'mixed'
-              ? 'Mixed environment - verify core locations'
-              : undefined,
-          confidence: 'medium',
-        }),
-      );
-    }
-
-    // Fire-rated penetrations
-    if (parkingEnvironment.fireRatedPenetrations === true) {
-      items.push(
-        line({
-          category: 'CIVIL',
-          description: 'Fire-Rated Penetration Sealing',
-          quantity: Math.max(charger.count, 2),
-          unit: 'each',
-          unitPrice: costs.fireRatedPenetration.mid,
-          pricingSource: 'industry_standard',
-          ruleName: 'civil-fire-penetration',
-          ruleReason:
-            'Fire-rated assembly penetrations require firestop sealant per building code.',
-          sourceInputs: ['parkingEnvironment.fireRatedPenetrations'],
-          manualReviewRequired: false,
-          confidence: 'medium',
-        }),
-      );
-    }
-  }
-
-  // ── Surface lot specific ──
-  if (
-    parkingEnvironment.type === 'surface_lot' ||
-    parkingEnvironment.type === 'mixed'
-  ) {
-    const distance = electrical.distanceToPanel_ft ?? 75;
-
-    // Trenching
-    if (
-      parkingEnvironment.trenchingRequired === true ||
-      parkingEnvironment.trenchingRequired === null
-    ) {
-      items.push(
-        line({
-          category: 'CIVIL',
-          description: `Trenching (${parkingEnvironment.surfaceType ?? 'unknown surface'})`,
-          quantity: distance,
-          unit: 'linear ft',
-          unitPrice: costs.trenchingPerFt.mid,
-          pricingSource: 'industry_standard',
-          ruleName: 'civil-trenching',
-          ruleReason: `Trenching estimated at ${distance}ft based on panel distance. Surface type: ${parkingEnvironment.surfaceType ?? 'unknown'}.`,
-          sourceInputs: [
-            'parkingEnvironment.trenchingRequired',
-            'electrical.distanceToPanel_ft',
-            'parkingEnvironment.surfaceType',
-          ],
-          manualReviewRequired:
-            parkingEnvironment.trenchingRequired === null ||
-            parkingEnvironment.type === 'mixed',
-          manualReviewReason: 'Trenching need/distance not confirmed',
-          confidence:
-            parkingEnvironment.trenchingRequired === null ? 'low' : 'medium',
-        }),
-      );
-    }
-
-    // Boring
-    if (parkingEnvironment.boringRequired === true) {
-      const boringDist = Math.min(distance, 50);
-      items.push(
-        line({
-          category: 'CIVIL',
-          description: 'Directional Boring (under obstacles)',
-          quantity: boringDist,
-          unit: 'linear ft',
-          unitPrice: costs.boringPerFt.mid,
-          pricingSource: 'industry_standard',
-          ruleName: 'civil-boring',
-          ruleReason: `Boring required for ${boringDist}ft to pass under obstacles (sidewalks, driveways, etc.)`,
-          sourceInputs: ['parkingEnvironment.boringRequired'],
-          manualReviewRequired: false,
-          confidence: 'medium',
-        }),
-      );
-    }
-
-    // Surface restoration
-    if (
-      parkingEnvironment.trenchingRequired === true ||
-      parkingEnvironment.trenchingRequired === null
-    ) {
-      items.push(
-        line({
-          category: 'SITE_WORK',
-          description: `Surface Restoration (${parkingEnvironment.surfaceType ?? 'asphalt'} patching)`,
-          quantity: distance,
-          unit: 'linear ft',
-          unitPrice: 15,
-          pricingSource: 'industry_standard',
-          ruleName: 'civil-surface-restore',
-          ruleReason:
-            'Trench restoration included for trenched areas. Assumes standard 24" wide trench patch.',
-          sourceInputs: ['parkingEnvironment.surfaceType'],
-          manualReviewRequired: false,
-          confidence: 'medium',
-        }),
-      );
-    }
-  }
-
-  // Concrete pad
-  if (input.accessories.padRequired) {
-    const padPrice = ACCESSORY_PRICES.find((a) => a.id === 'acc-pad');
+  const installItem = findPricebookItem(installItemId);
+  if (installItem) {
     items.push(
-      line({
-        category: 'CIVIL',
-        description: 'Concrete Charging Pad',
-        quantity: charger.count,
-        unit: 'each',
-        unitPrice: padPrice?.midPrice ?? 2750,
-        pricingSource: 'industry_standard',
-        ruleName: 'civil-concrete-pad',
-        ruleReason:
-          'Concrete pads requested for charger mounting locations.',
-        sourceInputs: ['accessories.padRequired', 'charger.count'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-  }
-
-  // Traffic control
-  if (parkingEnvironment.trafficControlRequired === true) {
-    items.push(
-      line({
-        category: 'SAFETY',
-        description: 'Traffic Control / Flagging (estimated 3 days)',
-        quantity: 3,
-        unit: 'days',
-        unitPrice: costs.trafficControl.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'civil-traffic-control',
-        ruleReason:
-          'Traffic control flagging needed during civil work in active parking areas.',
-        sourceInputs: ['parkingEnvironment.trafficControlRequired'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-  }
-
-  // Debris removal
-  if (input.accessories.debrisRemoval) {
-    items.push(
-      line({
-        category: 'SITE_WORK',
-        description: 'Debris Removal and Site Cleanup',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.debrisRemoval.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'civil-debris-removal',
-        ruleReason: 'Post-construction debris removal and site cleanup.',
-        sourceInputs: ['accessories.debrisRemoval'],
-        manualReviewRequired: false,
-        confidence: 'medium',
+      pricebookLine(installItem, charger.count, {
+        ruleName: 'Charger install labor',
+        ruleReason: `${charger.count}x ${installItem.description} at $${installItem.catalogPrice}/ea`,
+        sourceInputs: ['charger.count', 'charger.mountType', 'charger.portType', 'charger.brand'],
       }),
     );
   }
@@ -596,7 +417,7 @@ function civilRules(
   return { items, reviews };
 }
 
-// ── 4. Electrical Rules ──────────────────────────────────────
+// ── 4. Electrical Material Rules ───────────────────────────────
 
 function electricalRules(
   input: EstimateInput,
@@ -604,212 +425,101 @@ function electricalRules(
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
   const { electrical, charger, makeReady } = input;
-  const costs = INSTALLATION_COSTS;
 
-  // Skip electrical if not Bullet's responsibility
+  // Skip electrical if make ready is client responsibility
   if (makeReady.responsibility === 'client') {
     reviews.push(
       review({
         field: 'makeReady.responsibility',
-        condition: 'Client-responsible make-ready',
+        condition: 'Client handles make-ready',
         severity: 'info',
-        message:
-          'Electrical make-ready is client responsibility. Electrical materials/labor excluded.',
+        message: 'Electrical make-ready work excluded — client responsibility.',
       }),
     );
     return { items, reviews };
   }
 
-  const distance = electrical.distanceToPanel_ft ?? 75;
-  const isLongRun = distance > 100;
+  // ── Conduit, Wire, Breakers (ELEC LBR MAT) ──
+  const conduitItem = findPricebookItem('eleclbrmat-conduit-wire');
+  if (conduitItem) {
+    const distance = electrical.distanceToPanel_ft ?? 50; // default 50ft if unknown
+    const distanceKnown = electrical.distanceToPanel_ft !== null;
 
-  // Unknown capacity
+    items.push(
+      pricebookLine(conduitItem, distance, {
+        ruleName: 'Conduit/wire/breakers',
+        ruleReason: `${distance} LF of EMT conduit, wire, breakers at $${resolvePrice(conduitItem, true).price}/ft. ${distanceKnown ? 'Distance from SOW.' : 'Distance estimated at 50ft — verify at site walk.'}`,
+        sourceInputs: ['electrical.distanceToPanel_ft', 'charger.count'],
+        manualReviewRequired: !distanceKnown,
+        manualReviewReason: !distanceKnown
+          ? 'Electrical distance not specified — using 50ft estimate'
+          : undefined,
+        confidence: distanceKnown ? 'high' : 'medium',
+      }),
+    );
+
+    if (!distanceKnown) {
+      reviews.push(
+        review({
+          field: 'electrical.distanceToPanel_ft',
+          condition: 'Distance unknown',
+          severity: 'warning',
+          message: 'Electrical distance not specified. Using 50ft default. Verify at site walk.',
+        }),
+      );
+    }
+  }
+
+  // ── Sub-panel (if needed) ──
+  if (electrical.panelUpgradeRequired === true || charger.count >= 4) {
+    const subpanelItem = findPricebookItem('eleclbrmat-subpanel');
+    if (subpanelItem) {
+      items.push(
+        pricebookLine(subpanelItem, 1, {
+          ruleName: 'EV sub-panel',
+          ruleReason: charger.count >= 4
+            ? `Sub-panel recommended for ${charger.count} chargers`
+            : 'Panel upgrade flagged in SOW',
+          sourceInputs: ['electrical.panelUpgradeRequired', 'charger.count'],
+          confidence: electrical.panelUpgradeRequired === true ? 'high' : 'medium',
+        }),
+      );
+    }
+  }
+
+  // ── Transformer (ELEC) ──
+  if (electrical.transformerRequired === true) {
+    const xfrmrItem = findPricebookItem('elec-transformer');
+    if (xfrmrItem) {
+      items.push(
+        pricebookLine(xfrmrItem, 1, {
+          ruleName: 'Transformer upgrade',
+          ruleReason: 'Transformer required per SOW — TBD pricing, requires manual quote.',
+          sourceInputs: ['electrical.transformerRequired'],
+          manualReviewRequired: true,
+          manualReviewReason: 'Transformer pricing is always TBD — requires site-specific quote',
+          confidence: 'low',
+        }),
+      );
+      reviews.push(
+        review({
+          field: 'electrical.transformerRequired',
+          condition: 'Transformer needed',
+          severity: 'critical',
+          message: 'Transformer upgrade required — pricing TBD. Cannot auto-price.',
+        }),
+      );
+    }
+  }
+
+  // ── Capacity unknown ──
   if (!electrical.availableCapacityKnown) {
     reviews.push(
       review({
         field: 'electrical.availableCapacityKnown',
         condition: 'Electrical capacity unknown',
-        severity: 'critical',
-        message:
-          'Available electrical capacity is unknown. A load calculation or utility survey is required before finalizing the estimate.',
-      }),
-    );
-    // Add load calculation
-    items.push(
-      line({
-        category: 'ELEC_LBR',
-        description: 'Electrical Load Calculation',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.loadCalc.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'elec-load-calc',
-        ruleReason:
-          'Electrical capacity is unknown - load calculation included to determine available capacity.',
-        sourceInputs: ['electrical.availableCapacityKnown'],
-        manualReviewRequired: true,
-        manualReviewReason: 'Capacity unknown - load calc required first',
-        confidence: 'medium',
-      }),
-    );
-  }
-
-  // Conduit
-  const conduitMultiplier = isLongRun ? 1.15 : 1.0; // 15% extra for long runs
-  items.push(
-    line({
-      category: 'ELEC_MAT',
-      description: `Conduit Run (EMT/rigid, ${distance}ft)`,
-      quantity: Math.ceil(distance * conduitMultiplier),
-      unit: 'linear ft',
-      unitPrice: costs.conduitPerFt.mid,
-      pricingSource: 'industry_standard',
-      ruleName: 'elec-conduit',
-      ruleReason: `Conduit for ${distance}ft run from panel to charger location.${isLongRun ? ' Long run (>100ft) - added 15% for fittings/bends.' : ''}`,
-      sourceInputs: ['electrical.distanceToPanel_ft'],
-      manualReviewRequired: electrical.distanceToPanel_ft === null,
-      manualReviewReason:
-        electrical.distanceToPanel_ft === null
-          ? 'Distance to panel not specified - using 75ft estimate'
-          : undefined,
-      confidence: electrical.distanceToPanel_ft !== null ? 'medium' : 'low',
-    }),
-  );
-
-  // Wire
-  const wireGaugeFactor =
-    electrical.serviceType === '480v_3phase' ? 1.5 : 1.0;
-  items.push(
-    line({
-      category: 'ELEC_MAT',
-      description: `Wire/Cable (${electrical.serviceType ?? 'TBD voltage'})`,
-      quantity: Math.ceil(distance * conduitMultiplier),
-      unit: 'linear ft',
-      unitPrice: Math.round(costs.wirePerFt.mid * wireGaugeFactor),
-      pricingSource: 'industry_standard',
-      ruleName: 'elec-wire',
-      ruleReason: `Wire sized for ${electrical.serviceType ?? 'unknown'} service.${wireGaugeFactor > 1 ? ' 480V 3-phase requires heavier gauge - 1.5x cost factor applied.' : ''}`,
-      sourceInputs: [
-        'electrical.serviceType',
-        'electrical.distanceToPanel_ft',
-      ],
-      manualReviewRequired: electrical.serviceType === null || electrical.serviceType === 'unknown',
-      manualReviewReason: 'Service type unknown - wire gauge cannot be determined',
-      confidence: electrical.serviceType !== null && electrical.serviceType !== 'unknown' ? 'medium' : 'low',
-    }),
-  );
-
-  // Electrical labor
-  const laborHours =
-    charger.count * 8 + Math.ceil(distance / 20) * 2 + (isLongRun ? 8 : 0);
-  items.push(
-    line({
-      category: 'ELEC_LBR',
-      description: 'Electrical Installation Labor',
-      quantity: laborHours,
-      unit: 'hours',
-      unitPrice: costs.electricalLabor.mid,
-      pricingSource: 'industry_standard',
-      ruleName: 'elec-labor',
-      ruleReason: `Estimated ${laborHours} hours: ${charger.count} chargers x 8hr + distance factor + ${isLongRun ? 'long run premium' : 'standard'}.`,
-      sourceInputs: ['charger.count', 'electrical.distanceToPanel_ft'],
-      manualReviewRequired: false,
-      confidence: 'medium',
-    }),
-  );
-
-  // Breakers
-  if (electrical.breakerSpaceAvailable !== false) {
-    items.push(
-      line({
-        category: 'ELEC_MAT',
-        description: `Circuit Breakers (${charger.ampsPerCharger ?? 40}A)`,
-        quantity: charger.count,
-        unit: 'each',
-        unitPrice: 150,
-        pricingSource: 'industry_standard',
-        ruleName: 'elec-breakers',
-        ruleReason: `${charger.count} breakers for individual charger circuits.`,
-        sourceInputs: [
-          'charger.count',
-          'charger.ampsPerCharger',
-          'electrical.breakerSpaceAvailable',
-        ],
-        manualReviewRequired: electrical.breakerSpaceAvailable === null,
-        manualReviewReason: 'Breaker space availability unknown',
-        confidence: 'medium',
-      }),
-    );
-  }
-
-  // Panel upgrade
-  if (electrical.panelUpgradeRequired === true) {
-    items.push(
-      line({
-        category: 'ELEC_MAT',
-        description: 'Electrical Panel Upgrade',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.panelUpgrade.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'elec-panel-upgrade',
-        ruleReason:
-          'Panel upgrade required to accommodate additional charging load.',
-        sourceInputs: ['electrical.panelUpgradeRequired'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-  } else if (electrical.panelUpgradeRequired === null) {
-    reviews.push(
-      review({
-        field: 'electrical.panelUpgradeRequired',
-        condition: 'Panel upgrade need unknown',
         severity: 'warning',
-        message:
-          'Panel upgrade requirement is unknown. Load calculation will determine if upgrade is needed.',
-      }),
-    );
-  }
-
-  // Transformer
-  if (electrical.transformerRequired === true) {
-    items.push(
-      line({
-        category: 'ELEC_MAT',
-        description: 'Step-Down Transformer',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.transformer.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'elec-transformer',
-        ruleReason:
-          'Transformer required for voltage conversion to charger requirements.',
-        sourceInputs: ['electrical.transformerRequired'],
-        manualReviewRequired: true,
-        manualReviewReason:
-          'Transformer sizing depends on total load - verify with engineer',
-        confidence: 'medium',
-      }),
-    );
-  }
-
-  // Switchgear
-  if (electrical.switchgearRequired === true) {
-    items.push(
-      line({
-        category: 'ELEC_MAT',
-        description: 'Switchgear / Distribution Equipment',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.switchgear.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'elec-switchgear',
-        ruleReason: 'Switchgear required for load distribution.',
-        sourceInputs: ['electrical.switchgearRequired'],
-        manualReviewRequired: true,
-        manualReviewReason: 'Switchgear spec depends on total load',
-        confidence: 'medium',
+        message: 'Available electrical capacity not confirmed. May need panel upgrade or transformer after site evaluation.',
       }),
     );
   }
@@ -817,7 +527,145 @@ function electricalRules(
   return { items, reviews };
 }
 
-// ── 5. Permit / Design Engineering Rules ─────────────────────
+// ── 5. Civil / Parking Environment Rules ───────────────────────
+
+function civilRules(
+  input: EstimateInput,
+): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
+  const items: EstimateLineItem[] = [];
+  const reviews: ManualReviewTrigger[] = [];
+  const { parkingEnvironment, electrical, charger } = input;
+  const distance = electrical.distanceToPanel_ft ?? 50;
+
+  // ── MIXED environment → force manual review ──
+  if (parkingEnvironment.type === 'mixed') {
+    reviews.push(
+      review({
+        field: 'parkingEnvironment.type',
+        condition: 'Mixed parking environment',
+        severity: 'critical',
+        message: 'Mixed parking environment (garage + surface lot). All civil line items require manual review — cannot auto-determine scope split.',
+      }),
+    );
+  }
+
+  // ── Parking Garage logic ──
+  if (parkingEnvironment.type === 'parking_garage' || parkingEnvironment.type === 'mixed') {
+    // Coring & slab scan
+    const coringItem = findPricebookItem('civil-coring-slab-scan');
+    if (coringItem) {
+      const coringQty = Math.max(1, Math.ceil(charger.count / 2));
+      items.push(
+        pricebookLine(coringItem, coringQty, {
+          ruleName: 'Garage coring & slab scan',
+          ruleReason: `Parking garage requires coring for conduit routing. ${coringQty} locations estimated. Catalog: $${coringItem.catalogPrice}, typical override: $${KNOWN_OVERRIDES['civil-coring-slab-scan']?.typicalOverride ?? coringItem.catalogPrice}.`,
+          sourceInputs: ['parkingEnvironment.type', 'charger.count'],
+          manualReviewRequired: parkingEnvironment.type === 'mixed',
+          manualReviewReason: parkingEnvironment.type === 'mixed' ? 'Mixed environment — verify garage scope' : undefined,
+          confidence: parkingEnvironment.type === 'mixed' ? 'low' : 'medium',
+        }),
+      );
+    }
+
+    // PT slab check
+    if (parkingEnvironment.hasPTSlab === true || parkingEnvironment.hasPTSlab === null) {
+      reviews.push(
+        review({
+          field: 'parkingEnvironment.hasPTSlab',
+          condition: parkingEnvironment.hasPTSlab === null ? 'PT slab status unknown' : 'PT slab present',
+          severity: parkingEnvironment.hasPTSlab === null ? 'critical' : 'warning',
+          message: parkingEnvironment.hasPTSlab === null
+            ? 'Post-tensioned slab status unknown in garage. MUST determine before estimating — coring into PT cables is catastrophic.'
+            : 'Post-tensioned slab confirmed. Slab scan mandatory before any coring.',
+        }),
+      );
+    }
+
+    // Concrete cutting in garage
+    const concreteCutItem = findPricebookItem('civil-concrete-cutting');
+    if (concreteCutItem && distance > 0) {
+      const cutDist = Math.min(distance, 100); // cap at reasonable garage distance
+      items.push(
+        pricebookLine(concreteCutItem, cutDist, {
+          ruleName: 'Garage concrete cutting',
+          ruleReason: `${cutDist} LF of concrete cutting & trenching in garage at $${concreteCutItem.catalogPrice}/ft`,
+          sourceInputs: ['parkingEnvironment.type', 'electrical.distanceToPanel_ft'],
+          manualReviewRequired: parkingEnvironment.type === 'mixed',
+          confidence: 'medium',
+        }),
+      );
+    }
+  }
+
+  // ── Surface Lot logic ──
+  if (parkingEnvironment.type === 'surface_lot' || parkingEnvironment.type === 'mixed') {
+    // Trenching
+    if (parkingEnvironment.trenchingRequired !== false) {
+      const trenchItem = findPricebookItem('civil-trenching');
+      if (trenchItem && distance > 0) {
+        items.push(
+          pricebookLine(trenchItem, distance, {
+            ruleName: 'Surface trenching',
+            ruleReason: `${distance} LF trenching in soft/normal soil at $${trenchItem.catalogPrice}/ft`,
+            sourceInputs: ['parkingEnvironment.type', 'parkingEnvironment.trenchingRequired', 'electrical.distanceToPanel_ft'],
+            manualReviewRequired: parkingEnvironment.type === 'mixed',
+            confidence: 'medium',
+          }),
+        );
+      }
+    }
+
+    // Boring (if flagged or under hard surface)
+    if (parkingEnvironment.boringRequired === true) {
+      const boreItem = findPricebookItem('civil-boring-hand');
+      if (boreItem) {
+        const boreDist = Math.min(distance, 50);
+        items.push(
+          pricebookLine(boreItem, boreDist, {
+            ruleName: 'Surface boring',
+            ruleReason: `${boreDist} LF boring by hand at $${boreItem.catalogPrice}/ft`,
+            sourceInputs: ['parkingEnvironment.boringRequired', 'electrical.distanceToPanel_ft'],
+            confidence: 'medium',
+          }),
+        );
+      }
+    }
+
+    // Concrete pads (for pedestal mount on surface)
+    if (charger.mountType === 'pedestal' && parkingEnvironment.type === 'surface_lot') {
+      const padItem = findPricebookItem('civil-concrete-pad');
+      if (padItem) {
+        const padCount = charger.pedestalCount > 0 ? charger.pedestalCount : charger.count;
+        if (padCount >= 2) {
+          items.push(
+            pricebookLine(padItem, padCount, {
+              ruleName: 'Concrete pads for pedestals',
+              ruleReason: `${padCount}x concrete pads at $${padItem.catalogPrice}/ea. Minimum order 2.`,
+              sourceInputs: ['charger.mountType', 'charger.pedestalCount', 'parkingEnvironment.type'],
+              confidence: 'medium',
+            }),
+          );
+        }
+      }
+    }
+  }
+
+  // ── No parking environment specified ──
+  if (parkingEnvironment.type === null) {
+    reviews.push(
+      review({
+        field: 'parkingEnvironment.type',
+        condition: 'Parking environment not specified',
+        severity: 'warning',
+        message: 'Parking environment not specified. Civil work scope cannot be accurately determined. Defaulting to minimal civil items.',
+      }),
+    );
+  }
+
+  return { items, reviews };
+}
+
+// ── 6. Permit & Design/Engineering Rules ───────────────────────
 
 function permitDesignRules(
   input: EstimateInput,
@@ -825,106 +673,86 @@ function permitDesignRules(
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
   const { permit, designEngineering } = input;
-  const costs = INSTALLATION_COSTS;
 
-  // Permit
-  if (permit.responsibility === 'bullet') {
-    items.push(
-      line({
-        category: 'PERMIT',
-        description: 'Permit Filing and Management',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: 1_500,
-        pricingSource: 'industry_standard',
-        ruleName: 'permit-labor',
-        ruleReason:
-          'Bullet Energy handles permit filing. Includes application prep, submission, and inspection coordination.',
-        sourceInputs: ['permit.responsibility'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-    const feeAmount = permit.feeAllowance ?? costs.permitFee.mid;
-    items.push(
-      line({
-        category: 'PERMIT',
-        description: 'Permit Fee Allowance',
-        quantity: 1,
-        unit: 'allowance',
-        unitPrice: feeAmount,
-        pricingSource:
-          permit.feeAllowance !== null ? 'allowance' : 'industry_standard',
-        ruleName: 'permit-fee',
-        ruleReason:
-          permit.feeAllowance !== null
-            ? `Permit fee allowance of $${feeAmount} specified in SOW.`
-            : `No permit fee specified - using industry average of $${feeAmount}.`,
-        sourceInputs: ['permit.responsibility', 'permit.feeAllowance'],
-        manualReviewRequired: permit.feeAllowance === null,
-        manualReviewReason: 'Permit fee not specified - using estimate',
-        confidence: permit.feeAllowance !== null ? 'high' : 'low',
-      }),
-    );
-  } else if (permit.responsibility === 'tbd') {
-    reviews.push(
-      review({
-        field: 'permit.responsibility',
-        condition: 'Permit responsibility TBD',
-        severity: 'warning',
-        message:
-          'Permit responsibility not determined. Clarify with customer before finalizing.',
-      }),
-    );
-  }
-
-  // Design / Engineering
-  if (designEngineering.responsibility === 'bullet') {
-    if (designEngineering.stampedPlansRequired === true) {
+  // ── Permit Fees ──
+  if (permit.responsibility === 'bullet' || permit.responsibility === null) {
+    const permitItem = findPricebookItem('permit-fees');
+    if (permitItem) {
       items.push(
-        line({
-          category: 'DES/ENG',
-          description: 'Stamped Engineering Plans (PE)',
-          quantity: 1,
-          unit: 'lump sum',
-          unitPrice: costs.engineeringPlans.mid,
-          pricingSource: 'industry_standard',
-          ruleName: 'design-stamped-plans',
-          ruleReason:
-            'PE-stamped plans required by jurisdiction. Includes electrical and site plans.',
-          sourceInputs: [
-            'designEngineering.responsibility',
-            'designEngineering.stampedPlansRequired',
-          ],
-          manualReviewRequired: false,
-          confidence: 'medium',
-        }),
-      );
-    } else {
-      items.push(
-        line({
-          category: 'DES/ENG',
-          description: 'Design & Engineering (non-stamped)',
-          quantity: 1,
-          unit: 'lump sum',
-          unitPrice: Math.round(costs.engineeringPlans.mid * 0.6),
-          pricingSource: 'industry_standard',
-          ruleName: 'design-basic',
-          ruleReason:
-            'Basic design package (no PE stamp). Includes site layout, electrical design, and as-built documentation.',
-          sourceInputs: ['designEngineering.responsibility'],
-          manualReviewRequired: designEngineering.stampedPlansRequired === null,
-          manualReviewReason: 'Stamped plan requirement not confirmed',
-          confidence: 'medium',
+        pricebookLine(permitItem, 1, {
+          ruleName: 'Permit fees',
+          ruleReason: 'Permit fees billed at actual cost + 10%. $0 placeholder — actual cost TBD.',
+          sourceInputs: ['permit.responsibility'],
+          confidence: 'high',
         }),
       );
     }
   }
 
+  // ── Engineered Plans ──
+  if (designEngineering.responsibility === 'bullet' || designEngineering.responsibility === null) {
+    const plansItem = findPricebookItem('deseng-stamped-plans');
+    if (plansItem) {
+      items.push(
+        pricebookLine(plansItem, 1, {
+          ruleName: 'Engineered stamped plans',
+          ruleReason: `Stamped plan set. Catalog: $${plansItem.catalogPrice}, typical override: $${KNOWN_OVERRIDES['deseng-stamped-plans']?.typicalOverride}.`,
+          sourceInputs: ['designEngineering.responsibility'],
+        }),
+      );
+    }
+
+    // Load calculations
+    const loadCalcItem = findPricebookItem('deseng-load-calc');
+    if (loadCalcItem) {
+      items.push(
+        pricebookLine(loadCalcItem, 1, {
+          ruleName: 'Load calculations',
+          ruleReason: `Load calculation. Catalog: $${loadCalcItem.catalogPrice}, typical override: $${KNOWN_OVERRIDES['deseng-load-calc']?.typicalOverride}.`,
+          sourceInputs: ['designEngineering.responsibility'],
+        }),
+      );
+    }
+
+    // Utility coordination
+    const utilCoordItem = findPricebookItem('deseng-utility-coord');
+    if (utilCoordItem) {
+      items.push(
+        pricebookLine(utilCoordItem, 1, {
+          ruleName: 'Utility coordination',
+          ruleReason: `Up to 2 in-person visits at $${utilCoordItem.catalogPrice}`,
+          sourceInputs: ['designEngineering.responsibility'],
+        }),
+      );
+    }
+
+    // Private utility mark-out
+    const markoutItem = findPricebookItem('deseng-private-utility-markout');
+    if (markoutItem) {
+      items.push(
+        pricebookLine(markoutItem, 1, {
+          ruleName: 'Private utility mark-out',
+          ruleReason: `Private utility mark-out at $${markoutItem.catalogPrice}. Free if public property.`,
+          sourceInputs: ['designEngineering.responsibility'],
+          confidence: 'medium',
+        }),
+      );
+    }
+  } else {
+    reviews.push(
+      review({
+        field: 'designEngineering.responsibility',
+        condition: 'Client handles design/engineering',
+        severity: 'info',
+        message: 'Design & engineering excluded — client responsibility.',
+      }),
+    );
+  }
+
   return { items, reviews };
 }
 
-// ── 6. Network Rules ─────────────────────────────────────────
+// ── 7. Network Rules ───────────────────────────────────────────
 
 function networkRules(
   input: EstimateInput,
@@ -932,108 +760,32 @@ function networkRules(
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
   const { network } = input;
-  const costs = INSTALLATION_COSTS;
 
-  if (network.type === 'none' || network.type === 'included_in_package') {
-    return { items, reviews };
-  }
-
-  if (network.type === 'customer_lan') {
-    reviews.push(
-      review({
-        field: 'network.type',
-        condition: 'Customer LAN - no network hardware',
-        severity: 'info',
-        message:
-          'Customer providing LAN connection. No network hardware included in estimate.',
-      }),
-    );
+  if (network.type === 'none' || network.type === 'customer_lan' || network.type === 'included_in_package') {
+    if (network.type === 'customer_lan') {
+      reviews.push(
+        review({
+          field: 'network.type',
+          condition: 'Customer LAN',
+          severity: 'info',
+          message: 'Network equipment excluded — customer providing LAN connectivity.',
+        }),
+      );
+    }
     return { items, reviews };
   }
 
   if (network.type === 'cellular_router') {
-    items.push(
-      line({
-        category: 'NETWORK',
-        description: 'Cellular Router (4G/5G)',
-        quantity: 1,
-        unit: 'each',
-        unitPrice: costs.cellularRouter.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'network-cellular-router',
-        ruleReason:
-          'Cellular router for charger connectivity where LAN/WiFi unavailable.',
-        sourceInputs: ['network.type'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-    items.push(
-      line({
-        category: 'NETWORK',
-        description: 'Router NEMA Enclosure',
-        quantity: 1,
-        unit: 'each',
-        unitPrice: costs.routerEnclosure.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'network-enclosure',
-        ruleReason: 'Weatherproof enclosure for outdoor cellular router.',
-        sourceInputs: ['network.type'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-    items.push(
-      line({
-        category: 'NETWORK',
-        description: 'Network Equipment Installation',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.networkInstallLabor.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'network-install-labor',
-        ruleReason:
-          'Labor to mount, wire, and configure cellular router and charger network.',
-        sourceInputs: ['network.type'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-  }
-
-  if (network.type === 'wifi_bridge') {
-    items.push(
-      line({
-        category: 'NETWORK',
-        description: 'WiFi Bridge Equipment',
-        quantity: 1,
-        unit: 'each',
-        unitPrice: costs.wifiBridge.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'network-wifi-bridge',
-        ruleReason: 'WiFi bridge to extend building network to charger area.',
-        sourceInputs: ['network.type'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-    items.push(
-      line({
-        category: 'NETWORK',
-        description: 'WiFi Bridge Installation',
-        quantity: 1,
-        unit: 'lump sum',
-        unitPrice: costs.networkInstallLabor.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'network-wifi-install',
-        ruleReason: 'Labor to install and configure WiFi bridge.',
-        sourceInputs: ['network.type'],
-        manualReviewRequired:
-          network.wifiInstallResponsibility === 'tbd',
-        manualReviewReason: 'WiFi install responsibility TBD',
-        confidence: 'medium',
-      }),
-    );
+    const routerItem = findPricebookItem('network-teltonika-rut-m50');
+    if (routerItem) {
+      items.push(
+        pricebookLine(routerItem, 1, {
+          ruleName: 'Cellular router',
+          ruleReason: `Teltonika RUT M50 cellular router at $${routerItem.catalogPrice}`,
+          sourceInputs: ['network.type'],
+        }),
+      );
+    }
   }
 
   if (network.type === null) {
@@ -1042,8 +794,7 @@ function networkRules(
         field: 'network.type',
         condition: 'Network type not specified',
         severity: 'warning',
-        message:
-          'Network/connectivity type not specified. Determine if chargers require network connection.',
+        message: 'Network connectivity type not specified. Cannot determine if router/enclosure/cabling is needed.',
       }),
     );
   }
@@ -1051,7 +802,7 @@ function networkRules(
   return { items, reviews };
 }
 
-// ── 7. Accessory Rules ───────────────────────────────────────
+// ── 8. Accessory Rules (Site Work) ─────────────────────────────
 
 function accessoryRules(
   input: EstimateInput,
@@ -1060,132 +811,70 @@ function accessoryRules(
   const reviews: ManualReviewTrigger[] = [];
   const { accessories, signageBollards, charger } = input;
 
-  // Bollards
-  const bollardQty = accessories.bollardQty;
+  // ── Bollards ──
+  const bollardQty = accessories.bollardQty > 0
+    ? accessories.bollardQty
+    : (signageBollards.responsibility === 'bollards' || signageBollards.responsibility === 'signage_bollards')
+      ? charger.count * 2  // default 2 per charger
+      : 0;
+
   if (bollardQty > 0) {
-    const price = ACCESSORY_PRICES.find((a) => a.id === 'acc-bollard');
-    items.push(
-      line({
-        category: 'MATERIAL',
-        description: 'Safety Bollard (installed)',
-        quantity: bollardQty,
-        unit: 'each',
-        unitPrice: price?.midPrice ?? 375,
-        pricingSource: 'industry_standard',
-        ruleName: 'acc-bollards',
-        ruleReason: `${bollardQty} bollards for charger station protection.`,
-        sourceInputs: ['accessories.bollardQty'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-  } else if (
-    signageBollards.responsibility === 'bollards' ||
-    signageBollards.responsibility === 'signage_bollards'
-  ) {
-    // Default 2 per charger if responsibility says bollards but no qty
-    const defaultQty = charger.count * 2;
-    const price = ACCESSORY_PRICES.find((a) => a.id === 'acc-bollard');
-    items.push(
-      line({
-        category: 'MATERIAL',
-        description: 'Safety Bollard (installed, estimated qty)',
-        quantity: defaultQty,
-        unit: 'each',
-        unitPrice: price?.midPrice ?? 375,
-        pricingSource: 'industry_standard',
-        ruleName: 'acc-bollards-default',
-        ruleReason: `Bollard responsibility assigned but no qty specified. Estimated ${defaultQty} (2 per charger).`,
-        sourceInputs: [
-          'signageBollards.responsibility',
-          'charger.count',
-        ],
-        manualReviewRequired: true,
-        manualReviewReason: 'Bollard quantity estimated - verify with site survey',
-        confidence: 'low',
-      }),
-    );
+    const bollardItem = findPricebookItem('sitework-bollards');
+    if (bollardItem) {
+      items.push(
+        pricebookLine(bollardItem, bollardQty, {
+          ruleName: 'Safety bollards',
+          ruleReason: `${bollardQty}x steel safety bollards at $${bollardItem.catalogPrice}/ea`,
+          sourceInputs: ['accessories.bollardQty', 'signageBollards.responsibility', 'charger.count'],
+          confidence: accessories.bollardQty > 0 ? 'high' : 'medium',
+        }),
+      );
+    }
   }
 
-  // Signs
-  const signQty = accessories.signQty;
+  // ── Signage ──
+  const signQty = accessories.signQty > 0
+    ? accessories.signQty
+    : (signageBollards.responsibility === 'signage' || signageBollards.responsibility === 'signage_bollards')
+      ? charger.count  // 1 per charger
+      : 0;
+
   if (signQty > 0) {
-    const price = ACCESSORY_PRICES.find((a) => a.id === 'acc-sign');
-    items.push(
-      line({
-        category: 'MATERIAL',
-        description: 'EV Charging Sign (installed)',
-        quantity: signQty,
-        unit: 'each',
-        unitPrice: price?.midPrice ?? 275,
-        pricingSource: 'industry_standard',
-        ruleName: 'acc-signs',
-        ruleReason: `${signQty} EV charging signs.`,
-        sourceInputs: ['accessories.signQty'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
-  } else if (
-    signageBollards.responsibility === 'signage' ||
-    signageBollards.responsibility === 'signage_bollards'
-  ) {
-    const defaultQty = charger.count;
-    const price = ACCESSORY_PRICES.find((a) => a.id === 'acc-sign');
-    items.push(
-      line({
-        category: 'MATERIAL',
-        description: 'EV Charging Sign (installed, estimated qty)',
-        quantity: defaultQty,
-        unit: 'each',
-        unitPrice: price?.midPrice ?? 275,
-        pricingSource: 'industry_standard',
-        ruleName: 'acc-signs-default',
-        ruleReason: `Sign responsibility assigned but no qty specified. Estimated ${defaultQty} (1 per charger).`,
-        sourceInputs: ['signageBollards.responsibility', 'charger.count'],
-        manualReviewRequired: true,
-        manualReviewReason: 'Sign quantity estimated - verify',
-        confidence: 'low',
-      }),
-    );
+    const signItem = findPricebookItem('sitework-signage');
+    if (signItem) {
+      items.push(
+        pricebookLine(signItem, signQty, {
+          ruleName: 'EV signage',
+          ruleReason: `${signQty}x EV signage at $${signItem.catalogPrice}/ea (per parking spot)`,
+          sourceInputs: ['accessories.signQty', 'signageBollards.responsibility'],
+          confidence: accessories.signQty > 0 ? 'high' : 'medium',
+        }),
+      );
+    }
   }
 
-  // Wheel stops
+  // ── Wheel Stops ──
   if (accessories.wheelStopQty > 0) {
-    const price = ACCESSORY_PRICES.find((a) => a.id === 'acc-wheelstop');
-    items.push(
-      line({
-        category: 'MATERIAL',
-        description: 'Wheel Stop (installed)',
-        quantity: accessories.wheelStopQty,
-        unit: 'each',
-        unitPrice: price?.midPrice ?? 112,
-        pricingSource: 'industry_standard',
-        ruleName: 'acc-wheelstops',
-        ruleReason: `${accessories.wheelStopQty} wheel stops.`,
-        sourceInputs: ['accessories.wheelStopQty'],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
+    const wsItem = findPricebookItem('sitework-wheel-stops');
+    if (wsItem) {
+      items.push(
+        pricebookLine(wsItem, accessories.wheelStopQty, {
+          ruleName: 'Wheel stops',
+          ruleReason: `${accessories.wheelStopQty}x wheel stops at $${wsItem.catalogPrice}/ea`,
+          sourceInputs: ['accessories.wheelStopQty'],
+        }),
+      );
+    }
   }
 
-  // Striping
-  if (accessories.stripingRequired) {
-    const price = ACCESSORY_PRICES.find((a) => a.id === 'acc-striping');
+  // ── Misc Mounting Hardware ──
+  const hardwareItem = findPricebookItem('material-mounting-hardware');
+  if (hardwareItem) {
     items.push(
-      line({
-        category: 'SITE_WORK',
-        description: 'Parking Space Striping (EV designated)',
-        quantity: charger.count,
-        unit: 'spaces',
-        unitPrice: price?.midPrice ?? 350,
-        pricingSource: 'industry_standard',
-        ruleName: 'acc-striping',
-        ruleReason: `Striping for ${charger.count} EV charging spaces.`,
-        sourceInputs: ['accessories.stripingRequired', 'charger.count'],
-        manualReviewRequired: false,
-        confidence: 'medium',
+      pricebookLine(hardwareItem, charger.count, {
+        ruleName: 'Mounting hardware',
+        ruleReason: `${charger.count}x misc mounting hardware & BOS at $${hardwareItem.catalogPrice}/ea`,
+        sourceInputs: ['charger.count'],
       }),
     );
   }
@@ -1193,51 +882,34 @@ function accessoryRules(
   return { items, reviews };
 }
 
-// ── 8. Service Fee Rules ─────────────────────────────────────
+// ── 9. Safety Rules ────────────────────────────────────────────
 
-function serviceFeeRules(
+function safetyRules(
   input: EstimateInput,
 ): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
+  const { parkingEnvironment } = input;
 
-  // Only for Supercharger projects with connectivity
-  if (
-    input.project.projectType === 'full_turnkey_connectivity' ||
-    input.project.projectType === 'supercharger'
-  ) {
-    reviews.push(
-      review({
-        field: 'project.projectType',
-        condition: 'Supercharger project - recurring fees apply',
-        severity: 'info',
-        message:
-          'Tesla Supercharger recurring service fees apply: Public $0.10/kWh, Semi $0.08/kWh, Private $0.06/kWh or $6,000/stall/year. These are ongoing costs, not included in one-time estimate total.',
-      }),
-    );
-    items.push(
-      line({
-        category: 'SERVICE_FEE',
-        description:
-          'Tesla Recurring Service Fee (informational - not in total)',
-        quantity: 1,
-        unit: 'note',
-        unitPrice: 0,
-        pricingSource: 'catalog_bulk',
-        ruleName: 'service-tesla-recurring',
-        ruleReason:
-          'Tesla charges ongoing service fees for Supercharger connectivity. Rate depends on public/private/semi designation. This is a recurring cost shown for reference.',
-        sourceInputs: ['project.projectType'],
-        manualReviewRequired: false,
-        confidence: 'high',
-      }),
-    );
+  // Traffic control for most projects
+  if (parkingEnvironment.trafficControlRequired !== false) {
+    const tcItem = findPricebookItem('safety-traffic-control');
+    if (tcItem) {
+      items.push(
+        pricebookLine(tcItem, 1, {
+          ruleName: 'Traffic control & safety',
+          ruleReason: `On-site traffic control, safety fence, trench plates at $${tcItem.catalogPrice}. Actual cost depends on site conditions and duration.`,
+          sourceInputs: ['parkingEnvironment.trafficControlRequired'],
+          confidence: 'medium',
+        }),
+      );
+    }
   }
 
   return { items, reviews };
 }
 
-// ── 9. Remove & Replace Rules ────────────────────────────────
+// ── 10. Remove & Replace Rules ─────────────────────────────────
 
 function removeReplaceRules(
   input: EstimateInput,
@@ -1247,33 +919,18 @@ function removeReplaceRules(
 
   if (
     input.project.projectType !== 'remove_replace' ||
-    !input.removeReplace
+    !input.removeReplace?.existingChargerCount
   ) {
     return { items, reviews };
   }
 
-  const rr = input.removeReplace;
-  const count = rr.existingChargerCount ?? 0;
-
-  if (count > 0) {
+  const removalItem = findPricebookItem('eleclbr-removal');
+  if (removalItem) {
     items.push(
-      line({
-        category: 'SITE_WORK',
-        description: `Remove Existing Chargers (${rr.existingBrand ?? 'unknown brand'})`,
-        quantity: count,
-        unit: 'each',
-        unitPrice: 500,
-        pricingSource: 'industry_standard',
-        ruleName: 'rr-remove-existing',
-        ruleReason: `Removal of ${count} existing ${rr.existingBrand ?? 'unknown'} chargers. Includes disconnection, unmounting, and disposal.`,
-        sourceInputs: [
-          'removeReplace.existingChargerCount',
-          'removeReplace.existingBrand',
-        ],
-        manualReviewRequired: true,
-        manualReviewReason:
-          'Removal scope depends on existing mount type and wiring',
-        confidence: 'low',
+      pricebookLine(removalItem, input.removeReplace.existingChargerCount, {
+        ruleName: 'Charger removal',
+        ruleReason: `${input.removeReplace.existingChargerCount}x removal of existing chargers at $${removalItem.catalogPrice}/ea`,
+        sourceInputs: ['removeReplace.existingChargerCount'],
       }),
     );
   }
@@ -1281,67 +938,90 @@ function removeReplaceRules(
   return { items, reviews };
 }
 
-// ── 10. Charger Installation Labor ───────────────────────────
+// ── 11. Software Rules ─────────────────────────────────────────
 
-function installLaborRules(
+function softwareRules(
   input: EstimateInput,
 ): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
   const items: EstimateLineItem[] = [];
   const reviews: ManualReviewTrigger[] = [];
-  const { charger, chargerInstall } = input;
+  const { charger } = input;
 
-  if (chargerInstall.responsibility === 'client') {
-    reviews.push(
-      review({
-        field: 'chargerInstall.responsibility',
-        condition: 'Client-responsible install',
-        severity: 'info',
-        message:
-          'Charger installation is client responsibility. Install labor excluded.',
-      }),
-    );
+  // ChargePoint software only applies to ChargePoint chargers
+  if (!charger.brand.toLowerCase().includes('chargepoint')) {
     return { items, reviews };
   }
 
-  // Supercharger installs are typically included in the package
-  const isSupercharger =
-    charger.brand.toLowerCase().includes('tesla') &&
-    charger.model.toLowerCase().includes('supercharger');
+  if (charger.model.toLowerCase().includes('cpf50') || charger.model.toLowerCase().includes('cpf')) {
+    const activationItem = findPricebookItem('software-cp-fleet-activation');
+    const cloudItem = findPricebookItem('software-cp-cloud-1yr');
 
-  if (!isSupercharger) {
-    const hoursPerCharger = charger.mountType === 'wall' ? 3 : 5;
-    items.push(
-      line({
-        category: 'ELEC_LBR',
-        description: `Charger Installation Labor (${charger.mountType ?? 'standard'} mount)`,
-        quantity: charger.count * hoursPerCharger,
-        unit: 'hours',
-        unitPrice: INSTALLATION_COSTS.electricalLabor.mid,
-        pricingSource: 'industry_standard',
-        ruleName: 'install-charger-labor',
-        ruleReason: `${charger.count} chargers x ${hoursPerCharger}hr each (${charger.mountType ?? 'standard'} mount). Includes mounting, wiring, and basic testing.`,
-        sourceInputs: [
-          'charger.count',
-          'charger.mountType',
-          'chargerInstall.responsibility',
-        ],
-        manualReviewRequired: false,
-        confidence: 'medium',
-      }),
-    );
+    if (activationItem) {
+      items.push(
+        pricebookLine(activationItem, charger.count, {
+          ruleName: 'ChargePoint activation',
+          ruleReason: `${charger.count}x CPF activation at $${activationItem.catalogPrice}/ea`,
+          sourceInputs: ['charger.brand', 'charger.model'],
+        }),
+      );
+    }
+    if (cloudItem) {
+      items.push(
+        pricebookLine(cloudItem, charger.count, {
+          ruleName: 'ChargePoint cloud software',
+          ruleReason: `${charger.count}x 1-year prepaid cloud management at $${cloudItem.catalogPrice}/ea`,
+          sourceInputs: ['charger.brand', 'charger.model'],
+        }),
+      );
+    }
   }
+
+  return { items, reviews };
+}
+
+// ── 12. Service Fee Rules (Supercharger only) ──────────────────
+
+function serviceFeeRules(
+  input: EstimateInput,
+): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
+  const items: EstimateLineItem[] = [];
+  const reviews: ManualReviewTrigger[] = [];
+
+  const isSupercharger =
+    input.charger.brand.toLowerCase().includes('tesla') &&
+    (input.charger.model.toLowerCase().includes('supercharger') ||
+      input.charger.chargingLevel === 'l3_dcfc' ||
+      input.project.projectType === 'supercharger');
+
+  if (!isSupercharger) return { items, reviews };
+
+  const fee = SERVICE_FEES[0]; // Public PPU default
+  items.push(
+    line({
+      category: 'SOFTWARE',
+      description: `Tesla Turnkey O&M Service — ${fee.name} (${fee.unit})`,
+      quantity: input.charger.count,
+      unit: 'stall',
+      unitPrice: 0,
+      pricingSource: 'catalog',
+      ruleName: 'Tesla recurring service fee (informational)',
+      ruleReason: `Recurring fee of $${fee.rate}${fee.unit} per stall. Not included in one-time estimate total — shown for reference.`,
+      sourceInputs: ['charger.brand', 'charger.chargingLevel'],
+      manualReviewRequired: false,
+      confidence: 'high',
+    }),
+  );
 
   return { items, reviews };
 }
 
 // ============================================================
-// Master Rule Runner
+// Run All Rules
 // ============================================================
 
 export function runAllRules(
   input: EstimateInput,
 ): { items: EstimateLineItem[]; reviews: ManualReviewTrigger[] } {
-  // Create fresh counters per invocation (safe for concurrent requests)
   _counters = createCounters();
 
   const allItems: EstimateLineItem[] = [];
@@ -1354,8 +1034,7 @@ export function runAllRules(
         field: 'charger.count',
         condition: 'Zero or missing charger count',
         severity: 'critical',
-        message:
-          'Charger count is 0 or not provided. Estimate cannot be generated without knowing the number of chargers.',
+        message: 'Charger count is 0 or not provided. Estimate cannot be generated.',
       }),
     );
     return { items: allItems, reviews: allReviews };
@@ -1364,14 +1043,16 @@ export function runAllRules(
   const rulesets = [
     chargerHardwareRules,
     pedestalRules,
-    civilRules,
+    installLaborRules,
     electricalRules,
+    civilRules,
     permitDesignRules,
     networkRules,
     accessoryRules,
-    serviceFeeRules,
+    safetyRules,
     removeReplaceRules,
-    installLaborRules,
+    softwareRules,
+    serviceFeeRules,
   ];
 
   for (const ruleset of rulesets) {

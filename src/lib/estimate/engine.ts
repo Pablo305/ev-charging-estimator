@@ -106,14 +106,16 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
   const hardwareCategories = new Set(['CHARGER', 'PEDESTAL']);
   const installCategories = new Set([
     'CIVIL',
-    'ELEC_LBR',
-    'ELEC_MAT',
-    'SITE_WORK',
+    'ELEC',
+    'ELEC LBR',
+    'ELEC LBR MAT',
+    'ELEC MAT',
+    'SITE WORK',
     'SAFETY',
   ]);
   const permitDesignCategories = new Set(['PERMIT', 'DES/ENG']);
   const networkCategories = new Set(['NETWORK']);
-  const accessoryCategories = new Set(['MATERIAL']);
+  const accessoryCategories = new Set(['MATERIAL', 'MISC']);
   const serviceCategories = new Set(['SERVICE_FEE', 'SOFTWARE']);
 
   const sumByGroup = (cats: Set<string>): number =>

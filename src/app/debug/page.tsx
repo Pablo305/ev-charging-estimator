@@ -5,13 +5,11 @@ import Link from 'next/link';
 import { SCENARIOS } from '@/lib/estimate/scenarios';
 import { generateEstimate } from '@/lib/estimate/engine';
 import {
+  PRICEBOOK,
   TESLA_SUPERCHARGER_PACKAGES,
-  TESLA_UWC_ITEMS,
-  CHARGEPOINT_ITEMS,
-  OTHER_BRAND_ITEMS,
   SERVICE_FEES,
-  ACCESSORY_PRICES,
-  INSTALLATION_COSTS,
+  KNOWN_OVERRIDES,
+  findPricebookItemsByCategory,
 } from '@/lib/estimate/catalog';
 import { BOARD_CONFIG } from '@/lib/monday/config';
 
@@ -138,9 +136,18 @@ export default function DebugPage() {
           {activeTab === 'catalog' && (
             <div className="p-4 space-y-6">
               <CatalogSection title="Tesla Supercharger Packages" data={TESLA_SUPERCHARGER_PACKAGES} />
-              <CatalogSection title="Tesla L2 (UWC)" data={TESLA_UWC_ITEMS} />
-              <CatalogSection title="ChargePoint" data={CHARGEPOINT_ITEMS} />
-              <CatalogSection title="Other Brands" data={OTHER_BRAND_ITEMS} />
+              <CatalogSection title="Charger Hardware" data={findPricebookItemsByCategory('CHARGER')} />
+              <CatalogSection title="Pedestals" data={findPricebookItemsByCategory('PEDESTAL')} />
+              <CatalogSection title="Install Labor (ELEC LBR)" data={findPricebookItemsByCategory('ELEC LBR')} />
+              <CatalogSection title="Electrical Labor+Material" data={findPricebookItemsByCategory('ELEC LBR MAT')} />
+              <CatalogSection title="Civil" data={findPricebookItemsByCategory('CIVIL')} />
+              <CatalogSection title="Design/Engineering" data={findPricebookItemsByCategory('DES/ENG')} />
+              <CatalogSection title="Network" data={findPricebookItemsByCategory('NETWORK')} />
+              <CatalogSection title="Site Work" data={findPricebookItemsByCategory('SITE WORK')} />
+              <CatalogSection title="Safety" data={findPricebookItemsByCategory('SAFETY')} />
+              <CatalogSection title="Software" data={findPricebookItemsByCategory('SOFTWARE')} />
+              <CatalogSection title="Permit" data={findPricebookItemsByCategory('PERMIT')} />
+              <CatalogSection title="Material" data={findPricebookItemsByCategory('MATERIAL')} />
 
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Service Fees</h4>
@@ -150,16 +157,16 @@ export default function DebugPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Accessory Prices</h4>
+                <h4 className="text-sm font-medium text-gray-700">Known Price Overrides</h4>
                 <pre className="mt-1 max-h-[30vh] overflow-auto rounded bg-gray-900 p-4 text-xs text-green-400">
-                  {JSON.stringify(ACCESSORY_PRICES, null, 2)}
+                  {JSON.stringify(KNOWN_OVERRIDES, null, 2)}
                 </pre>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Installation Cost Ranges</h4>
+                <h4 className="text-sm font-medium text-gray-700">Full Pricebook ({PRICEBOOK.length} items)</h4>
                 <pre className="mt-1 max-h-[30vh] overflow-auto rounded bg-gray-900 p-4 text-xs text-green-400">
-                  {JSON.stringify(INSTALLATION_COSTS, null, 2)}
+                  {JSON.stringify(PRICEBOOK, null, 2)}
                 </pre>
               </div>
             </div>
