@@ -176,11 +176,11 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef(input);
 
-  // Detect touch device and collapse panels on mobile
+  // Detect mobile touch-only device (not desktop with touchscreen)
   useEffect(() => {
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    setIsTouchDevice(isTouch);
-    if (isTouch) {
+    const isMobileTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    setIsTouchDevice(isMobileTouch);
+    if (isMobileTouch) {
       setLeftPanelOpen(false);
       setRightPanelOpen(false);
     }
