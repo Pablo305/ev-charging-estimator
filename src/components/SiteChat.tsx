@@ -236,8 +236,8 @@ export function SiteChat() {
             </div>
           )}
 
-          {/* Input */}
-          <div className="border-t border-gray-100 px-3 py-2.5">
+          {/* Input — extra padding on mobile for virtual keyboard safe area */}
+          <div className="border-t border-gray-100 px-3 pb-[env(safe-area-inset-bottom,0.625rem)] pt-2.5 sm:pb-2.5">
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -248,13 +248,13 @@ export function SiteChat() {
                 placeholder="Ask anything about BulletEV..."
                 aria-label="Chat message"
                 autoFocus
-                className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-[13px] transition focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm transition focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 sm:py-2 sm:text-[13px]"
                 disabled={loading}
               />
               <button
                 onClick={handleSend}
                 disabled={loading || !input.trim()}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-40"
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-40 sm:h-9 sm:w-9"
                 aria-label="Send message"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">

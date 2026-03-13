@@ -282,21 +282,32 @@ export default function EstimatePage() {
   }, [currentTabIdx]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 pb-16">
       {/* Header */}
       <header className="bg-[#0B1220] text-white print:bg-white print:text-black">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-bold">BulletEV Estimate Generator</h1>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold sm:text-xl">BulletEV Estimate Generator</h1>
             <p className="text-xs text-blue-300 print:text-gray-500">Prototype v0.1.0</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
             {MAP_WORKSPACE_ENABLED && (
               <Link
                 href="/estimate/map"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 print:hidden"
+                className="hidden rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 print:hidden sm:inline-block"
               >
                 Map Workspace
+              </Link>
+            )}
+            {MAP_WORKSPACE_ENABLED && (
+              <Link
+                href="/estimate/map"
+                className="rounded-md bg-blue-600 p-2 text-white transition hover:bg-blue-500 print:hidden sm:hidden"
+                title="Map Workspace"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
               </Link>
             )}
             <ViewModeToggle />
@@ -307,18 +318,18 @@ export default function EstimatePage() {
 
       {/* Progress Bar */}
       <div className="border-b border-gray-200 bg-white print:hidden">
-        <div className="mx-auto max-w-7xl px-6 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Estimate Progress</span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+        <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6 sm:py-3">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="hidden text-sm font-medium text-gray-700 sm:inline">Estimate Progress</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                 progress >= 80 ? 'bg-green-100 text-green-800' :
                 progress >= 40 ? 'bg-amber-100 text-amber-800' :
                 'bg-gray-100 text-gray-600'
               }`}>{progress}%</span>
             </div>
             <span className="text-xs text-gray-500">
-              Step {currentTabIdx + 1} of {TABS.length}: {activeTab}
+              <span className="hidden sm:inline">Step </span>{currentTabIdx + 1}/{TABS.length}<span className="hidden sm:inline">: {activeTab}</span>
             </span>
           </div>
           <div className="flex gap-1">
@@ -462,7 +473,7 @@ export default function EstimatePage() {
           </div>
 
           {/* Section Header */}
-          <div className="border-b border-gray-100 bg-blue-50/50 px-6 py-3">
+          <div className="border-b border-gray-100 bg-blue-50/50 px-4 py-2 sm:px-6 sm:py-3">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-gray-800">{activeTab}</h2>
@@ -477,7 +488,7 @@ export default function EstimatePage() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <ErrorBoundary fallbackLabel={activeTab}>
               <SectionRenderer tab={activeTab} />
             </ErrorBoundary>
@@ -501,19 +512,19 @@ export default function EstimatePage() {
                 Next &#8594;
               </button>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex w-full items-center gap-3 sm:w-auto">
               {progress < 40 && (
-                <span className="text-xs text-gray-400">Fill in key fields to improve estimate accuracy</span>
+                <span className="hidden text-xs text-gray-400 sm:inline">Fill in key fields to improve estimate accuracy</span>
               )}
               {progress >= 40 && progress < 80 && (
-                <span className="text-xs text-amber-600">Good progress — more detail = better estimate</span>
+                <span className="hidden text-xs text-amber-600 sm:inline">Good progress — more detail = better estimate</span>
               )}
               {progress >= 80 && (
-                <span className="text-xs text-green-600">Ready to generate a high-confidence estimate</span>
+                <span className="hidden text-xs text-green-600 sm:inline">Ready to generate a high-confidence estimate</span>
               )}
               <button
                 onClick={handleGenerate}
-                className={`rounded-lg px-8 py-2.5 text-sm font-semibold text-white transition ${
+                className={`w-full rounded-lg px-8 py-2.5 text-sm font-semibold text-white transition sm:w-auto ${
                   progress >= 40
                     ? 'bg-[#2563EB] hover:bg-blue-700'
                     : 'bg-gray-400 hover:bg-gray-500'
@@ -571,55 +582,55 @@ function EstimateResults({
   return (
     <div id="estimate-output" className="space-y-6">
       {/* Header */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{output.input.project.name || 'Untitled Project'}</h2>
-            <p className="mt-1 text-sm text-gray-500">{output.input.customer.companyName} | {output.input.site.address}</p>
-            <p className="mt-1 text-xs text-gray-400">Generated {new Date(metadata.generatedAt).toLocaleString()} | Engine {metadata.engineVersion}</p>
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">{output.input.project.name || 'Untitled Project'}</h2>
+          <p className="mt-1 truncate text-sm text-gray-500">{output.input.customer.companyName} | {output.input.site.address}</p>
+          <p className="mt-1 text-xs text-gray-400">Generated {new Date(metadata.generatedAt).toLocaleString()} | Engine {metadata.engineVersion}</p>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+          <div className="rounded-lg bg-gray-50 px-3 py-2 sm:px-4">
+            <p className="text-[10px] text-gray-500 sm:text-xs">Completeness</p>
+            <p className={`text-base font-bold sm:text-lg ${metadata.inputCompleteness >= 70 ? 'text-green-600' : metadata.inputCompleteness >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+              {metadata.inputCompleteness}%
+            </p>
           </div>
-          <div className="flex flex-wrap items-start gap-3 text-right">
-            <div className="rounded-lg bg-gray-50 px-4 py-2">
-              <p className="text-xs text-gray-500">Input Completeness</p>
-              <p className={`text-lg font-bold ${metadata.inputCompleteness >= 70 ? 'text-green-600' : metadata.inputCompleteness >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                {metadata.inputCompleteness}%
-              </p>
-            </div>
-            <div className="rounded-lg bg-gray-50 px-4 py-2">
-              <p className="text-xs text-gray-500">Confidence</p>
-              <p className={`text-lg font-bold ${metadata.automationConfidence === 'high' ? 'text-green-600' : metadata.automationConfidence === 'medium' ? 'text-yellow-600' : 'text-red-600'}`}>
-                {metadata.automationConfidence.toUpperCase()}
-              </p>
-            </div>
-            <div className="rounded-lg bg-gray-50 px-4 py-2">
-              <p className="text-xs text-gray-500">Total</p>
-              <p className="text-lg font-bold text-gray-900">{fmt(summary.total)}</p>
-            </div>
-            <button
-              onClick={() => exportEstimatePDF(output)}
-              className="rounded-lg bg-[#0B1220] px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 print:hidden"
+          <div className="rounded-lg bg-gray-50 px-3 py-2 sm:px-4">
+            <p className="text-[10px] text-gray-500 sm:text-xs">Confidence</p>
+            <p className={`text-base font-bold sm:text-lg ${metadata.automationConfidence === 'high' ? 'text-green-600' : metadata.automationConfidence === 'medium' ? 'text-yellow-600' : 'text-red-600'}`}>
+              {metadata.automationConfidence.toUpperCase()}
+            </p>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-3 py-2 sm:px-4">
+            <p className="text-[10px] text-gray-500 sm:text-xs">Total</p>
+            <p className="text-base font-bold text-gray-900 sm:text-lg">{fmt(summary.total)}</p>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-col gap-2 print:hidden sm:flex-row sm:gap-3">
+          <button
+            onClick={() => exportEstimatePDF(output)}
+            className="w-full rounded-lg bg-[#0B1220] px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 sm:w-auto"
+          >
+            Download PDF
+          </button>
+          {MAP_WORKSPACE_ENABLED && (
+            <Link
+              href="/estimate/map"
+              className="w-full rounded-lg bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
             >
-              Download PDF
-            </button>
-            {MAP_WORKSPACE_ENABLED && (
-              <Link
-                href="/estimate/map"
-                className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 print:hidden"
-              >
-                Open Map Workspace
-              </Link>
-            )}
-          </div>
+              Open Map Workspace
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Manual Review Triggers */}
       {manualReviewTriggers.length > 0 && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-6 print:border-gray-300 print:bg-gray-50">
-          <h3 className="text-lg font-semibold text-amber-900">Manual Review Required ({manualReviewTriggers.length})</h3>
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 print:border-gray-300 print:bg-gray-50 sm:p-6">
+          <h3 className="text-base font-semibold text-amber-900 sm:text-lg">Manual Review Required ({manualReviewTriggers.length})</h3>
           <div className="mt-3 space-y-2">
             {manualReviewTriggers.map((trigger: ManualReviewTrigger) => (
-              <div key={trigger.id} className="flex items-start gap-3 rounded border border-amber-200 bg-white px-4 py-3">
+              <div key={trigger.id} className="flex items-start gap-2 rounded border border-amber-200 bg-white px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
                 <SeverityBadge severity={trigger.severity} />
                 <div>
                   <p className="text-sm font-medium text-gray-900">{trigger.message}</p>
@@ -632,9 +643,9 @@ function EstimateResults({
       )}
 
       {/* Summary Breakdown */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900">Cost Summary</h3>
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Cost Summary</h3>
+        <div className="mt-3 grid gap-2 grid-cols-2 sm:mt-4 sm:grid-cols-3">
           {[
             { label: 'Hardware', value: summary.hardwareTotal },
             { label: 'Installation', value: summary.installationTotal },
@@ -650,31 +661,31 @@ function EstimateResults({
           ))}
         </div>
         <div className="mt-4 border-t border-gray-200 pt-4 space-y-1">
-          <div className="flex justify-between"><span className="text-sm text-gray-600">Subtotal (with {output.input.estimateControls.markupPercent}% markup)</span><span className="text-sm font-medium">{fmt(summary.subtotal)}</span></div>
-          <div className="flex justify-between"><span className="text-sm text-gray-600">Tax ({output.input.estimateControls.taxRate}%)</span><span className="text-sm font-medium">{fmt(summary.tax)}</span></div>
-          <div className="flex justify-between"><span className="text-sm text-gray-600">Contingency ({output.input.estimateControls.contingencyPercent}%)</span><span className="text-sm font-medium">{fmt(summary.contingency)}</span></div>
-          <div className="flex justify-between border-t border-gray-300 pt-2"><span className="text-base font-semibold text-gray-900">Total</span><span className="text-base font-bold text-gray-900">{fmt(summary.total)}</span></div>
+          <div className="flex justify-between gap-2"><span className="text-xs text-gray-600 sm:text-sm">Subtotal ({output.input.estimateControls.markupPercent}% markup)</span><span className="flex-shrink-0 text-xs font-medium sm:text-sm">{fmt(summary.subtotal)}</span></div>
+          <div className="flex justify-between gap-2"><span className="text-xs text-gray-600 sm:text-sm">Tax ({output.input.estimateControls.taxRate}%)</span><span className="flex-shrink-0 text-xs font-medium sm:text-sm">{fmt(summary.tax)}</span></div>
+          <div className="flex justify-between gap-2"><span className="text-xs text-gray-600 sm:text-sm">Contingency ({output.input.estimateControls.contingencyPercent}%)</span><span className="flex-shrink-0 text-xs font-medium sm:text-sm">{fmt(summary.contingency)}</span></div>
+          <div className="flex justify-between gap-2 border-t border-gray-300 pt-2"><span className="text-sm font-semibold text-gray-900 sm:text-base">Total</span><span className="flex-shrink-0 text-sm font-bold text-gray-900 sm:text-base">{fmt(summary.total)}</span></div>
         </div>
       </div>
 
       {/* Line Items by Category */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h3 className="text-lg font-semibold text-gray-900">Line Items ({lineItems.length})</h3>
+        <div className="border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
+          <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Line Items ({lineItems.length})</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto scrollbar-none">
+          <table className="w-full min-w-[600px] text-sm sm:min-w-0">
             <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
               <tr>
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Description</th>
-                <th className="px-4 py-3 text-right">Qty</th>
-                <th className="px-4 py-3">Unit</th>
-                <th className="px-4 py-3 text-right">Unit Price</th>
-                <th className="px-4 py-3 text-right">Ext. Price</th>
-                <th className="px-4 py-3">Source</th>
-                <th className="px-4 py-3 text-center">Conf.</th>
+                <th className="hidden px-4 py-3 sm:table-cell">ID</th>
+                <th className="hidden px-4 py-3 sm:table-cell">Category</th>
+                <th className="px-3 py-2 sm:px-4 sm:py-3">Description</th>
+                <th className="px-3 py-2 text-right sm:px-4 sm:py-3">Qty</th>
+                <th className="hidden px-4 py-3 sm:table-cell">Unit</th>
+                <th className="hidden px-4 py-3 text-right lg:table-cell">Unit Price</th>
+                <th className="px-3 py-2 text-right sm:px-4 sm:py-3">Ext. Price</th>
+                <th className="hidden px-4 py-3 md:table-cell">Source</th>
+                <th className="hidden px-4 py-3 text-center md:table-cell">Conf.</th>
               </tr>
             </thead>
             <tbody>
@@ -693,11 +704,11 @@ function EstimateResults({
       </div>
 
       {/* Exclusions */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900">Exclusions ({exclusions.length})</h3>
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Exclusions ({exclusions.length})</h3>
         <ul className="mt-3 space-y-2">
           {exclusions.map((ex) => (
-            <li key={ex.id} className="flex items-start gap-2 text-sm">
+            <li key={ex.id} className="flex items-start gap-2 text-xs sm:text-sm">
               <span className="mt-0.5 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">{ex.category}</span>
               <span className="text-gray-700">{ex.text}</span>
             </li>
@@ -725,9 +736,12 @@ function CategoryGroup({
   return (
     <>
       <tr className="bg-gray-100">
-        <td colSpan={6} className="px-4 py-2 text-xs font-bold uppercase text-gray-600">{category}</td>
-        <td className="px-4 py-2 text-right text-xs font-bold text-gray-600">{fmt(catTotal)}</td>
-        <td colSpan={2} />
+        <td colSpan={9} className="px-3 py-2 sm:px-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase text-gray-600">{category}</span>
+            <span className="text-xs font-bold text-gray-600">{fmt(catTotal)}</span>
+          </div>
+        </td>
       </tr>
       {items.map((li, idx) => (
         <LineItemRow
@@ -760,25 +774,25 @@ function LineItemRow({
         className={`${isOdd ? 'bg-gray-50' : 'bg-white'} ${item.manualReviewRequired ? 'border-l-4 border-l-amber-400' : ''} cursor-pointer hover:bg-blue-50`}
         onClick={onToggle}
       >
-        <td className="px-4 py-2 text-xs text-gray-400">{item.id}</td>
-        <td className="px-4 py-2 text-xs text-gray-500">{item.category}</td>
-        <td className="px-4 py-2 text-gray-900">
+        <td className="hidden px-4 py-2 text-xs text-gray-400 sm:table-cell">{item.id}</td>
+        <td className="hidden px-4 py-2 text-xs text-gray-500 sm:table-cell">{item.category}</td>
+        <td className="px-3 py-2 text-gray-900 sm:px-4">
           {item.description}
           {item.manualReviewRequired && (
-            <span className="ml-2 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">REVIEW</span>
+            <span className="ml-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700 sm:ml-2 sm:text-xs">REVIEW</span>
           )}
         </td>
-        <td className="px-4 py-2 text-right">{item.quantity}</td>
-        <td className="px-4 py-2 text-xs text-gray-500">{item.unit}</td>
-        <td className="px-4 py-2 text-right">{fmt(item.unitPrice)}</td>
-        <td className="px-4 py-2 text-right font-medium">{fmt(item.extendedPrice)}</td>
-        <td className="px-4 py-2"><PricingBadge source={item.pricingSource} /></td>
-        <td className="px-4 py-2 text-center"><ConfidenceDot level={item.confidence} /></td>
+        <td className="px-3 py-2 text-right sm:px-4">{item.quantity}</td>
+        <td className="hidden px-4 py-2 text-xs text-gray-500 sm:table-cell">{item.unit}</td>
+        <td className="hidden px-4 py-2 text-right lg:table-cell">{fmt(item.unitPrice)}</td>
+        <td className="px-3 py-2 text-right font-medium sm:px-4">{fmt(item.extendedPrice)}</td>
+        <td className="hidden px-4 py-2 md:table-cell"><PricingBadge source={item.pricingSource} /></td>
+        <td className="hidden px-4 py-2 text-center md:table-cell"><ConfidenceDot level={item.confidence} /></td>
       </tr>
       {expanded && (
         <tr className="bg-blue-50">
-          <td colSpan={9} className="px-6 py-4">
-            <div className="space-y-2 text-sm">
+          <td colSpan={9} className="px-3 py-3 sm:px-6 sm:py-4">
+            <div className="space-y-1.5 text-xs sm:space-y-2 sm:text-sm">
               <p><span className="font-medium text-gray-700">Rule:</span> <span className="font-mono text-xs text-gray-500">{item.ruleName}</span></p>
               <p><span className="font-medium text-gray-700">Why this line?</span> {item.ruleReason}</p>
               <p><span className="font-medium text-gray-700">Source Inputs:</span> {item.sourceInputs.join(', ')}</p>

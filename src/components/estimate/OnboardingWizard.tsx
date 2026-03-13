@@ -41,9 +41,9 @@ export function OnboardingWizard({ onEntrySelect }: OnboardingWizardProps) {
 
   if (step === 1) {
     return (
-      <div className="mx-auto max-w-3xl py-12">
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-900">How would you like to start?</h2>
+      <div className="mx-auto max-w-3xl px-2 py-6 sm:py-12">
+        <div className="mb-6 text-center sm:mb-8">
+          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">How would you like to start?</h2>
           <p className="mt-2 text-sm text-gray-500">Choose the best entry point for your project</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -78,7 +78,7 @@ export function OnboardingWizard({ onEntrySelect }: OnboardingWizardProps) {
 
   if (step === 2) {
     return (
-      <div className="mx-auto max-w-3xl py-12">
+      <div className="mx-auto max-w-3xl px-2 py-6 sm:py-12">
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold text-gray-900">What type of project?</h2>
           <p className="mt-2 text-sm text-gray-500">This pre-fills relevant settings and determines included line items</p>
