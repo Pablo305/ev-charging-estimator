@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import type { RunSegment, EquipmentPlacement, RunType, EquipmentType } from '@/lib/map/types';
+import type { RunSegment, EquipmentPlacement, RunType, EquipmentType, PointToolType } from '@/lib/map/types';
 import { RUN_TYPE_CONFIG, EQUIPMENT_TYPE_CONFIG } from '@/lib/map/constants';
 import { measureRunLength } from '@/lib/map/measurements';
 import type { LineString, Point } from 'geojson';
@@ -12,8 +12,10 @@ interface SiteMapProps {
   siteCoordinates: [number, number] | null;
   runs: readonly RunSegment[];
   equipment: readonly EquipmentPlacement[];
-  selectedTool: RunType | EquipmentType | null;
+  selectedTool: RunType | EquipmentType | PointToolType | null;
   selectedFeatureId: string | null;
+  powerSourceLocation: [number, number] | null;
+  chargerZones: readonly [number, number][];
   onRunCreate: (runType: RunType, geometry: LineString, lengthFt: number) => void;
   onRunUpdate: (id: string, geometry: LineString, lengthFt: number) => void;
   onRunDelete: (id: string) => void;
@@ -21,9 +23,11 @@ interface SiteMapProps {
   onEquipmentUpdate: (id: string, geometry: Point) => void;
   onEquipmentDelete: (id: string) => void;
   onFeatureSelect: (id: string | null) => void;
+  onPointToolPlace: (toolType: PointToolType, coordinates: [number, number]) => void;
 }
 
 const EQUIPMENT_TYPES = new Set<string>(Object.keys(EQUIPMENT_TYPE_CONFIG));
+const POINT_TOOL_TYPES = new Set<string>(['power_source', 'charger_zone']);
 
 // Time window (ms) to suppress click events that are part of a double-click
 const DBLCLICK_THRESHOLD_MS = 300;
@@ -33,12 +37,20 @@ export function SiteMap({
   runs,
   equipment,
   selectedTool,
+  powerSourceLocation,
+  chargerZones,
   onRunCreate,
+  onRunUpdate: _onRunUpdate,
   onEquipmentPlace,
+  onEquipmentUpdate: _onEquipmentUpdate,
   onEquipmentDelete,
   onRunDelete,
   onFeatureSelect,
+  onPointToolPlace,
 }: SiteMapProps) {
+  // TODO: Wire _onRunUpdate and _onEquipmentUpdate for drag-to-edit support
+  void _onRunUpdate;
+  void _onEquipmentUpdate;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -60,6 +72,13 @@ export function SiteMap({
 
   const onEquipmentPlaceRef = useRef(onEquipmentPlace);
   onEquipmentPlaceRef.current = onEquipmentPlace;
+
+  const onPointToolPlaceRef = useRef(onPointToolPlace);
+  onPointToolPlaceRef.current = onPointToolPlace;
+
+  // Refs for point tool markers
+  const powerSourceMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const chargerZoneMarkersRef = useRef<mapboxgl.Marker[]>([]);
 
   // ── Helper: clear temp drawing visuals ──
   function clearDrawingVisuals(map: mapboxgl.Map) {
@@ -237,6 +256,12 @@ export function SiteMap({
 
       const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
 
+      // Point tool placement (power source / charger zone) — instant
+      if (POINT_TOOL_TYPES.has(tool)) {
+        onPointToolPlaceRef.current(tool as PointToolType, lngLat);
+        return;
+      }
+
       // Equipment placement — instant, no dblclick ambiguity
       if (EQUIPMENT_TYPES.has(tool)) {
         const point: Point = { type: 'Point', coordinates: lngLat };
@@ -252,7 +277,7 @@ export function SiteMap({
       draw.clickTimer = setTimeout(() => {
         // This fires only if no dblclick happened within the threshold
         if (draw.pendingClick) {
-          draw.points.push(draw.pendingClick);
+          draw.points = [...draw.points, draw.pendingClick];
           draw.pendingClick = null;
           updateDrawingVisuals(map, draw.points);
         }
@@ -275,7 +300,7 @@ export function SiteMap({
 
       // Add the final point from the dblclick location (once)
       const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-      draw.points.push(lngLat);
+      draw.points = [...draw.points, lngLat];
       draw.pendingClick = null;
 
       if (draw.points.length < 2) {
@@ -462,6 +487,67 @@ export function SiteMap({
       clearDrawingVisuals(map);
     }
   }, [selectedTool]);
+
+  // ── Power source marker ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove old marker
+    if (powerSourceMarkerRef.current) {
+      powerSourceMarkerRef.current.remove();
+      powerSourceMarkerRef.current = null;
+    }
+
+    if (powerSourceLocation) {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        width: 40px; height: 40px; border-radius: 50%;
+        background: #DC2626; border: 3px solid #FFF;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(220,38,38,0.5);
+      `;
+      el.textContent = '\u26A1';
+      el.title = 'Power Source';
+
+      powerSourceMarkerRef.current = new mapboxgl.Marker({ element: el })
+        .setLngLat(powerSourceLocation)
+        .addTo(map);
+    }
+  }, [powerSourceLocation]);
+
+  // ── Charger zone markers ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove old markers
+    for (const marker of chargerZoneMarkersRef.current) {
+      marker.remove();
+    }
+    chargerZoneMarkersRef.current = [];
+
+    for (let i = 0; i < chargerZones.length; i++) {
+      const coord = chargerZones[i];
+      const el = document.createElement('div');
+      el.style.cssText = `
+        width: 32px; height: 32px; border-radius: 50%;
+        background: #2563EB; border: 2px solid #FFF;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: bold; color: white;
+        cursor: pointer; box-shadow: 0 2px 6px rgba(37,99,235,0.5);
+        animation: pulse 2s infinite;
+      `;
+      el.textContent = String(i + 1);
+      el.title = `Charger Zone ${i + 1}`;
+
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat(coord)
+        .addTo(map);
+
+      chargerZoneMarkersRef.current.push(marker);
+    }
+  }, [chargerZones]);
 
   // ── Cursor style ──
   useEffect(() => {

@@ -7,12 +7,17 @@ import type {
   MapAction,
   RunType,
   EquipmentType,
+  PointToolType,
   PatchBatch,
   EstimatePatch,
 } from '@/lib/map/types';
+import type { SiteIntelligence, AssessmentPhase } from '@/lib/ai/site-assessment-types';
 import { PATCH_DEBOUNCE_MS } from '@/lib/map/constants';
 import { measureRunLength } from '@/lib/map/measurements';
 import { generatePatches, applyPatches } from '@/lib/map/sync';
+import { generateAIPatches } from '@/lib/map/ai-patches';
+import { generateInferencePatches } from '@/lib/map/auto-infer';
+import { autoGenerateRuns } from '@/lib/map/auto-generate-runs';
 import { generateEquipmentLabel } from './EquipmentLayer';
 import { SiteMap } from './SiteMap';
 import { StreetViewPanel } from './StreetViewPanel';
@@ -20,7 +25,24 @@ import { DrawingToolbar } from './DrawingToolbar';
 import { SiteInfoPanel } from './SiteInfoPanel';
 import { PatchReviewPanel } from './PatchReviewPanel';
 import { EstimateImpactPanel } from './EstimateImpactPanel';
+import { SiteAssessmentFlow } from './SiteAssessmentFlow';
+import { SiteIntelligenceCard } from './SiteIntelligenceCard';
+import { SmartQuestionnaire } from './SmartQuestionnaire';
 import type { LineString, Point } from 'geojson';
+
+// ── Module-level constants ──
+
+const ALLOWED_SV_FIELDS = new Set([
+  'parkingEnvironment.surfaceType',
+  'parkingEnvironment.type',
+  'charger.mountType',
+  'parkingEnvironment.trafficControlRequired',
+]);
+
+const ALLOWED_QA_FIELDS = new Set([
+  'charger.brand', 'charger.count', 'charger.chargingLevel',
+  'parkingEnvironment.hasPTSlab', 'site.siteType',
+]);
 
 // ── Reducer ──
 
@@ -32,13 +54,22 @@ function initialState(): MapWorkspaceState {
     equipment: [],
     selectedTool: null,
     selectedFeatureId: null,
+    powerSourceLocation: null,
+    chargerZones: [],
   };
 }
 
 function mapReducer(state: MapWorkspaceState, action: MapAction): MapWorkspaceState {
   switch (action.type) {
     case 'SET_ADDRESS':
-      return { ...state, siteAddress: action.address, siteCoordinates: action.coordinates };
+      return {
+        ...state,
+        siteAddress: action.address,
+        siteCoordinates: action.coordinates,
+        // Reset AI state so a new assessment can trigger for the new address
+        powerSourceLocation: null,
+        chargerZones: [],
+      };
 
     case 'SELECT_TOOL':
       return { ...state, selectedTool: action.tool, selectedFeatureId: null };
@@ -76,6 +107,23 @@ function mapReducer(state: MapWorkspaceState, action: MapAction): MapWorkspaceSt
     case 'DELETE_EQUIPMENT':
       return { ...state, equipment: state.equipment.filter((e) => e.id !== action.id) };
 
+    case 'SET_POWER_SOURCE':
+      return { ...state, powerSourceLocation: action.coordinates };
+
+    case 'SET_CHARGER_ZONE':
+      return { ...state, chargerZones: [...state.chargerZones, action.coordinates] };
+
+    case 'LOAD_AI_RUNS': {
+      // Remove previous auto-generated runs/equipment (IDs contain '-auto-') before adding new ones
+      const manualRuns = state.runs.filter((r) => !r.id.includes('-auto-'));
+      const manualEquipment = state.equipment.filter((e) => !e.id.includes('-auto-'));
+      return {
+        ...state,
+        runs: [...manualRuns, ...action.runs],
+        equipment: [...manualEquipment, ...action.equipment],
+      };
+    }
+
     case 'RESET':
       return initialState();
 
@@ -94,10 +142,8 @@ interface MapWorkspaceProps {
 
 // ── Component ──
 
-let idCounter = 0;
 function nextId(prefix: string): string {
-  idCounter += 1;
-  return `${prefix}-${Date.now()}-${idCounter}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 type CenterView = 'satellite' | 'streetview';
@@ -119,7 +165,32 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
   const [centerView, setCenterView] = useState<CenterView>('satellite');
   const [isAnalyzingStreetView, setIsAnalyzingStreetView] = useState(false);
   const [streetViewAnalysis, setStreetViewAnalysis] = useState<StreetViewAnalysisResult | null>(null);
+  const [assessmentPhase, setAssessmentPhase] = useState<AssessmentPhase>('idle');
+  const [siteIntelligence, setSiteIntelligence] = useState<SiteIntelligence | null>(null);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const assessmentGenerationRef = useRef(0);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef(input);
+
+  // Keep inputRef current for async callbacks
+  useEffect(() => { inputRef.current = input; }, [input]);
+
+  // Cleanup toast timer on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  // Show a toast notification that auto-dismisses
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+  }, []);
 
   // Load address from input
   useEffect(() => {
@@ -132,12 +203,12 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
       )
         .then((res) => res.json())
         .then((data) => {
-          if (data.features?.length > 0) {
-            const center = data.features[0].center as [number, number];
+          const center = data.features?.[0]?.center;
+          if (Array.isArray(center) && center.length >= 2) {
             dispatch({
               type: 'SET_ADDRESS',
               address: input.site.address,
-              coordinates: center,
+              coordinates: [center[0], center[1]] as [number, number],
             });
           }
         })
@@ -145,31 +216,79 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
     }
   }, [input.site.address, mapState.siteAddress]);
 
-  // Debounced patch generation
+  // Debounced patch generation — merges map patches with existing AI/questionnaire patches
+  // Uses inputRef.current to avoid re-triggering when patches are applied
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      const batch = generatePatches(mapState, input);
-      setPatchBatch(batch.patches.length > 0 ? batch : null);
+      const currentInput = inputRef.current;
+      const batch = generatePatches(mapState, currentInput);
+      const inferPatches = generateInferencePatches(currentInput, mapState);
+      setPatchBatch((prev) => {
+        // Preserve AI analysis patches; auto_infer patches are recomputed each cycle
+        const preservedPatches = (prev?.patches ?? []).filter(
+          (p) => p.source === 'ai_analysis',
+        );
+        // Deduplicate: AI analysis patches take priority over auto_infer for same fieldPath
+        const aiFieldPaths = new Set(preservedPatches.map((p) => p.fieldPath));
+        const mapFieldPaths = new Set(batch.patches.map((p) => p.fieldPath));
+        const dedupedInferPatches = inferPatches.filter(
+          (p) => !aiFieldPaths.has(p.fieldPath) && !mapFieldPaths.has(p.fieldPath),
+        );
+        const allPatches = [...preservedPatches, ...batch.patches, ...dedupedInferPatches];
+        if (allPatches.length === 0) return null;
+        return {
+          batchId: batch.batchId,
+          trigger: batch.trigger,
+          patches: allPatches,
+          createdAt: batch.createdAt,
+        };
+      });
     }, PATCH_DEBOUNCE_MS);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [mapState, input]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapState]);
 
   // ── Callbacks ──
 
-  const handleAddressSelect = useCallback(
+  const performAddressChange = useCallback(
     (address: string, coordinates: [number, number]) => {
       dispatch({ type: 'SET_ADDRESS', address, coordinates });
+      assessmentGenerationRef.current += 1;
+      setAssessmentPhase('idle');
+      setSiteIntelligence(null);
+      setStreetViewAnalysis(null);
+      setShowQuestionnaire(false);
+      setPatchBatch(null);
     },
     [],
   );
 
+  const handleAddressSelect = useCallback(
+    (address: string, coordinates: [number, number]) => {
+      // Warn if user has existing drawings that will be lost
+      const hasDrawings = mapState.runs.length > 0 || mapState.equipment.length > 0;
+      if (hasDrawings) {
+        setConfirmDialog({
+          message: `Changing the address will clear ${mapState.runs.length} run(s) and ${mapState.equipment.length} equipment marker(s). Continue?`,
+          onConfirm: () => {
+            performAddressChange(address, coordinates);
+            setConfirmDialog(null);
+          },
+        });
+      } else {
+        performAddressChange(address, coordinates);
+      }
+    },
+    [mapState.runs.length, mapState.equipment.length, performAddressChange],
+  );
+
   const handleSelectTool = useCallback(
-    (tool: RunType | EquipmentType | null) => {
+    (tool: RunType | EquipmentType | PointToolType | null) => {
       dispatch({ type: 'SELECT_TOOL', tool });
     },
     [],
@@ -251,23 +370,23 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
   const updatePatchStatus = useCallback(
     (patchId: string, status: EstimatePatch['status']) => {
-      if (!patchBatch) return;
-      const updated: PatchBatch = {
-        ...patchBatch,
-        patches: patchBatch.patches.map((p) =>
-          p.id === patchId ? { ...p, status } : p,
-        ),
-      };
-      setPatchBatch(updated);
-
-      // If all patches resolved, apply accepted ones
-      const allResolved = updated.patches.every((p) => p.status !== 'pending');
-      if (allResolved) {
-        const newInput = applyPatches(input, updated.patches);
-        onInputChange(newInput);
-      }
+      setPatchBatch((prev) => {
+        if (!prev) return prev;
+        const updated: PatchBatch = {
+          ...prev,
+          patches: prev.patches.map((p) =>
+            p.id === patchId ? { ...p, status } : p,
+          ),
+        };
+        // If all patches resolved, apply accepted ones
+        if (updated.patches.every((p) => p.status !== 'pending')) {
+          const newInput = applyPatches(inputRef.current, updated.patches);
+          onInputChange(newInput);
+        }
+        return updated;
+      });
     },
-    [patchBatch, input, onInputChange],
+    [onInputChange],
   );
 
   const handleAcceptPatch = useCallback(
@@ -281,27 +400,50 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
   );
 
   const handleAcceptAll = useCallback(() => {
-    if (!patchBatch) return;
-    const updated: PatchBatch = {
-      ...patchBatch,
-      patches: patchBatch.patches.map((p) =>
-        p.status === 'pending' ? { ...p, status: 'accepted' as const } : p,
-      ),
-    };
-    setPatchBatch(updated);
-    const newInput = applyPatches(input, updated.patches);
-    onInputChange(newInput);
-  }, [patchBatch, input, onInputChange]);
+    setPatchBatch((prev) => {
+      if (!prev) return prev;
+      const updated: PatchBatch = {
+        ...prev,
+        patches: prev.patches.map((p) =>
+          p.status === 'pending' ? { ...p, status: 'accepted' as const } : p,
+        ),
+      };
+      onInputChange(applyPatches(inputRef.current, updated.patches));
+      return updated;
+    });
+  }, [onInputChange]);
 
   const handleRejectAll = useCallback(() => {
-    if (!patchBatch) return;
-    setPatchBatch({
-      ...patchBatch,
-      patches: patchBatch.patches.map((p) =>
-        p.status === 'pending' ? { ...p, status: 'rejected' as const } : p,
-      ),
+    setPatchBatch((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        patches: prev.patches.map((p) =>
+          p.status === 'pending' ? { ...p, status: 'rejected' as const } : p,
+        ),
+      };
     });
-  }, [patchBatch]);
+  }, []);
+
+  // Accept specific patch IDs atomically (for "Accept Safe" button)
+  const handleAcceptSafe = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    setPatchBatch((prev) => {
+      if (!prev) return prev;
+      const updated: PatchBatch = {
+        ...prev,
+        patches: prev.patches.map((p) =>
+          idSet.has(p.id) && p.status === 'pending'
+            ? { ...p, status: 'accepted' as const }
+            : p,
+        ),
+      };
+      if (updated.patches.every((p) => p.status !== 'pending')) {
+        onInputChange(applyPatches(inputRef.current, updated.patches));
+      }
+      return updated;
+    });
+  }, [onInputChange]);
 
   // ── Street View AI analysis ──
 
@@ -321,7 +463,41 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
       }
       const data = await res.json();
       if (data.analysis) {
-        setStreetViewAnalysis(data.analysis as StreetViewAnalysisResult);
+        const analysis = data.analysis as StreetViewAnalysisResult;
+        setStreetViewAnalysis(analysis);
+
+        // Convert street view inferred fields into patches
+        if (analysis.inferredFields) {
+          const svPatches: EstimatePatch[] = [];
+          let counter = 0;
+          for (const [fieldPath, value] of Object.entries(analysis.inferredFields)) {
+            if (!ALLOWED_SV_FIELDS.has(fieldPath)) continue;
+            if (value === null || value === undefined) continue;
+            counter += 1;
+            svPatches.push({
+              id: `sv-patch-${Date.now()}-${counter}`,
+              fieldPath,
+              previousValue: null,
+              proposedValue: value,
+              source: 'ai_analysis',
+              reason: `Street View AI analysis (${Math.round((analysis.confidence ?? 0.5) * 100)}% confidence)`,
+              status: 'pending',
+            });
+          }
+          if (svPatches.length > 0) {
+            setPatchBatch((prev) => {
+              if (!prev) {
+                return {
+                  batchId: `sv-batch-${Date.now()}`,
+                  trigger: 'streetview_analysis',
+                  patches: svPatches,
+                  createdAt: new Date().toISOString(),
+                };
+              }
+              return { ...prev, patches: [...prev.patches, ...svPatches] };
+            });
+          }
+        }
       }
     } catch (err) {
       console.error('Street View analysis error:', err);
@@ -329,6 +505,171 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
       setIsAnalyzingStreetView(false);
     }
   }, []);
+
+  // ── AI Site Assessment ──
+
+  const triggerAssessment = useCallback(async (lat: number, lng: number) => {
+    const generation = ++assessmentGenerationRef.current;
+    setAssessmentPhase('analyzing_satellite');
+    setSiteIntelligence(null);
+
+    try {
+      const res = await fetch('/api/ai/assess-site', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lng }),
+      });
+
+      // Discard stale response if address changed while fetching
+      if (assessmentGenerationRef.current !== generation) return;
+
+      if (!res.ok) {
+        console.error('Site assessment failed:', await res.json().catch(() => ({})));
+        setAssessmentPhase('idle');
+        return;
+      }
+
+      const data = await res.json();
+
+      // Check again after parsing — address may have changed
+      if (assessmentGenerationRef.current !== generation) return;
+
+      if (data.siteIntelligence) {
+        const intel = data.siteIntelligence as SiteIntelligence;
+        setSiteIntelligence(intel);
+        setAssessmentPhase('awaiting_user_input');
+        showToast(`AI found ${intel.mergedInferences.length} site characteristics (${Math.round(intel.overallConfidence * 100)}% confidence)`);
+
+        // Auto-generate AI patches (use inputRef for fresh input)
+        const aiBatch = generateAIPatches(intel, inputRef.current);
+        if (aiBatch.patches.length > 0) {
+          setPatchBatch((prev) => {
+            if (!prev) return aiBatch;
+            return {
+              ...prev,
+              patches: [...prev.patches, ...aiBatch.patches],
+            };
+          });
+        }
+
+        // Show questionnaire if there are unanswered questions
+        if (intel.unansweredQuestions.length > 0) {
+          setShowQuestionnaire(true);
+        }
+      }
+    } catch (err) {
+      // Only update phase if this is still the current assessment
+      if (assessmentGenerationRef.current === generation) {
+        console.error('Site assessment error:', err);
+        setAssessmentPhase('idle');
+      }
+    }
+  }, [showToast]);
+
+  // Auto-trigger assessment when coordinates are set
+  useEffect(() => {
+    if (mapState.siteCoordinates && assessmentPhase === 'idle') {
+      const [lng, lat] = mapState.siteCoordinates;
+      triggerAssessment(lat, lng);
+    }
+    // Only trigger on coordinate changes, not phase changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapState.siteCoordinates]);
+
+  // Allowed field paths for questionnaire answers
+
+  // Handle questionnaire answers — route through patch review panel
+  const handleQuestionAnswer = useCallback(
+    (fieldPath: string, value: unknown) => {
+      // Only allow known field paths
+      if (!ALLOWED_QA_FIELDS.has(fieldPath)) return;
+
+      // Validate number bounds
+      if (typeof value === 'number') {
+        if (!Number.isFinite(value) || value < 0 || value > 500) return;
+      }
+
+      const patch: EstimatePatch = {
+        id: `qa-patch-${Date.now()}`,
+        fieldPath,
+        previousValue: null,
+        proposedValue: value,
+        source: 'ai_analysis',
+        reason: 'User confirmed via Smart Questionnaire',
+        status: 'pending',
+      };
+
+      setPatchBatch((prev) => {
+        if (!prev) {
+          return {
+            batchId: `qa-batch-${Date.now()}`,
+            trigger: 'questionnaire_answer',
+            patches: [patch],
+            createdAt: new Date().toISOString(),
+          };
+        }
+        return { ...prev, patches: [...prev.patches, patch] };
+      });
+    },
+    [],
+  );
+
+  const handleQuestionnaireComplete = useCallback(() => {
+    setShowQuestionnaire(false);
+    setAssessmentPhase('generating_runs');
+    // Prompt user to mark power source and charger zones
+    dispatch({ type: 'SELECT_TOOL', tool: 'power_source' });
+  }, []);
+
+  // Handle power source / charger zone placement
+  const handlePointToolPlace = useCallback(
+    (toolType: PointToolType, coordinates: [number, number]) => {
+      if (toolType === 'power_source') {
+        dispatch({ type: 'SET_POWER_SOURCE', coordinates });
+        // Switch to charger zone tool after placing power source
+        dispatch({ type: 'SELECT_TOOL', tool: 'charger_zone' });
+      } else if (toolType === 'charger_zone') {
+        dispatch({ type: 'SET_CHARGER_ZONE', coordinates });
+      }
+    },
+    [],
+  );
+
+  // Auto-generate runs when power source + at least one charger zone are set
+  useEffect(() => {
+    if (!mapState.powerSourceLocation || mapState.chargerZones.length === 0) return;
+
+    // Determine surface from AI analysis
+    const surfaceInference = siteIntelligence?.mergedInferences.find(
+      (m) => m.fieldPath === 'parkingEnvironment.surfaceType',
+    );
+    const primarySurface = (surfaceInference?.value as string) ?? null;
+
+    // Determine charging level from input
+    const chargingLevel = input.charger?.chargingLevel ?? 'l2';
+
+    const plgRaw = siteIntelligence?.satelliteAnalysis?.parkingLayoutGeometry;
+    const plgObj = typeof plgRaw === 'object' && plgRaw !== null ? plgRaw as Record<string, unknown> : null;
+    const surfaceTransitions = Array.isArray(plgObj?.surfaceTransitions)
+      ? plgObj.surfaceTransitions.filter((s): s is string => typeof s === 'string')
+      : [];
+
+    const result = autoGenerateRuns(
+      mapState.powerSourceLocation,
+      mapState.chargerZones,
+      {
+        primarySurface: primarySurface as 'asphalt' | 'concrete' | 'gravel' | 'other' | null,
+        surfaceTransitions,
+      },
+      chargingLevel as 'l2' | 'l3_dcfc',
+    );
+
+    dispatch({ type: 'LOAD_AI_RUNS', runs: result.runs, equipment: result.equipment });
+    setAssessmentPhase('complete');
+    dispatch({ type: 'SELECT_TOOL', tool: null });
+    showToast(`Auto-generated ${result.runs.length} runs + ${result.equipment.length} equipment markers`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapState.powerSourceLocation, mapState.chargerZones.length]);
 
   // ── Delete selected feature ──
 
@@ -381,8 +722,15 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
           </button>
         </div>
 
-        {/* View toggle (satellite / street view) */}
-        <div className="absolute left-1/2 top-2 z-10 -translate-x-1/2">
+        {/* Assessment flow stepper */}
+        {assessmentPhase !== 'idle' && (
+          <div className="absolute left-1/2 top-2 z-10 -translate-x-1/2">
+            <SiteAssessmentFlow phase={assessmentPhase} />
+          </div>
+        )}
+
+        {/* View toggle (satellite / street view) — below stepper when active */}
+        <div className={`absolute left-1/2 z-10 -translate-x-1/2 ${assessmentPhase !== 'idle' ? 'top-14' : 'top-2'}`}>
           <div className="flex rounded-lg bg-white shadow">
             <button
               onClick={() => setCenterView('satellite')}
@@ -429,8 +777,17 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
             {/* Active tool indicator */}
             {mapState.selectedTool && (
-              <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
-                {mapState.selectedTool.replace('_', ' ')} mode — Click to draw, double-click to finish
+              <div className={`absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium text-white shadow-lg ${
+                mapState.selectedTool === 'power_source' ? 'bg-red-600'
+                : mapState.selectedTool === 'charger_zone' ? 'bg-blue-600'
+                : 'bg-blue-600'
+              }`}>
+                {mapState.selectedTool === 'power_source'
+                  ? 'Click where the electrical panel / power source is'
+                  : mapState.selectedTool === 'charger_zone'
+                  ? `Click where chargers go (${mapState.chargerZones.length} placed) — double-click when done`
+                  : `${mapState.selectedTool.replace('_', ' ')} mode — Click to draw, double-click to finish`
+                }
               </div>
             )}
 
@@ -440,6 +797,8 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
               equipment={mapState.equipment}
               selectedTool={mapState.selectedTool}
               selectedFeatureId={mapState.selectedFeatureId}
+              powerSourceLocation={mapState.powerSourceLocation}
+              chargerZones={mapState.chargerZones}
               onRunCreate={handleRunCreate}
               onRunUpdate={handleRunUpdate}
               onRunDelete={handleRunDelete}
@@ -447,6 +806,7 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
               onEquipmentUpdate={handleEquipmentUpdate}
               onEquipmentDelete={handleEquipmentDelete}
               onFeatureSelect={handleFeatureSelect}
+              onPointToolPlace={handlePointToolPlace}
             />
           </>
         ) : (
@@ -471,12 +831,46 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
               Map → Estimate Sync
             </div>
 
+            {/* AI Site Intelligence */}
+            {siteIntelligence && (
+              <SiteIntelligenceCard
+                intelligence={siteIntelligence}
+                onSuggestPowerSource={() => {
+                  dispatch({ type: 'SELECT_TOOL', tool: 'power_source' });
+                  showToast('Click the map to place the power source');
+                }}
+                onSuggestChargerZones={() => {
+                  dispatch({ type: 'SELECT_TOOL', tool: 'charger_zone' });
+                  showToast('Click the map to place charger zones');
+                }}
+              />
+            )}
+
+            {/* Point tool controls */}
+            {assessmentPhase === 'generating_runs' && !mapState.powerSourceLocation && (
+              <button
+                onClick={() => dispatch({ type: 'SELECT_TOOL', tool: 'power_source' })}
+                className="w-full rounded-lg bg-red-50 p-3 text-left text-sm text-red-800 hover:bg-red-100"
+              >
+                Click &quot;Power Source&quot; then click the map to mark the electrical panel location
+              </button>
+            )}
+            {assessmentPhase === 'generating_runs' && mapState.powerSourceLocation && mapState.chargerZones.length === 0 && (
+              <button
+                onClick={() => dispatch({ type: 'SELECT_TOOL', tool: 'charger_zone' })}
+                className="w-full rounded-lg bg-blue-50 p-3 text-left text-sm text-blue-800 hover:bg-blue-100"
+              >
+                Now click the map to mark where chargers should go
+              </button>
+            )}
+
             <PatchReviewPanel
               batch={patchBatch}
               onAcceptPatch={handleAcceptPatch}
               onRejectPatch={handleRejectPatch}
               onAcceptAll={handleAcceptAll}
               onRejectAll={handleRejectAll}
+              onAcceptSafe={handleAcceptSafe}
             />
 
             <EstimateImpactPanel estimate={estimate} />
@@ -553,6 +947,54 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
           </div>
         )}
       </div>
+
+      {/* Smart Questionnaire Modal */}
+      {showQuestionnaire && siteIntelligence && (
+        <SmartQuestionnaire
+          questions={siteIntelligence.unansweredQuestions}
+          onAnswer={handleQuestionAnswer}
+          onComplete={handleQuestionnaireComplete}
+        />
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-dialog-title"
+          onKeyDown={(e) => { if (e.key === 'Escape') setConfirmDialog(null); }}
+        >
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
+            <div id="confirm-dialog-title" className="mb-1 text-sm font-semibold text-gray-900">Confirm Address Change</div>
+            <p className="mb-4 text-sm text-gray-600">{confirmDialog.message}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-700"
+              >
+                Clear & Continue
+              </button>
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-[slideUp_0.3s_ease-out]">
+          <div className="rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white shadow-lg">
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

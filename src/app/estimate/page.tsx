@@ -2,18 +2,29 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { EstimateInput, EstimateOutput, EstimateLineItem, ManualReviewTrigger } from '@/lib/estimate/types';
 import { generateEstimate } from '@/lib/estimate/engine';
-import { emptyInput } from '@/lib/estimate/emptyInput';
 import { exportEstimatePDF } from '@/lib/estimate/export-pdf';
 import { SCENARIOS } from '@/lib/estimate/scenarios';
 import { useViewMode } from '@/lib/viewMode';
+import { useEstimate } from '@/contexts/EstimateContext';
 import { MAP_WORKSPACE_ENABLED } from '@/lib/map/feature-flags';
 import { ViewModeToggle } from '@/components/ViewModeToggle';
 import { SOWParser } from '@/components/advanced/SOWParser';
 import { ChatBuilder } from '@/components/advanced/ChatBuilder';
 import { AIReviewer } from '@/components/advanced/AIReviewer';
 import { PhotoAnalysis } from '@/components/advanced/PhotoAnalysis';
+import {
+  ProjectSection, CustomerSection, SiteSection, ParkingSection,
+  ChargerSection, ElectricalSection, CivilSection, PermitSection,
+  NetworkSection, AccessoriesSection, ResponsibilitiesSection, PricingSection,
+} from '@/components/estimate/sections';
+import { useAutoEstimate } from '@/hooks/useAutoEstimate';
+import { LiveEstimateSummary } from '@/components/estimate/LiveEstimateSummary';
+import { OnboardingWizard } from '@/components/estimate/OnboardingWizard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { emptyInput } from '@/lib/estimate/emptyInput';
 
 // ============================================================
 // Helpers
@@ -71,7 +82,6 @@ function getTabStatus(tab: string, input: EstimateInput): 'empty' | 'partial' | 
   const meta = TAB_META[tab];
   if (!meta) return 'empty';
 
-  // Check all fields in the tab section for any content
   const sectionMap: Record<string, string> = {
     'Project': 'project', 'Customer': 'customer', 'Site': 'site',
     'Parking': 'parkingEnvironment', 'Charger': 'charger', 'Electrical': 'electrical',
@@ -90,7 +100,6 @@ function getTabStatus(tab: string, input: EstimateInput): 'empty' | 'partial' | 
     }
   }
 
-  // For required fields check
   const requiredFilled = meta.required.length === 0 || meta.required.every(
     (path) => isFieldFilled(getFieldValue(input, path))
   );
@@ -144,17 +153,63 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 // ============================================================
+// Section Renderer — maps tab names to extracted components
+// ============================================================
+
+const SECTION_MAP: Record<string, React.ComponentType> = {
+  'Project': ProjectSection,
+  'Customer': CustomerSection,
+  'Site': SiteSection,
+  'Parking': ParkingSection,
+  'Charger': ChargerSection,
+  'Electrical': ElectricalSection,
+  'Civil': CivilSection,
+  'Permit/Design': PermitSection,
+  'Network': NetworkSection,
+  'Accessories': AccessoriesSection,
+  'Responsibilities': ResponsibilitiesSection,
+  'Controls': PricingSection,
+};
+
+function SectionRenderer({ tab }: { tab: string }) {
+  const Component = SECTION_MAP[tab];
+  if (!Component) return null;
+  return <Component />;
+}
+
+// ============================================================
 // Main Page
 // ============================================================
 
 export default function EstimatePage() {
+  const router = useRouter();
   const { isAdvanced } = useViewMode();
-  const [input, setInput] = useState<EstimateInput>(emptyInput());
+  const { input, updateField, applyPatches, setInput, resetEstimate } = useEstimate();
+  const autoEstimate = useAutoEstimate();
   const [output, setOutput] = useState<EstimateOutput | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>('Project');
   const [expandedLines, setExpandedLines] = useState<Set<string>>(new Set());
   const [inputMode, setInputMode] = useState<'form' | 'chat'>('form');
   const [aiStatus, setAiStatus] = useState<{ openai: boolean; gemini: boolean } | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(true);
+
+  // Detect if estimate is essentially empty (for onboarding)
+  const isEstimateEmpty = useMemo(() => {
+    return !input.project.name && !input.customer.companyName && !input.site.address && input.charger.count === 0;
+  }, [input.project.name, input.customer.companyName, input.site.address, input.charger.count]);
+
+  const handleEntrySelect = useCallback((entry: 'sow' | 'chat' | 'map' | 'form') => {
+    setShowOnboarding(false);
+    if (entry === 'chat') {
+      setInputMode('chat');
+    } else if (entry === 'map') {
+      router.push('/estimate/map');
+    } else if (entry === 'sow') {
+      // SOW parser is already visible in advanced mode, just switch to form
+      setInputMode('form');
+    }
+    // 'form' just dismisses wizard
+  }, [router]);
 
   // Check AI availability when Advanced mode is active
   useEffect(() => {
@@ -175,19 +230,18 @@ export default function EstimatePage() {
         setInput(found.input);
       }
     }
-  }, []);
+  }, [setInput]);
 
   const loadScenario = useCallback((id: string) => {
     const found = SCENARIOS.find((s) => s.id === id);
     if (found) {
       setInput(found.input);
       setOutput(null);
-      // Update URL
       const url = new URL(window.location.href);
       url.searchParams.set('scenario', id);
       window.history.replaceState({}, '', url.toString());
     }
-  }, []);
+  }, [setInput]);
 
   const handleGenerate = useCallback(() => {
     const result = generateEstimate(input);
@@ -203,26 +257,11 @@ export default function EstimatePage() {
     });
   }, []);
 
-  // Deep updater
-  const updateField = useCallback((path: string, value: unknown) => {
-    setInput((prev) => {
-      const parts = path.split('.');
-      const newInput = JSON.parse(JSON.stringify(prev));
-      let obj: Record<string, unknown> = newInput;
-      for (let i = 0; i < parts.length - 1; i++) {
-        obj = obj[parts[i]] as Record<string, unknown>;
-      }
-      obj[parts[parts.length - 1]] = value;
-      return newInput;
-    });
-  }, []);
-
-  // Apply multiple flat fields from AI components
   const applyFlatFields = useCallback((fields: Record<string, unknown>) => {
-    for (const [path, value] of Object.entries(fields)) {
-      updateField(path, value);
-    }
-  }, [updateField]);
+    applyPatches(
+      Object.entries(fields).map(([fieldPath, value]) => ({ fieldPath, value }))
+    );
+  }, [applyPatches]);
 
   const progress = useMemo(() => getOverallProgress(input), [input]);
   const tabStatuses = useMemo(() => {
@@ -253,15 +292,12 @@ export default function EstimatePage() {
           </div>
           <div className="flex items-center gap-4">
             {MAP_WORKSPACE_ENABLED && (
-              <button
-                onClick={() => {
-                  sessionStorage.setItem('estimateInput', JSON.stringify(input));
-                  window.location.href = '/estimate/map';
-                }}
+              <Link
+                href="/estimate/map"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 print:hidden"
               >
                 Map Workspace
-              </button>
+              </Link>
             )}
             <ViewModeToggle />
             <Link href="/" className="text-sm text-blue-300 hover:text-white print:hidden">Home</Link>
@@ -269,7 +305,7 @@ export default function EstimatePage() {
         </div>
       </header>
 
-      {/* Progress Bar — fixed below header */}
+      {/* Progress Bar */}
       <div className="border-b border-gray-200 bg-white print:hidden">
         <div className="mx-auto max-w-7xl px-6 py-3">
           <div className="flex items-center justify-between mb-2">
@@ -313,6 +349,11 @@ export default function EstimatePage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 print:px-0">
+        {/* Onboarding Wizard */}
+        {showOnboarding && isEstimateEmpty && (
+          <OnboardingWizard onEntrySelect={handleEntrySelect} />
+        )}
+
         {/* AI Status Banner */}
         {isAdvanced && aiStatus && (!aiStatus.openai || !aiStatus.gemini) && (
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 print:hidden">
@@ -326,7 +367,7 @@ export default function EstimatePage() {
         )}
 
         {/* Scenario Loader */}
-        <div className="mb-6 flex flex-wrap items-center gap-4 print:hidden">
+        <div className={`mb-6 flex flex-wrap items-center gap-4 print:hidden ${showOnboarding && isEstimateEmpty ? 'hidden' : ''}`}>
           <label className="text-sm font-medium text-gray-700">Quick Start:</label>
           <select
             className="rounded border border-gray-300 px-3 py-1.5 text-sm"
@@ -339,7 +380,7 @@ export default function EstimatePage() {
             ))}
           </select>
           <button
-            onClick={() => { setInput(emptyInput()); setOutput(null); }}
+            onClick={() => { resetEstimate(); setOutput(null); }}
             className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
           >
             Clear All
@@ -348,7 +389,7 @@ export default function EstimatePage() {
         </div>
 
         {/* Advanced: SOW Parser + Photo Analysis */}
-        {isAdvanced && (
+        {isAdvanced && !(showOnboarding && isEstimateEmpty) && (
           <div className="mb-6 grid gap-4 md:grid-cols-2 print:hidden">
             <SOWParser onApplyFields={applyFlatFields} />
             <PhotoAnalysis onApplyFields={applyFlatFields} />
@@ -356,7 +397,7 @@ export default function EstimatePage() {
         )}
 
         {/* Advanced: Input Mode Toggle */}
-        {isAdvanced && (
+        {isAdvanced && !(showOnboarding && isEstimateEmpty) && (
           <div className="mb-4 flex gap-2 print:hidden">
             <button
               onClick={() => setInputMode('form')}
@@ -382,7 +423,7 @@ export default function EstimatePage() {
         )}
 
         {/* Chat Builder (Advanced, chat mode) */}
-        {isAdvanced && inputMode === 'chat' && (
+        {isAdvanced && inputMode === 'chat' && !(showOnboarding && isEstimateEmpty) && (
           <div className="mb-8 print:hidden">
             <ChatBuilder
               currentInput={input}
@@ -393,16 +434,16 @@ export default function EstimatePage() {
         )}
 
         {/* Form (Classic or Advanced form mode) */}
-        <div className={`mb-8 rounded-lg border border-gray-200 bg-white shadow-sm print:hidden ${isAdvanced && inputMode === 'chat' ? 'hidden' : ''}`}>
-          {/* Tab Bar */}
-          <div className="flex flex-wrap gap-0 border-b border-gray-200 bg-gray-50">
+        <div className={`mb-8 rounded-lg border border-gray-200 bg-white shadow-sm print:hidden ${(isAdvanced && inputMode === 'chat') || (showOnboarding && isEstimateEmpty) ? 'hidden' : ''}`}>
+          {/* Tab Bar — horizontal scroll on mobile */}
+          <div className="flex gap-0 overflow-x-auto border-b border-gray-200 bg-gray-50 scrollbar-none">
             {TABS.map((tab) => {
               const status = tabStatuses[tab];
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition ${
+                  className={`relative flex flex-shrink-0 items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition ${
                     activeTab === tab
                       ? 'border-b-2 border-[#2563EB] bg-white text-[#2563EB]'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -437,11 +478,13 @@ export default function EstimatePage() {
 
           {/* Tab Content */}
           <div className="p-6">
-            <TabContent tab={activeTab} input={input} updateField={updateField} />
+            <ErrorBoundary fallbackLabel={activeTab}>
+              <SectionRenderer tab={activeTab} />
+            </ErrorBoundary>
           </div>
 
           {/* Navigation Footer */}
-          <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 flex items-center justify-between">
+          <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2">
               <button
                 onClick={goPrev}
@@ -500,361 +543,10 @@ export default function EstimatePage() {
           </>
         )}
       </div>
+
+      {/* Live Estimate Summary — sticky bottom bar */}
+      <LiveEstimateSummary autoEstimate={autoEstimate} />
     </main>
-  );
-}
-
-// ============================================================
-// Tab Content
-// ============================================================
-
-function TabContent({
-  tab, input, updateField,
-}: {
-  tab: TabName;
-  input: EstimateInput;
-  updateField: (path: string, value: unknown) => void;
-}) {
-  const cls = 'block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
-  const reqCls = 'block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 border-l-2 border-l-blue-400';
-  const label = 'block text-sm font-medium text-gray-700 mb-1';
-  const reqLabel = 'block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-blue-500';
-  const hint = 'mt-1 text-xs text-gray-400';
-  const grid = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3';
-
-  switch (tab) {
-    case 'Project':
-      return (
-        <div className={grid}>
-          <div>
-            <label className={reqLabel}>Project Name</label>
-            <input className={reqCls} value={input.project.name} onChange={(e) => updateField('project.name', e.target.value)} placeholder="e.g. Hampton Inn Miami - EV Charging" />
-            <p className={hint}>Used as the estimate title</p>
-          </div>
-          <div>
-            <label className={label}>Sales Rep</label>
-            <input className={cls} value={input.project.salesRep} onChange={(e) => updateField('project.salesRep', e.target.value)} placeholder="Name of sales representative" />
-          </div>
-          <div>
-            <label className={reqLabel}>Project Type</label>
-            <select className={reqCls} value={input.project.projectType} onChange={(e) => updateField('project.projectType', e.target.value)}>
-              {['full_turnkey','full_turnkey_connectivity','equipment_install_commission','install_commission','equipment_purchase','remove_replace','commission_only','service_work','supercharger'].map((v) => (
-                <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>
-              ))}
-            </select>
-            <p className={hint}>Determines which line items are included</p>
-          </div>
-          <div>
-            <label className={label}>Timeline</label>
-            <input className={cls} value={input.project.timeline} onChange={(e) => updateField('project.timeline', e.target.value)} placeholder="e.g. Q2 2026, ASAP, 6-8 weeks" />
-          </div>
-          <div>
-            <label className={label}>New Construction?</label>
-            <select className={cls} value={input.project.isNewConstruction === null ? 'null' : String(input.project.isNewConstruction)} onChange={(e) => updateField('project.isNewConstruction', e.target.value === 'null' ? null : e.target.value === 'true')}>
-              <option value="null">Unknown</option>
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
-            <p className={hint}>New construction may reduce civil/trenching costs</p>
-          </div>
-        </div>
-      );
-
-    case 'Customer':
-      return (
-        <div className={grid}>
-          <div><label className={reqLabel}>Company Name</label><input className={reqCls} value={input.customer.companyName} onChange={(e) => updateField('customer.companyName', e.target.value)} placeholder="e.g. 396 Property Management LLC" /></div>
-          <div><label className={label}>Contact Name</label><input className={cls} value={input.customer.contactName} onChange={(e) => updateField('customer.contactName', e.target.value)} placeholder="Primary contact for this project" /></div>
-          <div><label className={label}>Email</label><input className={cls} type="email" value={input.customer.contactEmail} onChange={(e) => updateField('customer.contactEmail', e.target.value)} placeholder="contact@company.com" /></div>
-          <div><label className={label}>Phone</label><input className={cls} value={input.customer.contactPhone} onChange={(e) => updateField('customer.contactPhone', e.target.value)} placeholder="(555) 123-4567" /></div>
-          <div className="sm:col-span-2 lg:col-span-3"><label className={label}>Billing Address</label><input className={cls} value={input.customer.billingAddress} onChange={(e) => updateField('customer.billingAddress', e.target.value)} placeholder="Full billing address" /></div>
-        </div>
-      );
-
-    case 'Site':
-      return (
-        <div className={grid}>
-          <div className="sm:col-span-2 lg:col-span-3"><label className={reqLabel}>Site Address</label><input className={reqCls} value={input.site.address} onChange={(e) => updateField('site.address', e.target.value)} placeholder="Full installation address" /><p className={hint}>Where the chargers will be installed</p></div>
-          <div>
-            <label className={label}>Site Type</label>
-            <select className={cls} value={input.site.siteType ?? ''} onChange={(e) => updateField('site.siteType', e.target.value || null)}>
-              <option value="">-- Select --</option>
-              {['airport','apartment','event_venue','fleet_dealer','hospital','hotel','industrial','mixed_use','fuel_station','municipal','office','parking_structure','police_gov','recreational','campground','restaurant','retail','school','other'].map((v) => (
-                <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>
-              ))}
-            </select>
-          </div>
-          <div><label className={reqLabel}>State</label><input className={reqCls} value={input.site.state} onChange={(e) => updateField('site.state', e.target.value.toUpperCase())} maxLength={2} placeholder="FL" /><p className={hint}>2-letter code (affects tax/permit rules)</p></div>
-        </div>
-      );
-
-    case 'Parking':
-      return (
-        <div className={grid}>
-          <div>
-            <label className={label}>Parking Type</label>
-            <select className={cls} value={input.parkingEnvironment.type ?? ''} onChange={(e) => updateField('parkingEnvironment.type', e.target.value || null)}>
-              <option value="">-- Unknown --</option>
-              <option value="surface_lot">Surface Lot</option>
-              <option value="parking_garage">Parking Garage</option>
-              <option value="mixed">Mixed</option>
-            </select>
-          </div>
-          <div>
-            <label className={label}>Surface Type</label>
-            <select className={cls} value={input.parkingEnvironment.surfaceType ?? ''} onChange={(e) => updateField('parkingEnvironment.surfaceType', e.target.value || null)}>
-              <option value="">-- Unknown --</option>
-              <option value="asphalt">Asphalt</option>
-              <option value="concrete">Concrete</option>
-              <option value="gravel">Gravel</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label className={label}>Indoor/Outdoor</label>
-            <select className={cls} value={input.parkingEnvironment.indoorOutdoor ?? ''} onChange={(e) => updateField('parkingEnvironment.indoorOutdoor', e.target.value || null)}>
-              <option value="">-- Unknown --</option>
-              <option value="indoor">Indoor</option>
-              <option value="outdoor">Outdoor</option>
-              <option value="both">Both</option>
-            </select>
-          </div>
-          <BoolField label="Has PT Slab?" path="parkingEnvironment.hasPTSlab" value={input.parkingEnvironment.hasPTSlab} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Trenching Required?" path="parkingEnvironment.trenchingRequired" value={input.parkingEnvironment.trenchingRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Boring Required?" path="parkingEnvironment.boringRequired" value={input.parkingEnvironment.boringRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Coring Required?" path="parkingEnvironment.coringRequired" value={input.parkingEnvironment.coringRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Traffic Control?" path="parkingEnvironment.trafficControlRequired" value={input.parkingEnvironment.trafficControlRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Fire-Rated Penetrations?" path="parkingEnvironment.fireRatedPenetrations" value={input.parkingEnvironment.fireRatedPenetrations} updateField={updateField} cls={cls} labelCls={label} />
-          <div className="sm:col-span-2 lg:col-span-3"><label className={label}>Access Restrictions</label><input className={cls} value={input.parkingEnvironment.accessRestrictions} onChange={(e) => updateField('parkingEnvironment.accessRestrictions', e.target.value)} /></div>
-        </div>
-      );
-
-    case 'Charger':
-      return (
-        <div className={grid}>
-          <div><label className={reqLabel}>Brand</label><input className={reqCls} value={input.charger.brand} onChange={(e) => updateField('charger.brand', e.target.value)} placeholder="e.g. Tesla, ChargePoint, Xeal" /><p className={hint}>Drives equipment pricing from our pricebook</p></div>
-          <div><label className={label}>Model</label><input className={cls} value={input.charger.model} onChange={(e) => updateField('charger.model', e.target.value)} placeholder="e.g. Universal Wall Connector, Supercharger, CT4000" /><p className={hint}>Specific model for accurate pricing</p></div>
-          <div><label className={reqLabel}>Count</label><input className={reqCls} type="number" min={0} value={input.charger.count} onChange={(e) => updateField('charger.count', parseInt(e.target.value) || 0)} /><p className={hint}>Total number of charger units</p></div>
-          <div><label className={label}>Pedestal Count</label><input className={cls} type="number" min={0} value={input.charger.pedestalCount} onChange={(e) => updateField('charger.pedestalCount', parseInt(e.target.value) || 0)} /></div>
-          <div>
-            <label className={reqLabel}>Charging Level</label>
-            <select className={reqCls} value={input.charger.chargingLevel ?? ''} onChange={(e) => updateField('charger.chargingLevel', e.target.value || null)}>
-              <option value="">-- Select --</option>
-              <option value="l2">Level 2 (up to 19.2 kW)</option>
-              <option value="l3_dcfc">Level 3 / DCFC (50+ kW)</option>
-            </select>
-            <p className={hint}>L2 = residential/workplace, L3 = fast charging</p>
-          </div>
-          <div>
-            <label className={label}>Mount Type</label>
-            <select className={cls} value={input.charger.mountType ?? ''} onChange={(e) => updateField('charger.mountType', e.target.value || null)}>
-              <option value="">-- Select --</option>
-              <option value="pedestal">Pedestal</option>
-              <option value="wall">Wall</option>
-              <option value="mix">Mix</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label className={label}>Port Type</label>
-            <select className={cls} value={input.charger.portType ?? ''} onChange={(e) => updateField('charger.portType', e.target.value || null)}>
-              <option value="">-- Select --</option>
-              <option value="single">Single</option>
-              <option value="dual">Dual</option>
-              <option value="mix">Mix</option>
-            </select>
-          </div>
-          <div><label className={label}>Amps per Charger</label><input className={cls} type="number" value={input.charger.ampsPerCharger ?? ''} onChange={(e) => updateField('charger.ampsPerCharger', e.target.value ? parseInt(e.target.value) : null)} /></div>
-          <div><label className={label}>Volts</label><input className={cls} type="number" value={input.charger.volts ?? ''} onChange={(e) => updateField('charger.volts', e.target.value ? parseInt(e.target.value) : null)} /></div>
-          <div>
-            <label className={label}>Customer Supplied?</label>
-            <select className={cls} value={String(input.charger.isCustomerSupplied)} onChange={(e) => updateField('charger.isCustomerSupplied', e.target.value === 'true')}>
-              <option value="false">No</option>
-              <option value="true">Yes</option>
-            </select>
-          </div>
-        </div>
-      );
-
-    case 'Electrical':
-      return (
-        <div className={grid}>
-          <div>
-            <label className={label}>Service Type</label>
-            <select className={cls} value={input.electrical.serviceType ?? ''} onChange={(e) => updateField('electrical.serviceType', e.target.value || null)}>
-              <option value="">-- Unknown --</option>
-              <option value="120v">120V</option>
-              <option value="208v">208V</option>
-              <option value="240v">240V</option>
-              <option value="480v_3phase">480V 3-Phase</option>
-              <option value="unknown">Unknown</option>
-            </select>
-          </div>
-          <div><label className={label}>Distance to Panel (ft)</label><input className={cls} type="number" value={input.electrical.distanceToPanel_ft ?? ''} onChange={(e) => updateField('electrical.distanceToPanel_ft', e.target.value ? parseInt(e.target.value) : null)} placeholder="Estimated feet" /><p className={hint}>Drives conduit and wire run costs</p></div>
-          <div><label className={label}>Available Amps</label><input className={cls} type="number" value={input.electrical.availableAmps ?? ''} onChange={(e) => updateField('electrical.availableAmps', e.target.value ? parseInt(e.target.value) : null)} /></div>
-          <div>
-            <label className={label}>Capacity Known?</label>
-            <select className={cls} value={String(input.electrical.availableCapacityKnown)} onChange={(e) => updateField('electrical.availableCapacityKnown', e.target.value === 'true')}>
-              <option value="false">No</option>
-              <option value="true">Yes</option>
-            </select>
-          </div>
-          <BoolField label="Breaker Space Available?" path="electrical.breakerSpaceAvailable" value={input.electrical.breakerSpaceAvailable} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Panel Upgrade Required?" path="electrical.panelUpgradeRequired" value={input.electrical.panelUpgradeRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Transformer Required?" path="electrical.transformerRequired" value={input.electrical.transformerRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Switchgear Required?" path="electrical.switchgearRequired" value={input.electrical.switchgearRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <BoolField label="Utility Coordination?" path="electrical.utilityCoordinationRequired" value={input.electrical.utilityCoordinationRequired} updateField={updateField} cls={cls} labelCls={label} />
-          <div className="sm:col-span-2 lg:col-span-3"><label className={label}>Electrical Room Description</label><input className={cls} value={input.electrical.electricalRoomDescription} onChange={(e) => updateField('electrical.electricalRoomDescription', e.target.value)} /></div>
-        </div>
-      );
-
-    case 'Civil':
-      return (
-        <div>
-          <label className={label}>Installation Location Description</label>
-          <textarea className={cls + ' h-32'} value={input.civil.installationLocationDescription} onChange={(e) => updateField('civil.installationLocationDescription', e.target.value)} placeholder="Describe the physical installation area — parking layout, distance from electrical room, any obstacles, surface conditions, etc." />
-          <p className={hint}>The more detail you provide, the more accurate the civil/site work estimate will be</p>
-        </div>
-      );
-
-    case 'Permit/Design':
-      return (
-        <div className={grid}>
-          <div>
-            <label className={label}>Permit Responsibility</label>
-            <select className={cls} value={input.permit.responsibility ?? ''} onChange={(e) => updateField('permit.responsibility', e.target.value || null)}>
-              <option value="">-- TBD --</option>
-              <option value="bullet">Bullet</option>
-              <option value="client">Client</option>
-              <option value="tbd">TBD</option>
-            </select>
-          </div>
-          <div><label className={label}>Permit Fee Allowance ($)</label><input className={cls} type="number" value={input.permit.feeAllowance ?? ''} onChange={(e) => updateField('permit.feeAllowance', e.target.value ? parseFloat(e.target.value) : null)} /></div>
-          <div>
-            <label className={label}>Design/Eng Responsibility</label>
-            <select className={cls} value={input.designEngineering.responsibility ?? ''} onChange={(e) => updateField('designEngineering.responsibility', e.target.value || null)}>
-              <option value="">-- TBD --</option>
-              <option value="bullet">Bullet</option>
-              <option value="client">Client</option>
-              <option value="tbd">TBD</option>
-            </select>
-          </div>
-          <BoolField label="Stamped Plans Required?" path="designEngineering.stampedPlansRequired" value={input.designEngineering.stampedPlansRequired} updateField={updateField} cls={cls} labelCls={label} />
-        </div>
-      );
-
-    case 'Network':
-      return (
-        <div className={grid}>
-          <div>
-            <label className={label}>Network Type</label>
-            <select className={cls} value={input.network.type ?? ''} onChange={(e) => updateField('network.type', e.target.value || null)}>
-              <option value="">-- Unknown --</option>
-              <option value="none">None</option>
-              <option value="customer_lan">Customer LAN</option>
-              <option value="wifi_bridge">WiFi Bridge</option>
-              <option value="cellular_router">Cellular Router</option>
-              <option value="included_in_package">Included in Package</option>
-            </select>
-          </div>
-          <div>
-            <label className={label}>WiFi Install Responsibility</label>
-            <select className={cls} value={input.network.wifiInstallResponsibility ?? ''} onChange={(e) => updateField('network.wifiInstallResponsibility', e.target.value || null)}>
-              <option value="">-- N/A --</option>
-              <option value="bullet">Bullet</option>
-              <option value="client">Client</option>
-              <option value="na">N/A</option>
-              <option value="tbd">TBD</option>
-            </select>
-          </div>
-        </div>
-      );
-
-    case 'Accessories':
-      return (
-        <div className={grid}>
-          <div><label className={label}>Bollard Qty</label><input className={cls} type="number" min={0} value={input.accessories.bollardQty} onChange={(e) => updateField('accessories.bollardQty', parseInt(e.target.value) || 0)} /></div>
-          <div><label className={label}>Sign Qty</label><input className={cls} type="number" min={0} value={input.accessories.signQty} onChange={(e) => updateField('accessories.signQty', parseInt(e.target.value) || 0)} /></div>
-          <div><label className={label}>Wheel Stop Qty</label><input className={cls} type="number" min={0} value={input.accessories.wheelStopQty} onChange={(e) => updateField('accessories.wheelStopQty', parseInt(e.target.value) || 0)} /></div>
-          <div className="flex items-center gap-2"><input type="checkbox" checked={input.accessories.stripingRequired} onChange={(e) => updateField('accessories.stripingRequired', e.target.checked)} /><span className="text-sm text-gray-700">Striping Required</span></div>
-          <div className="flex items-center gap-2"><input type="checkbox" checked={input.accessories.padRequired} onChange={(e) => updateField('accessories.padRequired', e.target.checked)} /><span className="text-sm text-gray-700">Concrete Pad Required</span></div>
-          <div className="flex items-center gap-2"><input type="checkbox" checked={input.accessories.debrisRemoval} onChange={(e) => updateField('accessories.debrisRemoval', e.target.checked)} /><span className="text-sm text-gray-700">Debris Removal</span></div>
-        </div>
-      );
-
-    case 'Responsibilities':
-      return (
-        <div className={grid}>
-          {[
-            { label: 'Make Ready', path: 'makeReady.responsibility', value: input.makeReady.responsibility },
-            { label: 'Charger Install', path: 'chargerInstall.responsibility', value: input.chargerInstall.responsibility },
-            { label: 'Purchasing Chargers', path: 'purchasingChargers.responsibility', value: input.purchasingChargers.responsibility },
-          ].map((f) => (
-            <div key={f.path}>
-              <label className={label}>{f.label}</label>
-              <select className={cls} value={f.value ?? ''} onChange={(e) => updateField(f.path, e.target.value || null)}>
-                <option value="">-- TBD --</option>
-                <option value="bullet">Bullet</option>
-                <option value="client">Client</option>
-                <option value="tbd">TBD</option>
-              </select>
-            </div>
-          ))}
-          <div>
-            <label className={label}>Signage/Bollards</label>
-            <select className={cls} value={input.signageBollards.responsibility ?? ''} onChange={(e) => updateField('signageBollards.responsibility', e.target.value || null)}>
-              <option value="">-- TBD --</option>
-              <option value="signage">Signage Only</option>
-              <option value="bollards">Bollards Only</option>
-              <option value="signage_bollards">Signage + Bollards</option>
-              <option value="none">None</option>
-              <option value="tbd">TBD</option>
-            </select>
-          </div>
-        </div>
-      );
-
-    case 'Controls':
-      return (
-        <div className={grid}>
-          <div>
-            <label className={label}>Pricing Tier</label>
-            <select className={cls} value={input.estimateControls.pricingTier} onChange={(e) => updateField('estimateControls.pricingTier', e.target.value)}>
-              <option value="bulk_discount">Bulk Discount</option>
-              <option value="msrp">MSRP</option>
-            </select>
-          </div>
-          <div><label className={label}>Tax Rate (%)</label><input className={cls} type="number" step="0.1" value={input.estimateControls.taxRate} onChange={(e) => updateField('estimateControls.taxRate', parseFloat(e.target.value) || 0)} /></div>
-          <div><label className={label}>Contingency (%)</label><input className={cls} type="number" step="1" value={input.estimateControls.contingencyPercent} onChange={(e) => updateField('estimateControls.contingencyPercent', parseFloat(e.target.value) || 0)} /></div>
-          <div><label className={label}>Markup (%)</label><input className={cls} type="number" step="1" value={input.estimateControls.markupPercent} onChange={(e) => updateField('estimateControls.markupPercent', parseFloat(e.target.value) || 0)} /></div>
-          <div className="sm:col-span-2 lg:col-span-3"><label className={label}>Notes</label><textarea className={cls + ' h-24'} value={input.notes} onChange={(e) => updateField('notes', e.target.value)} /></div>
-        </div>
-      );
-
-    default:
-      return null;
-  }
-}
-
-// ============================================================
-// Bool Field Helper
-// ============================================================
-
-function BoolField({
-  label, path, value, updateField, cls, labelCls,
-}: {
-  label: string; path: string; value: boolean | null;
-  updateField: (p: string, v: unknown) => void; cls: string; labelCls: string;
-}) {
-  return (
-    <div>
-      <label className={labelCls}>{label}</label>
-      <select className={cls} value={value === null ? 'null' : String(value)} onChange={(e) => updateField(path, e.target.value === 'null' ? null : e.target.value === 'true')}>
-        <option value="null">Unknown</option>
-        <option value="true">Yes</option>
-        <option value="false">No</option>
-      </select>
-    </div>
   );
 }
 
@@ -871,7 +563,6 @@ function EstimateResults({
 }) {
   const { summary, metadata, lineItems, exclusions, manualReviewTriggers } = output;
 
-  // Group line items by category
   const byCategory = lineItems.reduce<Record<string, EstimateLineItem[]>>((acc, li) => {
     if (!acc[li.category]) acc[li.category] = [];
     acc[li.category].push(li);
@@ -912,15 +603,12 @@ function EstimateResults({
               Download PDF
             </button>
             {MAP_WORKSPACE_ENABLED && (
-              <button
-                onClick={() => {
-                  sessionStorage.setItem('estimateInput', JSON.stringify(output.input));
-                  window.location.href = '/estimate/map';
-                }}
+              <Link
+                href="/estimate/map"
                 className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 print:hidden"
               >
                 Open Map Workspace
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -1037,7 +725,6 @@ function CategoryGroup({
 
   return (
     <>
-      {/* Category header row */}
       <tr className="bg-gray-100">
         <td colSpan={6} className="px-4 py-2 text-xs font-bold uppercase text-gray-600">{category}</td>
         <td className="px-4 py-2 text-right text-xs font-bold text-gray-600">{fmt(catTotal)}</td>

@@ -14,8 +14,14 @@ import { sumRunsByType, countEquipmentByType } from './measurements';
 
 // ── Deep get/set helpers ──
 
+const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 export function deepGet(obj: unknown, path: string): unknown {
   const parts = path.split('.');
+
+  // Block prototype pollution vectors (consistent with deepSet)
+  if (parts.some((p) => BLOCKED_KEYS.has(p))) return undefined;
+
   let current: unknown = obj;
   for (const part of parts) {
     if (current === null || current === undefined || typeof current !== 'object') {
@@ -25,8 +31,6 @@ export function deepGet(obj: unknown, path: string): unknown {
   }
   return current;
 }
-
-const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 function deepSet(obj: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
   const parts = path.split('.');

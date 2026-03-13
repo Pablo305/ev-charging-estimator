@@ -140,6 +140,119 @@ Rules:
 ${PRICING_CONSTRAINT}`;
 }
 
+export function buildEnhancedSatellitePrompt(): string {
+  return `You are an expert EV charger site assessor analyzing a satellite/aerial image for commercial EV charger installation.
+
+Analyze the visible site and return ONLY a JSON response:
+
+{
+  "siteDescription": "Brief description of what you see from above",
+  "inferredFields": {
+    "parkingEnvironment.type": "surface_lot | parking_garage | mixed | null",
+    "parkingEnvironment.surfaceType": "asphalt | concrete | gravel | other | null",
+    "site.siteType": "hotel | apartment | retail | office | industrial | fuel_station | other | null",
+    "parkingEnvironment.trafficControlRequired": true | false | null
+  },
+  "estimatedParkingSpaces": null,
+  "suggestedChargerCount": { "min": null, "max": null, "reasoning": "Based on 3-5% EV adoption rate" },
+  "parkingLayoutGeometry": {
+    "stallOrientation": "angled | perpendicular | parallel | mixed | null",
+    "driveAisleWidthEstimate": "narrow | standard | wide | null",
+    "adaZonesVisible": false,
+    "surfaceTransitions": ["List transitions like 'asphalt-to-concrete at building perimeter'"]
+  },
+  "electricalInfrastructure": {
+    "transformerPadVisible": false,
+    "meterClusterVisible": false,
+    "utilityPoleNearby": false,
+    "estimatedPanelSide": "north | south | east | west side of building, or null"
+  },
+  "concerns": ["List any EV charger installation concerns"],
+  "confidence": 0.75
+}
+
+EV CHARGER INSTALLATION FOCUS:
+- Identify electrical panel locations, transformer pads, utility meter clusters on building exteriors
+- Detect parking lot layout: stall orientation, drive aisle widths, ADA zones
+- Assess surface transitions (asphalt-to-concrete boundaries = bore/trench decision points)
+- Count parking spaces and suggest charger count (3-5% EV adoption rate)
+- Detect existing EV chargers or electrical infrastructure
+- Suggest optimal charger placement zones based on parking flow
+- Note bollard/protection requirements near drive aisles
+
+Rules:
+- Only report what is VISIBLE from the aerial/satellite view
+- For uncertain observations, lower the confidence score
+- Never claim hidden electrical capacity or buried conditions
+${PRICING_CONSTRAINT}`;
+}
+
+export function buildEnhancedStreetViewPrompt(): string {
+  return `You are an expert EV charger site assessor analyzing a Google Street View image for commercial EV charger installation.
+
+Analyze the ground-level view and return ONLY a JSON response:
+
+{
+  "siteDescription": "Brief description of what you see at ground level",
+  "inferredFields": {
+    "parkingEnvironment.surfaceType": "asphalt | concrete | gravel | other | null",
+    "parkingEnvironment.type": "surface_lot | parking_garage | mixed | null",
+    "charger.mountType": "pedestal | wall | null",
+    "parkingEnvironment.trafficControlRequired": true | false | null
+  },
+  "observations": {
+    "wallSurfaces": "Wall materials, mount points, height, accessibility",
+    "electricalInfra": "Visible panels, conduit runs, transformers, meters, junction boxes",
+    "parkingCondition": "Surface condition, cracks, drainage, grade",
+    "accessPoints": "Driveways, gates, bollards, narrow entries",
+    "existingChargers": "Any existing EV chargers or infrastructure visible",
+    "heightClearance": "Estimated clearance if garage/covered structure",
+    "lightingConditions": "Existing lighting poles, fixtures"
+  },
+  "electricalObservation": {
+    "panelVisible": false,
+    "transformerVisible": false,
+    "meterClusterVisible": false,
+    "existingConduitVisible": false,
+    "estimatedPanelLocation": "e.g. northwest corner of building",
+    "description": "Detailed description of visible electrical infrastructure"
+  },
+  "conduitRouting": {
+    "existingConduitVisible": false,
+    "wallMountFeasibility": "good | fair | poor | null",
+    "wallMaterial": "brick | concrete | stucco | metal | wood | null",
+    "routingOpportunities": ["e.g. existing conduit run along north wall"]
+  },
+  "adaCompliance": {
+    "adaParkingVisible": false,
+    "pathOfTravelClear": true,
+    "concerns": ["Any ADA compliance concerns"]
+  },
+  "mountRecommendation": {
+    "type": "pedestal | wall | pole_mount",
+    "reason": "Why this mount type suits this location",
+    "suggestedLocations": "Where chargers should go"
+  },
+  "concerns": ["List any installation concerns visible from street level"],
+  "confidence": 0.75
+}
+
+EV CHARGER INSTALLATION FOCUS:
+- Identify electrical panels, transformers, meter banks, junction boxes with location descriptions
+- Detect conduit pathways (wall-mounted, underground, overhead)
+- Assess wall mounting feasibility (material: brick/concrete/stucco, height, access)
+- Identify conduit routing opportunities (existing runs, wall channels, ceiling paths)
+- Detect ADA parking and paths of travel
+- Assess drive aisle widths for traffic control assessment
+- Identify surface transitions indicating bore vs trench sections
+
+Rules:
+- Only report what is VISIBLE in the ground-level image
+- Pay special attention to electrical panels, conduit paths, and parking layout
+- Note any ADA compliance concerns
+${PRICING_CONSTRAINT}`;
+}
+
 export function buildPhotoAnalysisPrompt(): string {
   return `You are analyzing a site photo for EV charger installation estimating.
 

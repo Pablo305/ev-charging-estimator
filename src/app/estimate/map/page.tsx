@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { EstimateInput, EstimateOutput } from '@/lib/estimate/types';
+import { EstimateOutput } from '@/lib/estimate/types';
 import { generateEstimate } from '@/lib/estimate/engine';
-import { emptyInput } from '@/lib/estimate/emptyInput';
+import { useEstimate } from '@/contexts/EstimateContext';
 import { MAP_WORKSPACE_ENABLED } from '@/lib/map/feature-flags';
 
 // Dynamic import — Mapbox GL requires DOM
@@ -26,32 +26,17 @@ function MapLoadingPlaceholder() {
 }
 
 export default function MapEstimatePage() {
-  const [input, setInput] = useState<EstimateInput>(emptyInput);
-
-  // Load input from sessionStorage (handoff from form page)
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('estimateInput');
-      if (saved) {
-        const parsed = JSON.parse(saved) as EstimateInput;
-        setInput(parsed);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
-
-  // Save input to sessionStorage on change
-  useEffect(() => {
-    try {
-      sessionStorage.setItem('estimateInput', JSON.stringify(input));
-    } catch {
-      // ignore storage errors
-    }
-  }, [input]);
+  const { input, setInput } = useEstimate();
 
   const estimate = useMemo<EstimateOutput | null>(() => {
-    if (!input.charger.count || input.charger.count <= 0) return null;
+    // Allow estimate when charger count is set OR when map workspace has distance data
+    const hasChargerCount = input.charger.count && input.charger.count > 0;
+    const hasMapData = input.mapWorkspace && (
+      (input.mapWorkspace.conduitDistance_ft ?? 0) > 0 ||
+      (input.mapWorkspace.trenchingDistance_ft ?? 0) > 0 ||
+      (input.mapWorkspace.boringDistance_ft ?? 0) > 0
+    );
+    if (!hasChargerCount && !hasMapData) return null;
     return generateEstimate(input);
   }, [input]);
 
@@ -70,6 +55,18 @@ export default function MapEstimatePage() {
       </div>
     );
   }
+
+  // Key form fields for mini summary
+  const summaryFields = useMemo(() => [
+    { label: 'Project', value: input.project.name || '—', tab: 'Project' },
+    { label: 'Type', value: input.project.projectType?.replace(/_/g, ' ') || '—', tab: 'Project' },
+    { label: 'Charger', value: input.charger.brand ? `${input.charger.count}× ${input.charger.brand} ${input.charger.model}` : '—', tab: 'Charger' },
+    { label: 'Level', value: input.charger.chargingLevel || '—', tab: 'Charger' },
+    { label: 'Site', value: input.site.siteType || '—', tab: 'Site' },
+    { label: 'Surface', value: input.parkingEnvironment.surfaceType || '—', tab: 'Parking' },
+  ], [input]);
+
+  const [showMiniSummary, setShowMiniSummary] = useState(false);
 
   return (
     <div className="flex h-screen flex-col">
@@ -92,6 +89,12 @@ export default function MapEstimatePage() {
           )}
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
+          <button
+            onClick={() => setShowMiniSummary((v) => !v)}
+            className="rounded bg-blue-50 px-2 py-1 text-blue-600 hover:bg-blue-100"
+          >
+            {showMiniSummary ? 'Hide' : 'Show'} Form Summary
+          </button>
           <span>Click to draw runs</span>
           <span>&bull;</span>
           <span>Double-click to finish</span>
@@ -99,6 +102,24 @@ export default function MapEstimatePage() {
           <span>Right-click to cancel/delete</span>
         </div>
       </header>
+
+      {/* Mini Form Summary */}
+      {showMiniSummary && (
+        <div className="border-b border-gray-200 bg-blue-50/50 px-4 py-2">
+          <div className="flex flex-wrap items-center gap-3">
+            {summaryFields.map((f) => (
+              <Link
+                key={f.label}
+                href={`/estimate?tab=${encodeURIComponent(f.tab)}`}
+                className="flex items-center gap-1.5 rounded bg-white px-2.5 py-1 text-xs shadow-sm hover:bg-blue-50"
+              >
+                <span className="font-medium text-gray-500">{f.label}:</span>
+                <span className={`font-semibold ${f.value === '—' ? 'text-gray-300' : 'text-gray-800'}`}>{f.value}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main workspace */}
       <main className="flex-1 overflow-hidden">

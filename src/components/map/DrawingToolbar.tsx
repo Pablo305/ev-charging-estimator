@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import type { RunType, EquipmentType } from '@/lib/map/types';
+import type { RunType, EquipmentType, PointToolType } from '@/lib/map/types';
 import { RUN_TYPE_CONFIG, EQUIPMENT_TYPE_CONFIG } from '@/lib/map/constants';
 
+type ToolType = RunType | EquipmentType | PointToolType | null;
+
 interface DrawingToolbarProps {
-  selectedTool: RunType | EquipmentType | null;
-  onSelectTool: (tool: RunType | EquipmentType | null) => void;
+  selectedTool: ToolType;
+  onSelectTool: (tool: ToolType) => void;
 }
 
 export function DrawingToolbar({ selectedTool, onSelectTool }: DrawingToolbarProps) {

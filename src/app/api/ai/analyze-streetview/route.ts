@@ -119,11 +119,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { imageUrl } = body as { imageUrl?: string };
 
-    // Only allow Google Street View Static API URLs
+    // Only allow Google Street View Static API URLs — parse to prevent SSRF
+    let parsedUrl: URL | null = null;
+    try {
+      if (imageUrl && typeof imageUrl === 'string') parsedUrl = new URL(imageUrl);
+    } catch { /* invalid URL */ }
     if (
-      !imageUrl ||
-      typeof imageUrl !== 'string' ||
-      !imageUrl.startsWith('https://maps.googleapis.com/maps/api/streetview')
+      !parsedUrl ||
+      parsedUrl.protocol !== 'https:' ||
+      parsedUrl.hostname !== 'maps.googleapis.com' ||
+      !parsedUrl.pathname.startsWith('/maps/api/streetview')
     ) {
       return NextResponse.json(
         { error: 'Valid Google Street View Static API URL required' },
