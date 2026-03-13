@@ -138,7 +138,7 @@ export function TextareaField({ label, value, onChange, placeholder, hint, rows 
     <div className={spanCls}>
       <label className={labelCls}>{label}</label>
       <textarea
-        className={`${baseCls} h-${rows * 8}`}
+        className={baseCls}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

@@ -212,7 +212,7 @@ export function PatchReviewPanel({
   if (!batch || batch.patches.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50/50 p-5 text-center">
-        <div className="mb-2 text-2xl">🗺️</div>
+        <div className="mb-2 text-2xl">&#128506;&#65039;</div>
         <div className="text-sm font-medium text-gray-600">No changes yet</div>
         <div className="mt-1 text-xs text-gray-400">
           Enter an address for AI analysis, or draw runs on the map

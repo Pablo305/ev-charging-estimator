@@ -170,10 +170,21 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const assessmentGenerationRef = useRef(0);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef(input);
+
+  // Detect touch device and collapse panels on mobile
+  useEffect(() => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+    if (isTouch) {
+      setLeftPanelOpen(false);
+      setRightPanelOpen(false);
+    }
+  }, []);
 
   // Keep inputRef current for async callbacks
   useEffect(() => { inputRef.current = input; }, [input]);
@@ -767,12 +778,18 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
         {centerView === 'satellite' ? (
           <>
-            {/* Floating toolbar */}
+            {/* Floating toolbar — disabled on touch devices */}
             <div className="absolute left-2 top-12 z-10">
-              <DrawingToolbar
-                selectedTool={mapState.selectedTool}
-                onSelectTool={handleSelectTool}
-              />
+              {isTouchDevice ? (
+                <div className="rounded-lg bg-white/90 px-3 py-2 text-xs text-gray-500 shadow-md backdrop-blur">
+                  Use desktop for drawing tools
+                </div>
+              ) : (
+                <DrawingToolbar
+                  selectedTool={mapState.selectedTool}
+                  onSelectTool={handleSelectTool}
+                />
+              )}
             </div>
 
             {/* Active tool indicator */}

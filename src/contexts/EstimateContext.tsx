@@ -129,7 +129,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [input]);
+  }, [input, isHydrated]);
 
   const updateField = useCallback((path: string, value: unknown) => {
     dispatch({ type: 'SET_FIELD', path, value });

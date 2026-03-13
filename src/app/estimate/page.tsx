@@ -563,11 +563,10 @@ function EstimateResults({
 }) {
   const { summary, metadata, lineItems, exclusions, manualReviewTriggers } = output;
 
-  const byCategory = lineItems.reduce<Record<string, EstimateLineItem[]>>((acc, li) => {
-    if (!acc[li.category]) acc[li.category] = [];
-    acc[li.category].push(li);
-    return acc;
-  }, {});
+  const byCategory = lineItems.reduce<Record<string, EstimateLineItem[]>>((acc, li) => ({
+    ...acc,
+    [li.category]: [...(acc[li.category] ?? []), li],
+  }), {});
 
   return (
     <div id="estimate-output" className="space-y-6">
