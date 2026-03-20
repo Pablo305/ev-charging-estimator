@@ -2,6 +2,80 @@
 // Normalized SOW Input
 // ============================================================
 
+export interface MapCoordinate {
+  lat: number;
+  lng: number;
+}
+
+export type MapFeatureType =
+  | 'charger'
+  | 'electrical_panel'
+  | 'mechanical_room'
+  | 'bollard'
+  | 'pad'
+  | 'trench'
+  | 'conduit'
+  | 'restricted_zone'
+  | 'parking_zone';
+
+interface SiteMapFeatureBase {
+  id: string;
+  type: MapFeatureType;
+  label: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SiteMapPointFeature extends SiteMapFeatureBase {
+  geometryType: 'Point';
+  coordinates: MapCoordinate;
+}
+
+export interface SiteMapLineFeature extends SiteMapFeatureBase {
+  geometryType: 'LineString';
+  coordinates: MapCoordinate[];
+  lengthFt: number;
+}
+
+export interface SiteMapPolygonFeature extends SiteMapFeatureBase {
+  geometryType: 'Polygon';
+  coordinates: MapCoordinate[];
+  areaSqFt: number;
+}
+
+export type SiteMapFeature =
+  | SiteMapPointFeature
+  | SiteMapLineFeature
+  | SiteMapPolygonFeature;
+
+export interface SiteMapSummary {
+  chargerCount: number;
+  panelCount: number;
+  mechanicalRoomCount: number;
+  bollardCount: number;
+  padCount: number;
+  trenchLengthFt: number;
+  conduitLengthFt: number;
+  restrictedZoneCount: number;
+  parkingZoneCount: number;
+}
+
+export interface MapAppliedField {
+  value: number | string | boolean | null;
+  featureIds: string[];
+  featureTypes: MapFeatureType[];
+  reasoning: string;
+}
+
+export interface SiteMapPlan {
+  center: MapCoordinate | null;
+  zoom: number;
+  features: SiteMapFeature[];
+  summary: SiteMapSummary;
+  appliedFields: Record<string, MapAppliedField>;
+  lastAppliedAt: string | null;
+}
+
 export interface EstimateInput {
   project: {
     name: string;
@@ -50,6 +124,8 @@ export interface EstimateInput {
       | 'other'
       | null;
     state: string;
+    location?: MapCoordinate | null;
+    mapPlan?: SiteMapPlan | null;
   };
   parkingEnvironment: {
     type: 'surface_lot' | 'parking_garage' | 'mixed' | null;
@@ -199,6 +275,8 @@ export interface EstimateLineItem {
   manualReviewRequired: boolean;
   manualReviewReason?: string;
   confidence: 'high' | 'medium' | 'low';
+  derivedFromMap?: boolean;
+  mapFeatureTypes?: MapFeatureType[];
 }
 
 export interface EstimateExclusion {
@@ -240,5 +318,7 @@ export interface EstimateOutput {
     inputCompleteness: number;
     automationConfidence: 'high' | 'medium' | 'low';
     requiresManualReview: boolean;
+    mapAppliedLineItems: number;
+    mapFeatureCount: number;
   };
 }

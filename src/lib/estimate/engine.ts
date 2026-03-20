@@ -98,6 +98,26 @@ function determineConfidence(
 export function generateEstimate(input: EstimateInput): EstimateOutput {
   // 1. Run all rules
   const { items, reviews } = runAllRules(input);
+  const appliedFieldSources = input.site.mapPlan?.appliedFields ?? {};
+  const lineItems = items.map((item) => {
+    const matchedMapFields = item.sourceInputs
+      .map((path) => appliedFieldSources[path])
+      .filter(Boolean);
+
+    if (matchedMapFields.length === 0) {
+      return item;
+    }
+
+    return {
+      ...item,
+      derivedFromMap: true,
+      mapFeatureTypes: Array.from(
+        new Set(
+          matchedMapFields.flatMap((field) => field.featureTypes),
+        ),
+      ),
+    };
+  });
 
   // 2. Select exclusions
   const exclusions = selectExclusions(input);
@@ -117,7 +137,7 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
   const serviceCategories = new Set(['SERVICE_FEE', 'SOFTWARE']);
 
   const sumByGroup = (cats: Set<string>): number =>
-    items
+    lineItems
       .filter((li) => cats.has(li.category))
       .reduce((sum, li) => sum + li.extendedPrice, 0);
 
@@ -152,7 +172,7 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
 
   return {
     input,
-    lineItems: items,
+    lineItems,
     exclusions,
     manualReviewTriggers: reviews,
     summary: {
@@ -173,6 +193,9 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
       inputCompleteness: completeness,
       automationConfidence: confidence,
       requiresManualReview: reviews.some((r) => r.severity === 'critical'),
+      mapAppliedLineItems: lineItems.filter((item) => item.derivedFromMap)
+        .length,
+      mapFeatureCount: input.site.mapPlan?.features.length ?? 0,
     },
   };
 }

@@ -25,6 +25,8 @@ function ensureDefaults(body: Record<string, unknown>): EstimateInput {
       address: input.site?.address ?? '',
       siteType: input.site?.siteType ?? null,
       state: input.site?.state ?? '',
+      location: input.site?.location ?? null,
+      mapPlan: input.site?.mapPlan ?? null,
     },
     parkingEnvironment: {
       type: input.parkingEnvironment?.type ?? null,

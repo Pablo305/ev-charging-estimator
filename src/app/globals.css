@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #06101c;
+  --background-elevated: #0d1b2d;
+  --foreground: #eff6ff;
+  --foreground-muted: rgba(226, 232, 240, 0.82);
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-strong: rgba(255, 255, 255, 0.88);
+  --panel-dark: rgba(6, 17, 31, 0.72);
+  --panel-border: rgba(255, 255, 255, 0.18);
+  --accent: #6ee7f9;
+  --accent-strong: #38bdf8;
+  --accent-violet: #8b5cf6;
+  --accent-amber: #f59e0b;
+  --shadow-strong: 0 28px 70px rgba(8, 15, 37, 0.32);
+  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
 @theme inline {
@@ -12,10 +24,147 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(34, 211, 238, 0.14), transparent 24%),
+    radial-gradient(circle at 80% 10%, rgba(139, 92, 246, 0.12), transparent 22%),
+    radial-gradient(circle at 80% 78%, rgba(245, 158, 11, 0.1), transparent 18%),
+    linear-gradient(180deg, #06101c 0%, #0a1422 42%, #eef4ff 42%, #f7fbff 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 80%);
+  opacity: 0.28;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.28);
+  color: #ffffff;
+}
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(22px);
+}
+
+.glass-panel-strong {
+  background: var(--panel-strong);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(28px);
+}
+
+.glass-panel-dark {
+  background: var(--panel-dark);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(28px);
+}
+
+.liquid-ring {
+  position: relative;
+}
+
+.liquid-ring::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(110, 231, 249, 0.34),
+    rgba(139, 92, 246, 0.28)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.hero-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  inset: auto -20% -34% auto;
+  width: 420px;
+  height: 420px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.32), transparent 62%);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.hero-glow::after {
+  content: "";
+  position: absolute;
+  inset: -22% auto auto -10%;
+  width: 340px;
+  height: 340px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.22), transparent 60%);
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.92);
+}
+
+.gradient-text {
+  background: linear-gradient(120deg, #ffffff 0%, #c7f9ff 36%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.soft-card {
+  border: 1px solid rgba(226, 232, 240, 0.78);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.page-section {
+  position: relative;
+  z-index: 1;
 }
 
 /* Print styles */
@@ -24,6 +173,11 @@ body {
     background: white;
     color: black;
     font-size: 11px;
+    background-image: none !important;
+  }
+
+  body::before {
+    display: none !important;
   }
 
   header {
