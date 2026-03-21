@@ -108,6 +108,16 @@ export const FIELD_MAPPINGS: readonly FieldMapping[] = [
     aggregation: 'COUNT',
   },
   {
+    equipmentType: 'charger_l2',
+    fieldPath: 'charger.count',
+    aggregation: 'COUNT',
+  },
+  {
+    equipmentType: 'charger_l3',
+    fieldPath: 'charger.count',
+    aggregation: 'COUNT',
+  },
+  {
     equipmentType: 'transformer',
     fieldPath: 'electrical.transformerRequired',
     aggregation: 'BOOLEAN',
@@ -115,6 +125,11 @@ export const FIELD_MAPPINGS: readonly FieldMapping[] = [
   {
     equipmentType: 'switchgear',
     fieldPath: 'electrical.switchgearRequired',
+    aggregation: 'BOOLEAN',
+  },
+  {
+    equipmentType: 'utility_meter',
+    fieldPath: 'electrical.utilityCoordinationRequired',
     aggregation: 'BOOLEAN',
   },
 ] as const;

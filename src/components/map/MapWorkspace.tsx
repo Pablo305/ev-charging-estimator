@@ -159,6 +159,48 @@ interface StreetViewAnalysisResult {
 
 export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspaceProps) {
   const [mapState, dispatch] = useReducer(mapReducer, undefined, initialState);
+  const [, setUndoStack] = useState<MapWorkspaceState[]>([]);
+
+  const dispatchWithUndo = useCallback((action: MapAction) => {
+    setUndoStack((prev) => [...prev.slice(-9), mapState]);
+    dispatch(action);
+  }, [mapState]);
+
+  const handleUndo = useCallback(() => {
+    setUndoStack((prev) => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      dispatch({ type: 'RESET' });
+      if (last.siteAddress && last.siteCoordinates) {
+        dispatch({
+          type: 'SET_ADDRESS',
+          address: last.siteAddress,
+          coordinates: last.siteCoordinates,
+        });
+      }
+      if (last.powerSourceLocation) {
+        dispatch({ type: 'SET_POWER_SOURCE', coordinates: last.powerSourceLocation });
+      }
+      for (const z of last.chargerZones) {
+        dispatch({ type: 'SET_CHARGER_ZONE', coordinates: z });
+      }
+      for (const run of last.runs) {
+        dispatch({ type: 'ADD_RUN', run });
+      }
+      for (const eq of last.equipment) {
+        dispatch({ type: 'ADD_EQUIPMENT', equipment: eq });
+      }
+      dispatch({ type: 'SELECT_TOOL', tool: last.selectedTool });
+      dispatch({ type: 'SELECT_FEATURE', featureId: last.selectedFeatureId });
+      return prev.slice(0, -1);
+    });
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    setUndoStack((prev) => [...prev.slice(-9), mapState]);
+    dispatch({ type: 'RESET' });
+  }, [mapState]);
+
   const [patchBatch, setPatchBatch] = useState<PatchBatch | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -331,9 +373,9 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
   const handleRunDelete = useCallback(
     (id: string) => {
-      dispatch({ type: 'DELETE_RUN', id });
+      dispatchWithUndo({ type: 'DELETE_RUN', id });
     },
-    [],
+    [dispatchWithUndo],
   );
 
   const handleEquipmentPlace = useCallback(
@@ -365,9 +407,9 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
   const handleEquipmentDelete = useCallback(
     (id: string) => {
-      dispatch({ type: 'DELETE_EQUIPMENT', id });
+      dispatchWithUndo({ type: 'DELETE_EQUIPMENT', id });
     },
-    [],
+    [dispatchWithUndo],
   );
 
   const handleFeatureSelect = useCallback(
@@ -692,9 +734,9 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
         const isRun = mapState.runs.some((r) => r.id === mapState.selectedFeatureId);
         if (isRun) {
-          handleRunDelete(mapState.selectedFeatureId);
-        } else {
-          handleEquipmentDelete(mapState.selectedFeatureId);
+          dispatchWithUndo({ type: 'DELETE_RUN', id: mapState.selectedFeatureId });
+        } else if (mapState.equipment.some((e) => e.id === mapState.selectedFeatureId)) {
+          dispatchWithUndo({ type: 'DELETE_EQUIPMENT', id: mapState.selectedFeatureId });
         }
         dispatch({ type: 'SELECT_FEATURE', featureId: null });
       }
@@ -702,7 +744,12 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mapState.selectedFeatureId, mapState.runs, handleRunDelete, handleEquipmentDelete]);
+  }, [
+    mapState.selectedFeatureId,
+    mapState.runs,
+    mapState.equipment,
+    dispatchWithUndo,
+  ]);
 
   return (
     <div className="flex h-full">
@@ -788,6 +835,8 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
                 <DrawingToolbar
                   selectedTool={mapState.selectedTool}
                   onSelectTool={handleSelectTool}
+                  onClearAll={handleClearAll}
+                  onUndo={handleUndo}
                 />
               )}
             </div>

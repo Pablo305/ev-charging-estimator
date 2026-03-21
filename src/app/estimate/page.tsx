@@ -93,13 +93,10 @@ function getTabStatus(tab: string, input: EstimateInput): 'empty' | 'partial' | 
 }
 
 function getOverallProgress(input: EstimateInput): number {
-  const criticalFields = [
-    'project.name', 'project.projectType', 'customer.companyName',
-    'site.address', 'site.state', 'charger.brand', 'charger.count',
-    'charger.chargingLevel', 'charger.model',
-  ];
-  const filled = criticalFields.filter((f) => isFieldFilled(getFieldValue(input, f))).length;
-  return Math.round((filled / criticalFields.length) * 100);
+  const allRequired = Object.values(TAB_META).flatMap((m) => m.required);
+  if (allRequired.length === 0) return 100;
+  const filled = allRequired.filter((f) => isFieldFilled(getFieldValue(input, f))).length;
+  return Math.round((filled / allRequired.length) * 100);
 }
 
 const SECTION_MAP: Record<string, React.ComponentType> = {
@@ -119,7 +116,7 @@ function SectionRenderer({ tab }: { tab: string }) {
 export default function EstimatePage() {
   const router = useRouter();
   const { isAdvanced } = useViewMode();
-  const { input, updateField, applyPatches, setInput, resetEstimate } = useEstimate();
+  const { input, updateField, applyPatches, setInput, resetEstimate, lastSavedAt } = useEstimate();
   const autoEstimate = useAutoEstimate();
   const [output, setOutput] = useState<EstimateOutput | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>('Project');
@@ -149,6 +146,10 @@ export default function EstimatePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenarioId = params.get('scenario');
+    const tabParam = params.get('tab');
+    if (tabParam && TABS.includes(tabParam as TabName)) {
+      setActiveTab(tabParam as TabName);
+    }
     if (scenarioId) {
       const found = SCENARIOS.find((s) => s.id === scenarioId);
       if (found) setInput(found.input);
@@ -240,6 +241,9 @@ export default function EstimatePage() {
                   background: progress >= 80 ? 'rgba(52,199,89,0.1)' : progress >= 40 ? 'rgba(255,149,0,0.1)' : 'rgba(0,0,0,0.03)',
                   color: progress >= 80 ? 'var(--system-green)' : progress >= 40 ? 'var(--system-orange)' : '#8e8e93',
                 }}>{progress}%</span>
+                {lastSavedAt && (
+                  <span className="text-[0.6875rem] text-gray-400">Saved {lastSavedAt}</span>
+                )}
               </div>
               <span className="text-[0.75rem] text-gray-400">
                 Step {currentTabIdx + 1}/{TABS.length}: {activeTab}
@@ -308,7 +312,12 @@ export default function EstimatePage() {
             {SCENARIOS.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
           <button
-            onClick={() => { resetEstimate(); setOutput(null); }}
+            onClick={() => {
+              if (window.confirm('Clear all estimate data? This cannot be undone.')) {
+                resetEstimate();
+                setOutput(null);
+              }
+            }}
             className="lg-pill text-[0.8125rem] text-gray-600"
           >
             Clear All
@@ -649,6 +658,7 @@ function LineItemRow({ item, isOdd, expanded, onToggle }: {
         <td className="hidden px-4 py-2.5 text-[0.75rem] text-gray-400 sm:table-cell">{item.id}</td>
         <td className="hidden px-4 py-2.5 text-[0.75rem] text-gray-400 sm:table-cell">{item.category}</td>
         <td className="px-3 py-2.5 text-gray-900 sm:px-4">
+          <svg className={`inline-block h-3.5 w-3.5 mr-1.5 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" /></svg>
           {item.description}
           {item.manualReviewRequired && (
             <span className="ml-1 inline-flex rounded-full px-2 py-0.5 text-[0.6rem] font-semibold uppercase sm:ml-2" style={{ background: 'rgba(255,149,0,0.1)', color: 'var(--system-orange)' }}>review</span>

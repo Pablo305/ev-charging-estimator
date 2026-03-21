@@ -12,22 +12,26 @@ interface PatchReviewPanelProps {
   onAcceptSafe?: (ids: string[]) => void;
 }
 
-// Map field paths to form tab categories
-const FIELD_TO_TAB: Record<string, string> = {
-  'site': 'Site',
-  'parkingEnvironment': 'Parking',
-  'charger': 'Charger',
-  'electrical': 'Electrical',
-  'civil': 'Civil',
-  'mapWorkspace': 'Map Data',
-  'permit': 'Permit/Design',
-  'network': 'Network',
-  'accessories': 'Accessories',
-};
-
 function getTabForField(fieldPath: string): string {
-  const section = fieldPath.split('.')[0];
-  return FIELD_TO_TAB[section] ?? 'Other';
+  const prefix = fieldPath.split('.')[0];
+  switch (prefix) {
+    case 'electrical':
+      return 'Electrical';
+    case 'charger':
+      return 'Charger';
+    case 'mapWorkspace':
+      return 'Electrical';
+    case 'parkingEnvironment':
+      return 'Parking';
+    case 'site':
+      return 'Site';
+    case 'project':
+      return 'Project';
+    case 'customer':
+      return 'Customer';
+    default:
+      return 'Project';
+  }
 }
 
 function formatValue(value: unknown): string {
@@ -165,14 +169,12 @@ function PatchRow({
       </div>
       <div className="mt-1 flex items-center justify-between">
         <span className="text-[11px] text-gray-500">{patch.reason}</span>
-        {!patch.fieldPath.startsWith('mapWorkspace') && (
-          <a
-            href={`/estimate?tab=${encodeURIComponent(getTabForField(patch.fieldPath))}&field=${encodeURIComponent(patch.fieldPath)}`}
-            className="ml-2 flex-shrink-0 text-[10px] font-medium text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            View in form →
-          </a>
-        )}
+        <a
+          href={`/estimate?tab=${encodeURIComponent(getTabForField(patch.fieldPath))}&field=${encodeURIComponent(patch.fieldPath)}`}
+          className="ml-2 flex-shrink-0 text-[10px] font-medium text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          View in form →
+        </a>
       </div>
     </div>
   );

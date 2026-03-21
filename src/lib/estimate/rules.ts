@@ -448,8 +448,8 @@ function electricalRules(
     items.push(
       pricebookLine(conduitItem, distance, {
         ruleName: 'Conduit/wire/breakers',
-        ruleReason: `${distance} LF of EMT conduit, wire, breakers at $${resolvePrice(conduitItem, true).price}/ft. ${distanceKnown ? 'Distance from SOW.' : 'Distance estimated at 50ft — verify at site walk.'}`,
-        sourceInputs: ['electrical.distanceToPanel_ft', 'charger.count'],
+        ruleReason: `${distance} LF of EMT conduit, wire, breakers at $${resolvePrice(conduitItem, true).price}/ft. ${input.mapWorkspace?.conduitDistance_ft != null ? 'Distance from map measurement.' : distanceKnown ? 'Distance from SOW.' : 'Distance estimated at 50ft — verify at site walk.'}`,
+        sourceInputs: [input.mapWorkspace?.conduitDistance_ft != null ? 'mapWorkspace.conduitDistance_ft' : 'electrical.distanceToPanel_ft', 'charger.count'],
         manualReviewRequired: !distanceKnown,
         manualReviewReason: !distanceKnown
           ? 'Electrical distance not specified — using 50ft estimate'

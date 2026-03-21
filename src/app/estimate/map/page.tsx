@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { EstimateOutput } from '@/lib/estimate/types';
 import { generateEstimate } from '@/lib/estimate/engine';
+import { exportEstimatePDF } from '@/lib/estimate/export-pdf';
 import { useEstimate } from '@/contexts/EstimateContext';
 import { MAP_WORKSPACE_ENABLED } from '@/lib/map/feature-flags';
 
@@ -95,6 +96,23 @@ export default function MapEstimatePage() {
           >
             {showMiniSummary ? 'Hide' : 'Show'} Form Summary
           </button>
+          <Link
+            href="/estimate"
+            className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+          >
+            Generate Estimate
+          </Link>
+          {estimate && (
+            <button
+              onClick={() => exportEstimatePDF(estimate)}
+              className="rounded bg-gray-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
+            >
+              Download PDF
+            </button>
+          )}
+          <span className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium" style={{ background: estimate ? 'rgba(52,199,89,0.1)' : 'rgba(0,0,0,0.04)', color: estimate ? '#059669' : '#8e8e93' }}>
+            {estimate ? `Estimate: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(estimate.summary.total)}` : 'No estimate yet'}
+          </span>
           <span>Click to draw runs</span>
           <span>&bull;</span>
           <span>Double-click to finish</span>

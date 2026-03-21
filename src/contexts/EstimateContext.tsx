@@ -86,6 +86,7 @@ interface EstimateContextValue {
   readonly applyPatches: (patches: ReadonlyArray<{ fieldPath: string; value: unknown }>) => void;
   readonly setInput: (input: EstimateInput) => void;
   readonly resetEstimate: () => void;
+  readonly lastSavedAt: string | null;
 }
 
 const EstimateContext = createContext<EstimateContextValue | null>(null);
@@ -95,6 +96,7 @@ const EstimateContext = createContext<EstimateContextValue | null>(null);
 export function EstimateProvider({ children }: { children: ReactNode }) {
   const [input, dispatch] = useReducer(estimateReducer, undefined, emptyInput);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from localStorage on mount
@@ -121,6 +123,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
     debounceRef.current = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(input));
+        setLastSavedAt(new Date().toLocaleTimeString());
       } catch {
         // ignore quota errors
       }
@@ -157,6 +160,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
     applyPatches,
     setInput,
     resetEstimate,
+    lastSavedAt,
   };
 
   return (

@@ -117,12 +117,20 @@ export function PhotoAnalysis({ onApplyFields }: PhotoAnalysisProps) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Analysis Results</span>
-                <button
-                  onClick={handleApply}
-                  className="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
-                >
-                  Apply to Form
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleApply}
+                    className="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                  >
+                    Apply to Form
+                  </button>
+                  <button
+                    onClick={() => { setResult(null); setPreview(null); }}
+                    className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                  >
+                    Clear Results
+                  </button>
+                </div>
               </div>
 
               <p className="text-sm text-gray-700">{result.siteDescription}</p>

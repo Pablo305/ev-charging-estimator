@@ -90,12 +90,20 @@ export function SOWParser({ onApplyFields }: SOWParserProps) {
                 <span className="text-sm font-medium text-gray-700">
                   Extracted Fields ({result.missingFields.length} missing)
                 </span>
-                <button
-                  onClick={handleApply}
-                  className="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
-                >
-                  Apply to Form
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleApply}
+                    className="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                  >
+                    Apply to Form
+                  </button>
+                  <button
+                    onClick={() => setResult(null)}
+                    className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
 
               <pre className="max-h-60 overflow-auto rounded bg-gray-900 p-3 text-xs text-green-400">

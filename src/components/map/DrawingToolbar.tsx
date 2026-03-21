@@ -9,9 +9,11 @@ type ToolType = RunType | EquipmentType | PointToolType | null;
 interface DrawingToolbarProps {
   selectedTool: ToolType;
   onSelectTool: (tool: ToolType) => void;
+  onClearAll: () => void;
+  onUndo: () => void;
 }
 
-export function DrawingToolbar({ selectedTool, onSelectTool }: DrawingToolbarProps) {
+export function DrawingToolbar({ selectedTool, onSelectTool, onClearAll, onUndo }: DrawingToolbarProps) {
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -35,12 +37,18 @@ export function DrawingToolbar({ selectedTool, onSelectTool }: DrawingToolbarPro
         }
       }
 
+      // Undo
+      if ((e.ctrlKey || e.metaKey) && key === 'Z') {
+        onUndo();
+        return;
+      }
+
       // Escape to deselect
       if (e.key === 'Escape') {
         onSelectTool(null);
       }
     },
-    [selectedTool, onSelectTool],
+    [selectedTool, onSelectTool, onUndo],
   );
 
   useEffect(() => {
@@ -112,6 +120,26 @@ export function DrawingToolbar({ selectedTool, onSelectTool }: DrawingToolbarPro
           Cancel (Esc)
         </button>
       )}
+
+      <div className="mt-2 border-t border-gray-100 pt-2 flex gap-1">
+        <button
+          onClick={onUndo}
+          className="flex-1 rounded bg-gray-100 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-200"
+          title="Undo last action (Ctrl+Z)"
+        >
+          Undo
+        </button>
+        <button
+          onClick={() => {
+            if (window.confirm('Clear all drawings, equipment, and runs from the map?')) {
+              onClearAll();
+            }
+          }}
+          className="flex-1 rounded bg-red-50 px-2 py-1.5 text-xs text-red-600 hover:bg-red-100"
+        >
+          Clear All
+        </button>
+      </div>
     </div>
   );
 }
