@@ -156,6 +156,10 @@ export interface EstimateInput {
     concreteCuttingDistance_ft: number | null;
     chargerCountFromMap: number | null;
     siteCoordinates: [number, number] | null;
+    drawings?: {
+      runs: Array<{ id: string; runType: string; geometry: { type: string; coordinates: number[][] }; lengthFt: number; label: string }>;
+      equipment: Array<{ id: string; equipmentType: string; geometry: { type: string; coordinates: number[] }; label: string }>;
+    } | null;
   };
   removeReplace?: {
     existingChargerCount: number | null;

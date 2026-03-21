@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { Suspense, useState, useCallback, useEffect, useMemo, type KeyboardEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { EstimateInput, EstimateOutput, EstimateLineItem, ManualReviewTrigger } from '@/lib/estimate/types';
 import { generateEstimate } from '@/lib/estimate/engine';
 import { exportEstimatePDF } from '@/lib/estimate/export-pdf';
@@ -113,6 +113,18 @@ function SectionRenderer({ tab }: { tab: string }) {
   return <Component />;
 }
 
+/** Reads `?tab=` from the URL (client navigations). Wrapped separately so the page can use Suspense per Next.js. */
+function TabSyncFromUrl({ setActiveTab }: { setActiveTab: (t: TabName) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && TABS.includes(tabParam as TabName)) {
+      setActiveTab(tabParam as TabName);
+    }
+  }, [searchParams, setActiveTab]);
+  return null;
+}
+
 export default function EstimatePage() {
   const router = useRouter();
   const { isAdvanced } = useViewMode();
@@ -146,10 +158,6 @@ export default function EstimatePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenarioId = params.get('scenario');
-    const tabParam = params.get('tab');
-    if (tabParam && TABS.includes(tabParam as TabName)) {
-      setActiveTab(tabParam as TabName);
-    }
     if (scenarioId) {
       const found = SCENARIOS.find((s) => s.id === scenarioId);
       if (found) setInput(found.input);
@@ -199,8 +207,28 @@ export default function EstimatePage() {
     if (currentTabIdx > 0) setActiveTab(TABS[currentTabIdx - 1]);
   }, [currentTabIdx]);
 
+  const handleTabKeyDown = useCallback((e: KeyboardEvent<HTMLButtonElement>, tab: TabName) => {
+    const idx = TABS.indexOf(tab);
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (idx < TABS.length - 1) setActiveTab(TABS[idx + 1]);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (idx > 0) setActiveTab(TABS[idx - 1]);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setActiveTab(TABS[0]);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setActiveTab(TABS[TABS.length - 1]);
+    }
+  }, []);
+
   return (
     <main className="relative min-h-screen pb-20">
+      <Suspense fallback={null}>
+        <TabSyncFromUrl setActiveTab={setActiveTab} />
+      </Suspense>
       <div className="ambient-mesh" />
 
       <div className="mx-auto max-w-[1200px] px-5 pt-5 sm:px-6" style={{ position: 'relative', zIndex: 1 }}>
@@ -363,12 +391,18 @@ export default function EstimatePage() {
           <div className="lg-panel-heavy overflow-hidden" style={{ borderRadius: 'var(--radius-xl)' }}>
 
             {/* Tab Bar */}
-            <div className="flex gap-0 overflow-x-auto scrollbar-none" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.02)' }}>
+            <div role="tablist" className="flex gap-0 overflow-x-auto scrollbar-none" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.02)' }}>
               {TABS.map((tab) => {
                 const status = tabStatuses[tab];
                 return (
                   <button
                     key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab}
+                    aria-controls="estimate-tab-panel"
+                    tabIndex={activeTab === tab ? 0 : -1}
+                    onKeyDown={(e) => handleTabKeyDown(e, tab)}
                     onClick={() => setActiveTab(tab)}
                     className="relative flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[0.8125rem] font-medium transition"
                     style={{
@@ -401,7 +435,7 @@ export default function EstimatePage() {
             </div>
 
             {/* Tab Content */}
-            <div className="p-5 sm:p-6">
+            <div id="estimate-tab-panel" role="tabpanel" className="p-5 sm:p-6">
               <ErrorBoundary fallbackLabel={activeTab}>
                 <SectionRenderer tab={activeTab} />
               </ErrorBoundary>
@@ -487,6 +521,14 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 /* ─── Estimate Results ───────────────────────────────────────── */
+
+const CATEGORY_TO_TAB: Record<string, string> = {
+  'CHARGER': 'Charger', 'PEDESTAL': 'Charger', 'CIVIL': 'Civil',
+  'DES/ENG': 'Permit/Design', 'ELEC LBR': 'Electrical', 'ELEC MAT': 'Electrical',
+  'ELEC LBR MAT': 'Electrical', 'ELEC': 'Electrical', 'MATERIAL': 'Accessories',
+  'NETWORK': 'Network', 'PERMIT': 'Permit/Design', 'SAFETY': 'Parking',
+  'SITE_WORK': 'Civil', 'SOFTWARE': 'Controls', 'SERVICE_FEE': 'Controls',
+};
 
 function EstimateResults({ output, expandedLines, toggleLine }: {
   output: EstimateOutput; expandedLines: Set<string>; toggleLine: (id: string) => void;
@@ -629,7 +671,16 @@ function CategoryGroup({ category, items, expandedLines, toggleLine }: {
         <td colSpan={9} className="px-3 py-2.5 sm:px-4">
           <div className="flex items-center justify-between">
             <span className="text-[0.6875rem] font-bold uppercase tracking-[0.04em] text-gray-500">{category}</span>
-            <span className="text-[0.6875rem] font-bold text-gray-600">{fmt(catTotal)}</span>
+            <span className="flex items-center">
+              <span className="text-[0.6875rem] font-bold text-gray-600">{fmt(catTotal)}</span>
+              <a
+                href={`/estimate?tab=${encodeURIComponent(CATEGORY_TO_TAB[category] ?? 'Project')}`}
+                className="ml-2 text-[0.6875rem] font-medium hover:underline"
+                style={{ color: 'var(--system-blue)' }}
+              >
+                Edit
+              </a>
+            </span>
           </div>
         </td>
       </tr>

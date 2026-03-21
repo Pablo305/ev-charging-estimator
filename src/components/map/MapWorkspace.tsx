@@ -159,6 +159,25 @@ interface StreetViewAnalysisResult {
 
 export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspaceProps) {
   const [mapState, dispatch] = useReducer(mapReducer, undefined, initialState);
+
+  // Hydrate map from saved drawings when the component mounts
+  useEffect(() => {
+    const saved = input.mapWorkspace?.drawings;
+    if (!saved) return;
+    if (saved.runs?.length) {
+      for (const run of saved.runs) {
+        dispatch({ type: 'ADD_RUN', run: run as any });
+      }
+    }
+    if (saved.equipment?.length) {
+      for (const eq of saved.equipment) {
+        dispatch({ type: 'ADD_EQUIPMENT', equipment: eq as any });
+      }
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [, setUndoStack] = useState<MapWorkspaceState[]>([]);
 
   const dispatchWithUndo = useCallback((action: MapAction) => {
@@ -433,13 +452,24 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
         };
         // If all patches resolved, apply accepted ones
         if (updated.patches.every((p) => p.status !== 'pending')) {
-          const newInput = applyPatches(inputRef.current, updated.patches);
+          let newInput = applyPatches(inputRef.current, updated.patches);
+          // Persist map drawings so they survive navigation
+          newInput = {
+            ...newInput,
+            mapWorkspace: {
+              ...(newInput.mapWorkspace ?? {}),
+              drawings: {
+                runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label })),
+                equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
+              },
+            },
+          } as EstimateInput;
           onInputChange(newInput);
         }
         return updated;
       });
     },
-    [onInputChange],
+    [onInputChange, mapState.runs, mapState.equipment],
   );
 
   const handleAcceptPatch = useCallback(
@@ -461,10 +491,22 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
           p.status === 'pending' ? { ...p, status: 'accepted' as const } : p,
         ),
       };
-      onInputChange(applyPatches(inputRef.current, updated.patches));
+      let newInput = applyPatches(inputRef.current, updated.patches);
+      // Persist map drawings so they survive navigation
+      newInput = {
+        ...newInput,
+        mapWorkspace: {
+          ...(newInput.mapWorkspace ?? {}),
+          drawings: {
+            runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label })),
+            equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
+          },
+        },
+      } as EstimateInput;
+      onInputChange(newInput);
       return updated;
     });
-  }, [onInputChange]);
+  }, [onInputChange, mapState.runs, mapState.equipment]);
 
   const handleRejectAll = useCallback(() => {
     setPatchBatch((prev) => {
@@ -492,11 +534,23 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
         ),
       };
       if (updated.patches.every((p) => p.status !== 'pending')) {
-        onInputChange(applyPatches(inputRef.current, updated.patches));
+        let newInput = applyPatches(inputRef.current, updated.patches);
+        // Persist map drawings so they survive navigation
+        newInput = {
+          ...newInput,
+          mapWorkspace: {
+            ...(newInput.mapWorkspace ?? {}),
+            drawings: {
+              runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label })),
+              equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
+            },
+          },
+        } as EstimateInput;
+        onInputChange(newInput);
       }
       return updated;
     });
-  }, [onInputChange]);
+  }, [onInputChange, mapState.runs, mapState.equipment]);
 
   // ── Street View AI analysis ──
 

@@ -22,20 +22,27 @@ interface InputFieldProps {
   maxLength?: number;
   colSpan?: 2 | 3;
   aiSuggested?: boolean;
+  error?: string;
+  disabled?: boolean;
+  id?: string;
 }
 
 export function InputField({
   label, value, onChange, type = 'text', required, placeholder, hint, min, max, step, maxLength, colSpan, aiSuggested,
+  error, disabled, id,
 }: InputFieldProps) {
+  const fieldId = id ?? label.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const spanCls = colSpan === 3 ? 'sm:col-span-2 lg:col-span-3' : colSpan === 2 ? 'sm:col-span-2' : '';
+  const inputCls = `${required ? requiredCls : baseCls}${error ? ' ring-[var(--system-red)]/40' : ''}`;
   return (
     <div className={spanCls}>
-      <label className={required ? requiredLabelCls : labelCls}>
+      <label htmlFor={fieldId} className={required ? requiredLabelCls : labelCls}>
         {label}
         {aiSuggested && <span className="ml-1 text-[var(--system-purple)]" title="AI suggested">&#10024;</span>}
       </label>
       <input
-        className={required ? requiredCls : baseCls}
+        id={fieldId}
+        className={inputCls}
         type={type}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
@@ -44,8 +51,12 @@ export function InputField({
         max={max}
         step={step}
         maxLength={maxLength}
+        disabled={disabled}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
       />
-      {hint && <p className={hintCls}>{hint}</p>}
+      {error && <p id={`${fieldId}-error`} className="mt-1.5 text-[0.6875rem]" style={{ color: 'var(--system-red)' }}>{error}</p>}
+      {hint && <p id={`${fieldId}-hint`} className={hintCls}>{hint}</p>}
     </div>
   );
 }
@@ -60,29 +71,40 @@ interface SelectFieldProps {
   placeholder?: string;
   colSpan?: 2 | 3;
   aiSuggested?: boolean;
+  error?: string;
+  disabled?: boolean;
+  id?: string;
 }
 
 export function SelectField({
   label, value, onChange, options, required, hint, placeholder, colSpan, aiSuggested,
+  error, disabled, id,
 }: SelectFieldProps) {
+  const fieldId = id ?? label.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const spanCls = colSpan === 3 ? 'sm:col-span-2 lg:col-span-3' : colSpan === 2 ? 'sm:col-span-2' : '';
+  const selectCls = `${required ? requiredCls : baseCls}${error ? ' ring-[var(--system-red)]/40' : ''}`;
   return (
     <div className={spanCls}>
-      <label className={required ? requiredLabelCls : labelCls}>
+      <label htmlFor={fieldId} className={required ? requiredLabelCls : labelCls}>
         {label}
         {aiSuggested && <span className="ml-1 text-[var(--system-purple)]" title="AI suggested">&#10024;</span>}
       </label>
       <select
-        className={required ? requiredCls : baseCls}
+        id={fieldId}
+        className={selectCls}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value || null)}
+        disabled={disabled}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
       >
         <option value="">{placeholder ?? '-- Select --'}</option>
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
-      {hint && <p className={hintCls}>{hint}</p>}
+      {error && <p id={`${fieldId}-error`} className="mt-1.5 text-[0.6875rem]" style={{ color: 'var(--system-red)' }}>{error}</p>}
+      {hint && <p id={`${fieldId}-hint`} className={hintCls}>{hint}</p>}
     </div>
   );
 }
@@ -92,19 +114,24 @@ interface BoolFieldProps {
   value: boolean | null;
   onChange: (value: boolean | null) => void;
   aiSuggested?: boolean;
+  disabled?: boolean;
+  id?: string;
 }
 
-export function BoolField({ label, value, onChange, aiSuggested }: BoolFieldProps) {
+export function BoolField({ label, value, onChange, aiSuggested, disabled, id }: BoolFieldProps) {
+  const fieldId = id ?? label.toLowerCase().replace(/[^a-z0-9]/g, '-');
   return (
     <div>
-      <label className={labelCls}>
+      <label htmlFor={fieldId} className={labelCls}>
         {label}
         {aiSuggested && <span className="ml-1 text-[var(--system-purple)]" title="AI suggested">&#10024;</span>}
       </label>
       <select
+        id={fieldId}
         className={baseCls}
         value={value === null ? 'null' : String(value)}
         onChange={(e) => onChange(e.target.value === 'null' ? null : e.target.value === 'true')}
+        disabled={disabled}
       >
         <option value="null">Unknown</option>
         <option value="true">Yes</option>
@@ -122,21 +149,31 @@ interface TextareaFieldProps {
   hint?: string;
   rows?: number;
   colSpan?: 2 | 3;
+  error?: string;
+  disabled?: boolean;
+  id?: string;
 }
 
-export function TextareaField({ label, value, onChange, placeholder, hint, rows = 4, colSpan }: TextareaFieldProps) {
+export function TextareaField({ label, value, onChange, placeholder, hint, rows = 4, colSpan, error, disabled, id }: TextareaFieldProps) {
+  const fieldId = id ?? label.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const spanCls = colSpan === 3 ? 'sm:col-span-2 lg:col-span-3' : colSpan === 2 ? 'sm:col-span-2' : '';
+  const textareaCls = `${baseCls}${error ? ' ring-[var(--system-red)]/40' : ''}`;
   return (
     <div className={spanCls}>
-      <label className={labelCls}>{label}</label>
+      <label htmlFor={fieldId} className={labelCls}>{label}</label>
       <textarea
-        className={baseCls}
+        id={fieldId}
+        className={textareaCls}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         style={{ minHeight: `${rows * 2}rem` }}
+        disabled={disabled}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
       />
-      {hint && <p className={hintCls}>{hint}</p>}
+      {error && <p id={`${fieldId}-error`} className="mt-1.5 text-[0.6875rem]" style={{ color: 'var(--system-red)' }}>{error}</p>}
+      {hint && <p id={`${fieldId}-hint`} className={hintCls}>{hint}</p>}
     </div>
   );
 }
@@ -145,12 +182,15 @@ interface CheckboxFieldProps {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  id?: string;
+  disabled?: boolean;
 }
 
-export function CheckboxField({ label, checked, onChange }: CheckboxFieldProps) {
+export function CheckboxField({ label, checked, onChange, id, disabled }: CheckboxFieldProps) {
+  const fieldId = id ?? label.toLowerCase().replace(/[^a-z0-9]/g, '-');
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-sm)] bg-black/[0.02] px-3.5 py-3 ring-1 ring-inset ring-black/[0.04] transition hover:bg-black/[0.04]">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-[var(--system-blue)] focus:ring-[var(--system-blue)]" />
+    <label htmlFor={fieldId} className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-sm)] bg-black/[0.02] px-3.5 py-3 ring-1 ring-inset ring-black/[0.04] transition hover:bg-black/[0.04]">
+      <input id={fieldId} type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-[var(--system-blue)] focus:ring-[var(--system-blue)]" />
       <span className="text-[0.8125rem] font-medium text-gray-700">{label}</span>
     </label>
   );
