@@ -10,6 +10,8 @@ interface StreetViewPanelProps {
   equipment: readonly EquipmentPlacement[];
   onAnalyze: (imageDataUrl: string) => void;
   isAnalyzing: boolean;
+  /** Hide AI / render / download controls (shared estimate view). */
+  readOnly?: boolean;
 }
 
 export function StreetViewPanel({
@@ -17,6 +19,7 @@ export function StreetViewPanel({
   equipment,
   onAnalyze,
   isAnalyzing,
+  readOnly = false,
 }: StreetViewPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<google.maps.StreetViewPanorama | null>(null);
@@ -135,28 +138,92 @@ export function StreetViewPanel({
     chargers.forEach((eq, i) => {
       const x = chargers.length === 1 ? canvas.width / 2 : startX + spacing * i;
       const config = EQUIPMENT_TYPE_CONFIG[eq.equipmentType];
+      const isL3 = eq.equipmentType === 'charger_l3';
 
-      // Draw charger post
-      ctx.fillStyle = '#1E40AF';
-      ctx.fillRect(x - 4, y - 60, 8, 60);
+      if (isL3) {
+        // L3 DCFC Supercharger — tall pedestal with screen and cable holster
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(x - 6, y - 75, 12, 75);
 
-      // Draw charger head
-      ctx.fillStyle = '#2563EB';
-      ctx.beginPath();
-      ctx.roundRect(x - 18, y - 80, 36, 28, 4);
-      ctx.fill();
+        ctx.fillStyle = '#1E3A5F';
+        ctx.beginPath();
+        ctx.roundRect(x - 20, y - 95, 40, 30, 4);
+        ctx.fill();
 
-      // Draw screen glow
-      ctx.fillStyle = '#93C5FD';
-      ctx.fillRect(x - 12, y - 76, 24, 16);
+        ctx.fillStyle = '#60A5FA';
+        ctx.fillRect(x - 14, y - 91, 28, 18);
+
+        // Lightning bolt on screen
+        ctx.strokeStyle = '#FDE047';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y - 90);
+        ctx.lineTo(x - 2, y - 82);
+        ctx.lineTo(x + 4, y - 82);
+        ctx.lineTo(x - 2, y - 74);
+        ctx.stroke();
+
+        // Cable holster on right side
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x + 20, y - 70);
+        ctx.quadraticCurveTo(x + 30, y - 60, x + 20, y - 50);
+        ctx.stroke();
+
+        // Connector nozzle
+        ctx.fillStyle = '#F59E0B';
+        ctx.beginPath();
+        ctx.roundRect(x + 17, y - 52, 8, 5, 2);
+        ctx.fill();
+
+        // Base pad
+        ctx.fillStyle = '#374151';
+        ctx.fillRect(x - 14, y, 28, 4);
+      } else {
+        // L2 Wall Charger — compact box with cable and plug
+        ctx.fillStyle = '#64748B';
+        ctx.fillRect(x - 16, y - 58, 32, 3);
+
+        ctx.fillStyle = '#2563EB';
+        ctx.beginPath();
+        ctx.roundRect(x - 14, y - 55, 28, 32, 3);
+        ctx.fill();
+
+        ctx.fillStyle = '#93C5FD';
+        ctx.fillRect(x - 9, y - 50, 18, 10);
+
+        // Green LED indicator
+        ctx.fillStyle = '#34D399';
+        ctx.beginPath();
+        ctx.arc(x, y - 30, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cable hanging down
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(x, y - 23);
+        ctx.quadraticCurveTo(x + 8, y - 10, x + 6, y);
+        ctx.stroke();
+
+        // Plug connector
+        ctx.fillStyle = '#374151';
+        ctx.beginPath();
+        ctx.arc(x + 6, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#93C5FD';
+        ctx.beginPath();
+        ctx.arc(x + 6, y, 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // Label
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 11px system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText(config.label, x, y - 62);
+      ctx.fillText(config.label, x, isL3 ? y - 98 : y - 62);
 
-      // Label below
       ctx.fillStyle = '#1E3A5F';
       ctx.font = '10px system-ui';
       ctx.fillText(eq.label, x, y + 14);
@@ -262,41 +329,44 @@ export function StreetViewPanel({
 
       {/* Controls overlay */}
       <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2">
-        {/* POV info */}
         <div className="rounded bg-black/60 px-3 py-1.5 text-xs text-white">
           Heading: {heading}° | Pitch: {pitch}°
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={handleCapture}
-            disabled={isAnalyzing || status !== 'ready'}
-            className="rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isAnalyzing ? 'Analyzing...' : 'AI Analyze View'}
-          </button>
-
-          <button
-            onClick={() => setRenderMode((v) => !v)}
-            className={`rounded px-3 py-2 text-xs font-medium shadow ${
-              renderMode
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            {renderMode ? 'Hide Render' : 'Show Render'}
-          </button>
-
-          {renderMode && (
+        {!readOnly && (
+          <div className="flex gap-2">
             <button
-              onClick={handleDownloadRender}
-              className="rounded bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow hover:bg-gray-100"
+              type="button"
+              onClick={handleCapture}
+              disabled={isAnalyzing || status !== 'ready'}
+              className="rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow hover:bg-blue-700 disabled:opacity-50"
             >
-              Download PNG
+              {isAnalyzing ? 'Analyzing...' : 'AI Analyze View'}
             </button>
-          )}
-        </div>
+
+            <button
+              type="button"
+              onClick={() => setRenderMode((v) => !v)}
+              className={`rounded px-3 py-2 text-xs font-medium shadow ${
+                renderMode
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {renderMode ? 'Hide Render' : 'Show Render'}
+            </button>
+
+            {renderMode && (
+              <button
+                type="button"
+                onClick={handleDownloadRender}
+                className="rounded bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow hover:bg-gray-100"
+              >
+                Download PNG
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

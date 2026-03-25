@@ -74,12 +74,6 @@ export default function MapEstimatePage() {
       {/* Top bar */}
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2">
         <div className="flex items-center gap-3">
-          <Link
-            href="/estimate"
-            className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
-          >
-            &larr; Back to Form
-          </Link>
           <h1 className="text-sm font-semibold text-gray-800">
             Map Workspace
           </h1>
@@ -88,6 +82,9 @@ export default function MapEstimatePage() {
               &mdash; {input.project.name}
             </span>
           )}
+          <span className="rounded bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+            Changes save automatically
+          </span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <button

@@ -55,11 +55,14 @@ export interface EquipmentTypeConfig {
 }
 
 export const EQUIPMENT_TYPE_CONFIG: Record<EquipmentType, EquipmentTypeConfig> = {
-  charger_l2: { label: 'L2 Charger', icon: '⚡', shortcut: '2' },
-  charger_l3: { label: 'L3 DCFC', icon: '⚡⚡', shortcut: '3' },
-  transformer: { label: 'Transformer', icon: '🔌', shortcut: 'R' },
-  switchgear: { label: 'Switchgear', icon: '🔲', shortcut: 'G' },
-  utility_meter: { label: 'Utility Meter', icon: '📊', shortcut: 'M' },
+  charger_l2: { label: 'L2 Charger', icon: 'l2', shortcut: '2' },
+  charger_l3: { label: 'L3 DCFC', icon: 'l3', shortcut: '3' },
+  transformer: { label: 'Transformer', icon: 'transformer', shortcut: 'R' },
+  switchgear: { label: 'Switchgear', icon: 'switchgear', shortcut: 'G' },
+  utility_meter: { label: 'Utility Meter', icon: 'meter', shortcut: 'U' },
+  meter_room: { label: 'Meter Room', icon: 'meter_room', shortcut: 'M' },
+  junction_box: { label: 'Junction Box', icon: 'junction', shortcut: 'J' },
+  bollard: { label: 'Bollard', icon: 'bollard', shortcut: 'O' },
 } as const;
 
 // ── Field mappings: map features → EstimateInput fields ──
@@ -131,6 +134,21 @@ export const FIELD_MAPPINGS: readonly FieldMapping[] = [
     equipmentType: 'utility_meter',
     fieldPath: 'electrical.utilityCoordinationRequired',
     aggregation: 'BOOLEAN',
+  },
+  {
+    equipmentType: 'meter_room',
+    fieldPath: 'electrical.meterRoomRequired',
+    aggregation: 'BOOLEAN',
+  },
+  {
+    equipmentType: 'junction_box',
+    fieldPath: 'electrical.junctionBoxCount',
+    aggregation: 'COUNT',
+  },
+  {
+    equipmentType: 'bollard',
+    fieldPath: 'accessories.bollardQty',
+    aggregation: 'COUNT',
   },
 ] as const;
 

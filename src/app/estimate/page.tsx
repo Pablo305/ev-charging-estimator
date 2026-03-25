@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense, useState, useCallback, useEffect, useMemo, type KeyboardEvent } from 'react';
+import { Suspense, useState, useCallback, useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { EstimateInput, EstimateOutput, EstimateLineItem, ManualReviewTrigger } from '@/lib/estimate/types';
 import { generateEstimate } from '@/lib/estimate/engine';
-import { exportEstimatePDF } from '@/lib/estimate/export-pdf';
+import { exportEstimatePDF, exportEstimatePDFWithPreviews } from '@/lib/estimate/export-pdf';
+import { buildPreviewAssetsFromOutput } from '@/lib/map/static-preview-urls';
 import { SCENARIOS } from '@/lib/estimate/scenarios';
 import { useViewMode } from '@/lib/viewMode';
 import { useEstimate } from '@/contexts/EstimateContext';
@@ -24,8 +25,8 @@ import { useAutoEstimate } from '@/hooks/useAutoEstimate';
 import { LiveEstimateSummary } from '@/components/estimate/LiveEstimateSummary';
 import { OnboardingWizard } from '@/components/estimate/OnboardingWizard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { emptyInput } from '@/lib/estimate/emptyInput';
-
+import { getFlowAdvice, SECTION_TIPS } from '@/lib/estimate/flow-advisor';
+import type { TabName as FlowTabName } from '@/lib/estimate/flow-advisor';
 function fmt(n: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 }
@@ -131,6 +132,7 @@ export default function EstimatePage() {
   const { input, updateField, applyPatches, setInput, resetEstimate, lastSavedAt } = useEstimate();
   const autoEstimate = useAutoEstimate();
   const [output, setOutput] = useState<EstimateOutput | null>(null);
+  const [shareStatus, setShareStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [activeTab, setActiveTab] = useState<TabName>('Project');
   const [expandedLines, setExpandedLines] = useState<Set<string>>(new Set());
   const [inputMode, setInputMode] = useState<'form' | 'chat'>('form');
@@ -179,6 +181,33 @@ export default function EstimatePage() {
     setOutput(generateEstimate(input));
   }, [input]);
 
+  const handleShareInteractive = useCallback(async () => {
+    if (!output) return;
+    setShareStatus('loading');
+    try {
+      const res = await fetch('/api/estimate/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ output }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Share failed');
+      const url = `${window.location.origin}${data.url}`;
+      await navigator.clipboard.writeText(url);
+      setShareStatus('done');
+      setTimeout(() => setShareStatus('idle'), 5000);
+    } catch {
+      setShareStatus('error');
+      setTimeout(() => setShareStatus('idle'), 5000);
+    }
+  }, [output]);
+
+  const handleDownloadPdfWithPreviews = useCallback(async () => {
+    if (!output) return;
+    const previews = buildPreviewAssetsFromOutput(output);
+    await exportEstimatePDFWithPreviews(output, previews);
+  }, [output]);
+
   const toggleLine = useCallback((id: string) => {
     setExpandedLines((prev) => {
       const next = new Set(prev);
@@ -198,6 +227,15 @@ export default function EstimatePage() {
     for (const tab of TABS) result[tab] = getTabStatus(tab, input);
     return result;
   }, [input]);
+  const flowAdvice = useMemo(() => getFlowAdvice(input), [input]);
+  const [advisorDismissed, setAdvisorDismissed] = useState(false);
+  const prevNextTabRef = useRef(flowAdvice.nextTab);
+  useEffect(() => {
+    if (flowAdvice.nextTab !== prevNextTabRef.current) {
+      setAdvisorDismissed(false);
+      prevNextTabRef.current = flowAdvice.nextTab;
+    }
+  }, [flowAdvice.nextTab]);
   const currentTabIdx = TABS.indexOf(activeTab);
 
   const goNext = useCallback(() => {
@@ -307,6 +345,36 @@ export default function EstimatePage() {
           </div>
         </div>
 
+        {/* ─── Next Best Action ─────────────────────────────── */}
+        {flowAdvice.nextTab && !advisorDismissed && !isEstimateEmpty && (
+          <div className="mt-3 print:hidden">
+            <div className="lg-panel-heavy flex items-center gap-3 px-4 py-3" style={{ borderRadius: 'var(--radius-lg)', borderLeft: '3px solid var(--system-blue)' }}>
+              <span className="text-[0.8125rem] font-medium text-gray-700">
+                <span className="mr-1.5 text-blue-500">Suggested:</span>
+                {flowAdvice.nextAction}
+              </span>
+              <button
+                onClick={() => setActiveTab(flowAdvice.nextTab as TabName)}
+                className="lg-pill lg-pill-active ml-auto px-3 py-1.5 text-[0.75rem] font-semibold"
+              >
+                Go to {flowAdvice.nextTab}
+              </button>
+              <button
+                onClick={() => setAdvisorDismissed(true)}
+                className="ml-1 text-gray-400 hover:text-gray-600"
+                title="Dismiss"
+              >
+                &times;
+              </button>
+            </div>
+            {flowAdvice.completionHints.length > 0 && (
+              <div className="mt-1.5 px-4 text-[0.6875rem] text-gray-400">
+                {flowAdvice.completionHints[0]}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ─── Onboarding ────────────────────────────────────── */}
         {showOnboarding && isEstimateEmpty && (
           <div className="mt-4">
@@ -394,6 +462,7 @@ export default function EstimatePage() {
             <div role="tablist" className="flex gap-0 overflow-x-auto scrollbar-none" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.02)' }}>
               {TABS.map((tab) => {
                 const status = tabStatuses[tab];
+                const isSkipped = flowAdvice.skipTabs.includes(tab as FlowTabName);
                 return (
                   <button
                     key={tab}
@@ -404,7 +473,8 @@ export default function EstimatePage() {
                     tabIndex={activeTab === tab ? 0 : -1}
                     onKeyDown={(e) => handleTabKeyDown(e, tab)}
                     onClick={() => setActiveTab(tab)}
-                    className="relative flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[0.8125rem] font-medium transition"
+                    title={isSkipped ? `Not applicable for ${input.project.projectType?.replace(/_/g, ' ') ?? 'this'} projects` : undefined}
+                    className={`relative flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[0.8125rem] font-medium transition ${isSkipped ? 'opacity-40' : ''}`}
                     style={{
                       color: activeTab === tab ? 'var(--system-blue)' : '#636366',
                       borderBottom: activeTab === tab ? '2px solid var(--system-blue)' : '2px solid transparent',
@@ -414,6 +484,7 @@ export default function EstimatePage() {
                     {status === 'complete' && <span className="lg-dot" style={{ width: 6, height: 6, background: 'var(--system-green)' }} />}
                     {status === 'partial' && <span className="lg-dot" style={{ width: 6, height: 6, background: 'var(--system-orange)' }} />}
                     {tab}
+                    {isSkipped && <span className="ml-1 rounded bg-gray-200 px-1 text-[9px] font-bold text-gray-500">N/A</span>}
                   </button>
                 );
               })}
@@ -433,6 +504,13 @@ export default function EstimatePage() {
                 )}
               </div>
             </div>
+
+            {/* Pro Tip */}
+            {SECTION_TIPS[activeTab as FlowTabName] && (
+              <div className="mx-5 mt-3 rounded-lg bg-blue-50/60 px-3 py-2 text-[0.6875rem] leading-relaxed text-blue-700 sm:mx-6">
+                <span className="font-semibold">Pro tip:</span> {SECTION_TIPS[activeTab as FlowTabName]}
+              </div>
+            )}
 
             {/* Tab Content */}
             <div id="estimate-tab-panel" role="tabpanel" className="p-5 sm:p-6">
@@ -470,7 +548,14 @@ export default function EstimatePage() {
         {/* ─── Results ───────────────────────────────────────── */}
         {output && (
           <div className="mt-6">
-            <EstimateResults output={output} expandedLines={expandedLines} toggleLine={toggleLine} />
+            <EstimateResults
+              output={output}
+              expandedLines={expandedLines}
+              toggleLine={toggleLine}
+              onShareInteractive={handleShareInteractive}
+              shareStatus={shareStatus}
+              onDownloadPdfWithPreviews={handleDownloadPdfWithPreviews}
+            />
             {isAdvanced && (
               <div className="mt-6 print:hidden">
                 <AIReviewer input={input} output={output} onApplyChange={(field, value) => updateField(field, value)} />
@@ -530,8 +615,11 @@ const CATEGORY_TO_TAB: Record<string, string> = {
   'SITE_WORK': 'Civil', 'SOFTWARE': 'Controls', 'SERVICE_FEE': 'Controls',
 };
 
-function EstimateResults({ output, expandedLines, toggleLine }: {
+function EstimateResults({ output, expandedLines, toggleLine, onShareInteractive, shareStatus, onDownloadPdfWithPreviews }: {
   output: EstimateOutput; expandedLines: Set<string>; toggleLine: (id: string) => void;
+  onShareInteractive: () => void;
+  shareStatus: 'idle' | 'loading' | 'done' | 'error';
+  onDownloadPdfWithPreviews: () => void;
 }) {
   const { summary, metadata, lineItems, exclusions, manualReviewTriggers } = output;
   const byCategory = lineItems.reduce<Record<string, EstimateLineItem[]>>((acc, li) => ({
@@ -560,10 +648,33 @@ function EstimateResults({ output, expandedLines, toggleLine }: {
           ))}
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 print:hidden sm:flex-row sm:gap-3">
+        <div className="mt-4 flex flex-col gap-2 print:hidden sm:flex-row sm:flex-wrap sm:gap-3">
           <button onClick={() => exportEstimatePDF(output)} className="lg-pill lg-pill-active px-5 py-2.5 text-[0.8125rem] font-semibold" style={{ background: '#1c1c1e' }}>
             Download PDF
           </button>
+          <button
+            type="button"
+            onClick={() => void onDownloadPdfWithPreviews()}
+            className="lg-pill px-5 py-2.5 text-[0.8125rem] font-semibold text-gray-800"
+            style={{ background: 'rgba(0,0,0,0.06)' }}
+          >
+            PDF + site images
+          </button>
+          <button
+            type="button"
+            onClick={() => void onShareInteractive()}
+            disabled={shareStatus === 'loading'}
+            className="lg-pill px-5 py-2.5 text-[0.8125rem] font-semibold text-white disabled:opacity-50"
+            style={{ background: 'var(--system-blue)' }}
+          >
+            {shareStatus === 'loading' ? 'Creating link…' : 'Share interactive estimate'}
+          </button>
+          {shareStatus === 'done' && (
+            <span className="self-center text-[0.75rem] text-green-600">Link copied to clipboard</span>
+          )}
+          {shareStatus === 'error' && (
+            <span className="self-center text-[0.75rem] text-red-600">Could not create link</span>
+          )}
           {MAP_WORKSPACE_ENABLED && (
             <Link href="/estimate/map" className="lg-pill lg-pill-active px-5 py-2.5 text-center text-[0.8125rem] font-semibold">
               Open Map Workspace

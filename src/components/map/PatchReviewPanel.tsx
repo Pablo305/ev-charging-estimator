@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import type { PatchBatch, EstimatePatch } from '@/lib/map/types';
+import { getImpactSummary } from '@/lib/map/patch-impact';
 
 interface PatchReviewPanelProps {
   batch: PatchBatch | null;
@@ -29,6 +30,18 @@ function getTabForField(fieldPath: string): string {
       return 'Project';
     case 'customer':
       return 'Customer';
+    case 'accessories':
+      return 'Accessories';
+    case 'makeReady':
+    case 'chargerInstall':
+    case 'purchasingChargers':
+    case 'signageBollards':
+      return 'Responsibilities';
+    case 'designEngineering':
+    case 'permit':
+      return 'Permit/Design';
+    case 'network':
+      return 'Network';
     default:
       return 'Project';
   }
@@ -44,26 +57,68 @@ function formatValue(value: unknown): string {
 
 function fieldLabel(path: string): string {
   const labels: Record<string, string> = {
+    // Map workspace measurements
     'mapWorkspace.conduitDistance_ft': 'Conduit Distance',
     'mapWorkspace.feederDistance_ft': 'Feeder Distance',
     'mapWorkspace.trenchingDistance_ft': 'Trenching Distance',
     'mapWorkspace.boringDistance_ft': 'Boring Distance',
-    'mapWorkspace.concreteCuttingDistance_ft': 'Concrete Cutting',
+    'mapWorkspace.concreteCuttingDistance_ft': 'Concrete Cutting Distance',
     'mapWorkspace.chargerCountFromMap': 'Charger Count (Map)',
     'mapWorkspace.siteCoordinates': 'Site Coordinates',
+    // Electrical
     'electrical.transformerRequired': 'Transformer Required',
     'electrical.switchgearRequired': 'Switchgear Required',
+    'electrical.utilityCoordinationRequired': 'Utility Coordination',
+    'electrical.meterRoomRequired': 'Meter Room Required',
+    'electrical.junctionBoxCount': 'Junction Box Count',
+    'electrical.panelUpgradeRequired': 'Panel Upgrade Required',
+    'electrical.serviceType': 'Electrical Service Type',
+    'electrical.distanceToPanel_ft': 'Distance to Panel',
+    'electrical.availableAmps': 'Available Amps',
+    'electrical.breakerSpaceAvailable': 'Breaker Space Available',
+    // Parking
     'parkingEnvironment.type': 'Parking Type',
     'parkingEnvironment.surfaceType': 'Surface Type',
     'parkingEnvironment.trafficControlRequired': 'Traffic Control',
     'parkingEnvironment.hasPTSlab': 'Post-Tensioned Slab',
-    'site.siteType': 'Site Type',
+    'parkingEnvironment.coringRequired': 'Coring Required',
+    'parkingEnvironment.slabScanRequired': 'Slab Scan Required',
+    'parkingEnvironment.boringRequired': 'Boring Required',
+    'parkingEnvironment.trenchingRequired': 'Trenching Required',
+    'parkingEnvironment.fireRatedPenetrations': 'Fire-Rated Penetrations',
+    // Charger
     'charger.mountType': 'Mount Type',
     'charger.count': 'Charger Count',
     'charger.chargingLevel': 'Charging Level',
     'charger.brand': 'Charger Brand',
+    'charger.model': 'Charger Model',
+    'charger.ampsPerCharger': 'Amps Per Charger',
+    // Site
+    'site.siteType': 'Site Type',
+    'site.address': 'Site Address',
+    // Responsibilities
+    'makeReady.responsibility': 'Make-Ready Responsibility',
+    'chargerInstall.responsibility': 'Charger Installation',
+    'purchasingChargers.responsibility': 'Charger Purchasing',
+    'signageBollards.responsibility': 'Signage & Bollards',
+    // Design & Permit
+    'designEngineering.responsibility': 'Design Engineering',
+    'designEngineering.stampedPlansRequired': 'Stamped Plans Required',
+    'permit.responsibility': 'Permit Responsibility',
+    // Accessories
+    'accessories.bollardQty': 'Bollard Quantity',
+    'accessories.signQty': 'Sign Quantity',
+    'accessories.wheelStopQty': 'Wheel Stop Quantity',
+    // Project
+    'project.projectType': 'Project Type',
+    'project.isNewConstruction': 'New Construction',
   };
-  return labels[path] ?? path.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim() ?? path;
+  // Fallback: format the last segment of the path as a human-readable label
+  return labels[path] ?? (path.split('.').pop() ?? path)
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/_/g, ' ')
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .trim();
 }
 
 const SOURCE_CONFIG: Record<EstimatePatch['source'], { text: string; color: string; tooltip: string }> = {
@@ -173,9 +228,26 @@ function PatchRow({
           href={`/estimate?tab=${encodeURIComponent(getTabForField(patch.fieldPath))}&field=${encodeURIComponent(patch.fieldPath)}`}
           className="ml-2 flex-shrink-0 text-[10px] font-medium text-blue-600 hover:text-blue-800 hover:underline"
         >
-          View in form →
+          View in form &rarr;
         </a>
       </div>
+      {/* Cost impact summary */}
+      {(() => {
+        const impact = getImpactSummary(patch.fieldPath, patch.proposedValue);
+        return impact ? (
+          <div className="mt-1.5 rounded bg-gray-50 px-2 py-1 text-[10px] text-gray-600">
+            <span className="font-medium text-gray-500">Impact:</span> {impact}
+          </div>
+        ) : null;
+      })()}
+      {/* Auto-accepted badge */}
+      {patch.autoAccepted && patch.status === 'accepted' && (
+        <div className="mt-1">
+          <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+            Auto-applied (field was empty)
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -211,6 +283,9 @@ export function PatchReviewPanel({
     return groups;
   }, [pending]);
 
+  const accepted = useMemo(() => batch?.patches.filter((p) => p.status === 'accepted') ?? [], [batch]);
+  const rejected = useMemo(() => batch?.patches.filter((p) => p.status === 'rejected') ?? [], [batch]);
+
   if (!batch || batch.patches.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50/50 p-5 text-center">
@@ -225,6 +300,31 @@ export function PatchReviewPanel({
 
   return (
     <div className="space-y-3">
+      {/* Explanatory header */}
+      <div className="rounded-lg bg-blue-50 px-3 py-2 text-[11px] leading-relaxed text-blue-800">
+        These suggestions sync your map drawings with the estimate form.
+        <strong> Accept</strong> applies the value. <strong>Reject</strong> keeps your current entry.
+      </div>
+
+      {/* Status count badges */}
+      <div className="flex gap-2 text-[10px] font-medium">
+        {pending.length > 0 && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+            {pending.length} pending
+          </span>
+        )}
+        {accepted.length > 0 && (
+          <span className="rounded-full bg-green-100 px-2 py-0.5 text-green-700">
+            {accepted.length} accepted
+          </span>
+        )}
+        {rejected.length > 0 && (
+          <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">
+            {rejected.length} rejected
+          </span>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
           Pending ({pending.length})

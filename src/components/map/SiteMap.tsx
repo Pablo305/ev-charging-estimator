@@ -6,6 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import type { RunSegment, EquipmentPlacement, RunType, EquipmentType, PointToolType } from '@/lib/map/types';
 import { RUN_TYPE_CONFIG, EQUIPMENT_TYPE_CONFIG } from '@/lib/map/constants';
 import { measureRunLength } from '@/lib/map/measurements';
+import { getEquipmentSvgHtml } from './EquipmentIcons';
 import type { LineString, Point } from 'geojson';
 
 interface SiteMapProps {
@@ -24,6 +25,8 @@ interface SiteMapProps {
   onEquipmentDelete: (id: string) => void;
   onFeatureSelect: (id: string | null) => void;
   onPointToolPlace: (toolType: PointToolType, coordinates: [number, number]) => void;
+  /** Called with the Mapbox map instance once fully loaded (for snapshot capture) */
+  onMapReady?: (map: mapboxgl.Map) => void;
 }
 
 const EQUIPMENT_TYPES = new Set<string>(Object.keys(EQUIPMENT_TYPE_CONFIG));
@@ -47,6 +50,7 @@ export function SiteMap({
   onRunDelete,
   onFeatureSelect,
   onPointToolPlace,
+  onMapReady,
 }: SiteMapProps) {
   // TODO: Wire _onRunUpdate and _onEquipmentUpdate for drag-to-edit support
   void _onRunUpdate;
@@ -151,6 +155,8 @@ export function SiteMap({
 
     map.on('load', () => {
       styleLoadedRef.current = true;
+      // Expose map instance for snapshot capture
+      if (onMapReady) onMapReady(map);
 
       // ── Committed run lines ──
       map.addSource('runs', {
@@ -431,13 +437,16 @@ export function SiteMap({
       const el = document.createElement('div');
       el.className = 'map-equipment-marker';
       el.style.cssText = `
-        width: 32px; height: 32px; border-radius: 50%;
+        width: 36px; height: 36px; border-radius: 8px;
         background: white; border: 2px solid #2563EB;
         display: flex; align-items: center; justify-content: center;
-        font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        transition: transform 0.15s ease;
       `;
-      el.textContent = config.icon;
+      el.innerHTML = getEquipmentSvgHtml(eq.equipmentType, 26);
       el.title = `${config.label}: ${eq.label}`;
+      el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.15)'; });
+      el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
 
       const marker = new mapboxgl.Marker({ element: el })
         .setLngLat(eq.geometry.coordinates as [number, number])

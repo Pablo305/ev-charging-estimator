@@ -146,6 +146,8 @@ export function normalizeMondayItem(item: MondayItem): EstimateInput {
       switchgearRequired: null, // No monday.com column mapped yet — requires board customization
       distanceToPanel_ft: getNumber(item, cols.distanceToPanel),
       utilityCoordinationRequired: null, // No monday.com column mapped yet — requires board customization
+      meterRoomRequired: null,
+      junctionBoxCount: null,
       electricalRoomDescription: '', // No monday.com column mapped yet — requires board customization
     },
     civil: {

@@ -253,6 +253,38 @@ Rules:
 ${PRICING_CONSTRAINT}`;
 }
 
+export function buildPlanAnalysisPrompt(): string {
+  return `You are reading a site plan, markup, or aerial markup image for commercial EV charging layout.
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "runs": [
+    {
+      "runType": "conduit|feeder|trench|bore|concrete_cut",
+      "points": [[0.12, 0.35], [0.44, 0.52]]
+    }
+  ],
+  "equipment": [
+    {
+      "equipmentType": "charger_l2|charger_l3|transformer|switchgear|utility_meter",
+      "relativeX": 0.62,
+      "relativeY": 0.48,
+      "label": "Charger 1"
+    }
+  ],
+  "notes": "Short caveats about uncertainty",
+  "confidence": "high|medium|low",
+  "needsReview": true
+}
+
+Rules:
+- relativeX and relativeY are normalized 0–1 on the image (origin top-left of the image).
+- Each point in runs is also [relativeX, relativeY] in the same normalized space.
+- If conduit paths are unclear, return an empty runs array and explain in notes.
+- Prefer marking likely charger locations in equipment even if runs are unknown.
+- Never output prices, ampacity, or guaranteed code compliance — this is for placement hints only.`;
+}
+
 export function buildPhotoAnalysisPrompt(): string {
   return `You are analyzing a site photo for EV charger installation estimating.
 

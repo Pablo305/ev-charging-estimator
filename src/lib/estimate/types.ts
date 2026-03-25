@@ -92,6 +92,10 @@ export interface EstimateInput {
     switchgearRequired: boolean | null;
     distanceToPanel_ft: number | null;
     utilityCoordinationRequired: boolean | null;
+    /** Map / plan placement of a dedicated meter room / service entrance building */
+    meterRoomRequired: boolean | null;
+    /** Count of pull/junction boxes suggested from map markers */
+    junctionBoxCount: number | null;
     electricalRoomDescription: string;
   };
   civil: {
@@ -156,8 +160,10 @@ export interface EstimateInput {
     concreteCuttingDistance_ft: number | null;
     chargerCountFromMap: number | null;
     siteCoordinates: [number, number] | null;
+    /** Captured Mapbox canvas screenshot for PDF export */
+    mapSnapshotDataUrl?: string;
     drawings?: {
-      runs: Array<{ id: string; runType: string; geometry: { type: string; coordinates: number[][] }; lengthFt: number; label: string }>;
+      runs: Array<{ id: string; runType: string; geometry: { type: string; coordinates: number[][] }; lengthFt: number; label: string; createdAt?: string }>;
       equipment: Array<{ id: string; equipmentType: string; geometry: { type: string; coordinates: number[] }; label: string }>;
     } | null;
   };

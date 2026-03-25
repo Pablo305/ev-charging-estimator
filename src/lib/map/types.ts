@@ -11,7 +11,10 @@ export type EquipmentType =
   | 'charger_l3'
   | 'transformer'
   | 'switchgear'
-  | 'utility_meter';
+  | 'utility_meter'
+  | 'meter_room'
+  | 'junction_box'
+  | 'bollard';
 
 export interface RunSegment {
   readonly id: string;
@@ -53,6 +56,8 @@ export interface EstimatePatch {
   readonly source: 'map_measurement' | 'map_equipment' | 'auto_infer' | 'ai_analysis';
   readonly reason: string;
   readonly status: PatchStatus;
+  /** True when the patch was auto-accepted because the target field was empty */
+  readonly autoAccepted?: boolean;
 }
 
 export interface PatchBatch {

@@ -112,34 +112,44 @@ export function generatePatches(
     if (proposedValue === currentValue) continue;
     if (proposedValue === null && currentValue === undefined) continue;
 
+    // Auto-accept only distance measurements into empty fields.
+    // Equipment booleans/counts require explicit user review.
+    const previousEmpty = currentValue == null;
+    const isRunMeasurement = mapping.runType !== undefined;
+    const autoAcceptable = previousEmpty && isRunMeasurement;
+
     patchCounter += 1;
     const patch: EstimatePatch = {
       id: `patch-${String(patchCounter).padStart(4, '0')}`,
       fieldPath: mapping.fieldPath,
       previousValue: currentValue ?? null,
       proposedValue,
-      source: mapping.runType !== undefined ? 'map_measurement' : 'map_equipment',
+      source: isRunMeasurement ? 'map_measurement' : 'map_equipment',
       reason: buildPatchReason(mapping, proposedValue),
-      status: 'pending',
+      status: autoAcceptable ? 'accepted' : 'pending',
+      autoAccepted: autoAcceptable,
     };
 
     patches.push(patch);
   }
 
-  // Add site coordinates patch if available
-  if (
-    mapState.siteCoordinates !== null &&
-    deepGet(currentInput, 'mapWorkspace.siteCoordinates') === undefined
-  ) {
+  // Add site coordinates patch if available and different from current
+  const currentCoords = deepGet(currentInput, 'mapWorkspace.siteCoordinates');
+  const coordsMatch = Array.isArray(currentCoords) && Array.isArray(mapState.siteCoordinates)
+    && currentCoords[0] === mapState.siteCoordinates[0]
+    && currentCoords[1] === mapState.siteCoordinates[1];
+  if (mapState.siteCoordinates != null && !coordsMatch) {
+    const coordsEmpty = currentCoords == null;
     patchCounter += 1;
     patches.push({
       id: `patch-${String(patchCounter).padStart(4, '0')}`,
       fieldPath: 'mapWorkspace.siteCoordinates',
-      previousValue: null,
+      previousValue: currentCoords ?? null,
       proposedValue: mapState.siteCoordinates,
       source: 'map_measurement',
       reason: 'Site coordinates from map address search',
-      status: 'pending',
+      status: coordsEmpty ? 'accepted' : 'pending',
+      autoAccepted: coordsEmpty,
     });
   }
 

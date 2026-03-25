@@ -20,6 +20,8 @@ export function emptyInput(): EstimateInput {
       serviceType: null, availableCapacityKnown: false, availableAmps: null,
       breakerSpaceAvailable: null, panelUpgradeRequired: null, transformerRequired: null,
       switchgearRequired: null, distanceToPanel_ft: null, utilityCoordinationRequired: null,
+      meterRoomRequired: null,
+      junctionBoxCount: null,
       electricalRoomDescription: '',
     },
     civil: { installationLocationDescription: '' },

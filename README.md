@@ -53,6 +53,10 @@ Open http://localhost:3000
 | `/api/generate-estimate` | POST endpoint for programmatic access |
 | `/api/health` | Health check |
 | `/api/live/monday-item/[id]` | Live monday.com item fetch (optional) |
+| `/e/[id]` | Public interactive estimate (readonly map, Street View, PDF download, chat) |
+| `POST /api/estimate/share` | Create shareable estimate record |
+| `GET /api/estimate/[id]` | Fetch shared estimate JSON |
+| `DELETE /api/estimate/[id]` | Revoke share (see `ESTIMATE_SHARE_REVOKE_SECRET`) |
 
 ## Operating Modes
 
@@ -74,6 +78,20 @@ The app still works fully without this - live mode is an optional enhancement.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `MONDAY_API_TOKEN` | No | monday.com API token for live item fetch |
+| `NEXT_PUBLIC_SUPABASE_URL` | No | Supabase project URL (with `SUPABASE_SERVICE_ROLE_KEY`, persists shared estimate links) |
+| `SUPABASE_SERVICE_ROLE_KEY` | No | Service role key for `shared_estimates` table (server-only) |
+| `GOOGLE_MAPS_SERVER_KEY` | No | Optional; Street View static previews in PDFs if set (falls back to `NEXT_PUBLIC_GOOGLE_MAPS_KEY`) |
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | No | Satellite static map previews (share + PDF) when `mapWorkspace.siteCoordinates` is set |
+| `GEMINI_API_KEY` | No | Plan/drawing analysis (`/api/ai/analyze-plan`) for AI placement hints on the map workspace |
+| `ESTIMATE_SHARE_REVOKE_SECRET` | No | If set, `DELETE /api/estimate/[id]` requires `Authorization: Bearer <secret>` to revoke a share link |
+
+### Interactive shared estimates (`/e/[id]`)
+
+- **Share link**: On `/estimate`, generate an estimate and use **Share interactive estimate** — stores JSON via Supabase if configured, otherwise under `data/shared-estimates.json` (local dev; gitignored).
+- **Supabase**: Run `supabase/migrations/001_shared_estimates.sql` in the Supabase SQL editor to create the `shared_estimates` table.
+- **PDF + site images**: Download from the shared page or estimate view embeds satellite / Street View previews when map coordinates exist and API keys are set.
+- **Map workspace**: Plan upload + AI suggestions apply to `mapWorkspace.drawings` for review before syncing to the estimate engine.
+- **Revoke**: `DELETE /api/estimate/[id]` with bearer token when `ESTIMATE_SHARE_REVOKE_SECRET` is configured (in production); in development, revoke works without the secret for local testing.
 
 ## Deploying to Vercel
 
@@ -141,7 +159,7 @@ This is a test model, not production software:
 - Rules are based on analysis of existing data, not validated by estimators
 - No database persistence
 - No user authentication
-- No PDF/export generation
+- PDF export is client-side; shared links store estimate JSON for the interactive page
 
 ## Next Steps Toward Production
 

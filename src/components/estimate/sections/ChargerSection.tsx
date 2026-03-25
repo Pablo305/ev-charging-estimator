@@ -2,6 +2,7 @@
 
 import { useEstimate } from '@/contexts/EstimateContext';
 import { InputField, SelectField, FormGrid } from '../FormField';
+import { NudgeBanner } from '../NudgeBanner';
 
 const CHARGING_LEVELS = [
   { value: 'l2', label: 'Level 2 (up to 19.2 kW)' },
@@ -27,6 +28,7 @@ export function ChargerSection() {
 
   return (
     <>
+      <NudgeBanner tab="Charger" />
       <div className="mb-5">
         <p className="mb-3 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--system-blue)' }}>Hardware</p>
         <FormGrid>

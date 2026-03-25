@@ -47,7 +47,7 @@ Navigation hub showing feature overview, AI capabilities, and sample scenarios.
 ### Map Workspace (/estimate/map)
 Satellite map (Mapbox) for visual estimation:
 - Draw 5 run types: conduit (blue), feeder (green), trench (orange), bore (purple), concrete cut (red)
-- Place 5 equipment types: L2 charger, L3 charger, transformer, switchgear, utility meter
+- Place equipment types: L2 charger, L3 DCFC, transformer, switchgear, utility meter, meter room, junction box, bollard
 - AI site assessment: enter address → satellite + street view analysis → merged inferences
 - Smart questionnaire: AI asks only questions it couldn't answer from imagery
 - Power source & charger zone markers → auto-generates runs with proper distances
@@ -347,7 +347,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { messages, currentEstimate } = body as { messages?: unknown[]; currentEstimate?: Record<string, unknown> };
+    const { messages, currentEstimate, sharedEstimateSnapshot } = body as {
+      messages?: unknown[];
+      currentEstimate?: Record<string, unknown>;
+      sharedEstimateSnapshot?: Record<string, unknown>;
+    };
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'messages array required' }, { status: 400 });
@@ -373,13 +377,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No valid messages provided' }, { status: 400 });
     }
 
-    // Build estimate context section if provided
+    // Build estimate context: shared read-only link vs in-app builder
     const ALLOWED_ESTIMATE_KEYS = new Set([
       'projectType', 'projectName', 'chargerBrand', 'chargerModel',
       'chargerCount', 'chargingLevel', 'siteAddress', 'siteType', 'state',
     ]);
     let estimateContext = '';
-    if (currentEstimate && typeof currentEstimate === 'object') {
+    const isSharedView =
+      sharedEstimateSnapshot && typeof sharedEstimateSnapshot === 'object';
+
+    if (isSharedView) {
+      const snap = JSON.stringify(sharedEstimateSnapshot).slice(0, 14_000);
+      estimateContext = `\n\n## SHARED ESTIMATE (READ-ONLY)\nThe user opened a **saved shared estimate link**. They cannot edit the estimate from this page. Do **not** suggest field changes or include SUGGESTIONS blocks. Help explain scope, totals, exclusions, process, and how to engage BulletEV next.\n\nSnapshot:\n${snap}`;
+    } else if (currentEstimate && typeof currentEstimate === 'object') {
       const entries = Object.entries(currentEstimate)
         .filter(([k, v]) => ALLOWED_ESTIMATE_KEYS.has(k) && v !== null && v !== undefined && v !== '' && v !== 0)
         .map(([k, v]) => `- ${k}: ${String(v).slice(0, 200)}`)
@@ -432,24 +442,26 @@ export async function POST(request: Request) {
     const suggestionsMatch = reply.match(/<!--SUGGESTIONS(\[[\s\S]*?\])SUGGESTIONS-->/);
     if (suggestionsMatch) {
       cleanReply = reply.replace(/<!--SUGGESTIONS\[[\s\S]*?\]SUGGESTIONS-->/, '').trim();
-      try {
-        const parsed = JSON.parse(suggestionsMatch[1]);
-        if (Array.isArray(parsed)) {
-          suggestedChanges = parsed
-            .filter((s: unknown): s is { fieldPath: string; value: unknown; label: string } => {
-              if (typeof s !== 'object' || s === null) return false;
-              const rec = s as Record<string, unknown>;
-              return (
-                typeof rec.fieldPath === 'string' &&
-                typeof rec.label === 'string' &&
-                rec.label.length <= 80 &&
-                ALLOWED_SUGGESTION_PATHS.has(rec.fieldPath) &&
-                'value' in rec
-              );
-            });
+      if (!isSharedView) {
+        try {
+          const parsed = JSON.parse(suggestionsMatch[1]);
+          if (Array.isArray(parsed)) {
+            suggestedChanges = parsed
+              .filter((s: unknown): s is { fieldPath: string; value: unknown; label: string } => {
+                if (typeof s !== 'object' || s === null) return false;
+                const rec = s as Record<string, unknown>;
+                return (
+                  typeof rec.fieldPath === 'string' &&
+                  typeof rec.label === 'string' &&
+                  rec.label.length <= 80 &&
+                  ALLOWED_SUGGESTION_PATHS.has(rec.fieldPath) &&
+                  'value' in rec
+                );
+              });
+          }
+        } catch {
+          // Invalid JSON in suggestions — ignore
         }
-      } catch {
-        // Invalid JSON in suggestions — ignore
       }
     }
 

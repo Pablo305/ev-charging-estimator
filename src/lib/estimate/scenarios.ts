@@ -68,6 +68,8 @@ const hamptonInn: EstimateInput = {
     switchgearRequired: false,
     distanceToPanel_ft: 85,
     utilityCoordinationRequired: false,
+    meterRoomRequired: null,
+    junctionBoxCount: null,
     electricalRoomDescription: 'Main electrical room ground floor near loading dock',
   },
   civil: {
@@ -172,6 +174,8 @@ const downtownApartment: EstimateInput = {
     switchgearRequired: false,
     distanceToPanel_ft: 150, // Long run
     utilityCoordinationRequired: false,
+    meterRoomRequired: null,
+    junctionBoxCount: null,
     electricalRoomDescription: 'Electrical room on P1 level. Chargers on P6. Must route through 5 floors.',
   },
   civil: {
@@ -278,6 +282,8 @@ const mixedComplex: EstimateInput = {
     switchgearRequired: true,
     distanceToPanel_ft: 120,
     utilityCoordinationRequired: true,
+    meterRoomRequired: null,
+    junctionBoxCount: null,
     electricalRoomDescription:
       'New construction - electrical room in parking structure B1 level',
   },
@@ -384,6 +390,8 @@ const superchargerStation: EstimateInput = {
     switchgearRequired: false,
     distanceToPanel_ft: 60,
     utilityCoordinationRequired: true,
+    meterRoomRequired: null,
+    junctionBoxCount: null,
     electricalRoomDescription: 'Existing 480V 3-phase service at fuel station. Dedicated pad for transformer.',
   },
   civil: {

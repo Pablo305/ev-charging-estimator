@@ -11,6 +11,7 @@ import type {
   PatchBatch,
   EstimatePatch,
 } from '@/lib/map/types';
+import { initialMapState, mapReducer } from '@/lib/map/workspace-reducer';
 import type { SiteIntelligence, AssessmentPhase } from '@/lib/ai/site-assessment-types';
 import { PATCH_DEBOUNCE_MS } from '@/lib/map/constants';
 import { measureRunLength } from '@/lib/map/measurements';
@@ -21,6 +22,7 @@ import { autoGenerateRuns } from '@/lib/map/auto-generate-runs';
 import { generateEquipmentLabel } from './EquipmentLayer';
 import { SiteMap } from './SiteMap';
 import { StreetViewPanel } from './StreetViewPanel';
+import { PlanUploadPanel } from './PlanUploadPanel';
 import { DrawingToolbar } from './DrawingToolbar';
 import { SiteInfoPanel } from './SiteInfoPanel';
 import { PatchReviewPanel } from './PatchReviewPanel';
@@ -29,6 +31,7 @@ import { SiteAssessmentFlow } from './SiteAssessmentFlow';
 import { SiteIntelligenceCard } from './SiteIntelligenceCard';
 import { SmartQuestionnaire } from './SmartQuestionnaire';
 import type { LineString, Point } from 'geojson';
+import type mapboxgl from 'mapbox-gl';
 
 // ── Module-level constants ──
 
@@ -43,94 +46,6 @@ const ALLOWED_QA_FIELDS = new Set([
   'charger.brand', 'charger.count', 'charger.chargingLevel',
   'parkingEnvironment.hasPTSlab', 'site.siteType',
 ]);
-
-// ── Reducer ──
-
-function initialState(): MapWorkspaceState {
-  return {
-    siteAddress: '',
-    siteCoordinates: null,
-    runs: [],
-    equipment: [],
-    selectedTool: null,
-    selectedFeatureId: null,
-    powerSourceLocation: null,
-    chargerZones: [],
-  };
-}
-
-function mapReducer(state: MapWorkspaceState, action: MapAction): MapWorkspaceState {
-  switch (action.type) {
-    case 'SET_ADDRESS':
-      return {
-        ...state,
-        siteAddress: action.address,
-        siteCoordinates: action.coordinates,
-        // Reset AI state so a new assessment can trigger for the new address
-        powerSourceLocation: null,
-        chargerZones: [],
-      };
-
-    case 'SELECT_TOOL':
-      return { ...state, selectedTool: action.tool, selectedFeatureId: null };
-
-    case 'SELECT_FEATURE':
-      return { ...state, selectedFeatureId: action.featureId };
-
-    case 'ADD_RUN':
-      return { ...state, runs: [...state.runs, action.run] };
-
-    case 'UPDATE_RUN':
-      return {
-        ...state,
-        runs: state.runs.map((r) =>
-          r.id === action.id
-            ? { ...r, geometry: action.geometry, lengthFt: action.lengthFt }
-            : r,
-        ),
-      };
-
-    case 'DELETE_RUN':
-      return { ...state, runs: state.runs.filter((r) => r.id !== action.id) };
-
-    case 'ADD_EQUIPMENT':
-      return { ...state, equipment: [...state.equipment, action.equipment] };
-
-    case 'UPDATE_EQUIPMENT':
-      return {
-        ...state,
-        equipment: state.equipment.map((e) =>
-          e.id === action.id ? { ...e, geometry: action.geometry } : e,
-        ),
-      };
-
-    case 'DELETE_EQUIPMENT':
-      return { ...state, equipment: state.equipment.filter((e) => e.id !== action.id) };
-
-    case 'SET_POWER_SOURCE':
-      return { ...state, powerSourceLocation: action.coordinates };
-
-    case 'SET_CHARGER_ZONE':
-      return { ...state, chargerZones: [...state.chargerZones, action.coordinates] };
-
-    case 'LOAD_AI_RUNS': {
-      // Remove previous auto-generated runs/equipment (IDs contain '-auto-') before adding new ones
-      const manualRuns = state.runs.filter((r) => !r.id.includes('-auto-'));
-      const manualEquipment = state.equipment.filter((e) => !e.id.includes('-auto-'));
-      return {
-        ...state,
-        runs: [...manualRuns, ...action.runs],
-        equipment: [...manualEquipment, ...action.equipment],
-      };
-    }
-
-    case 'RESET':
-      return initialState();
-
-    default:
-      return state;
-  }
-}
 
 // ── Props ──
 
@@ -158,20 +73,24 @@ interface StreetViewAnalysisResult {
 }
 
 export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspaceProps) {
-  const [mapState, dispatch] = useReducer(mapReducer, undefined, initialState);
+  const [mapState, dispatch] = useReducer(mapReducer, undefined, initialMapState);
 
-  // Hydrate map from saved drawings when the component mounts
+  // Hydrate map from saved drawings when the component mounts.
+  // Deduplication guard prevents double-dispatch under React 18 Strict Mode.
+  const hydratedRef = useRef(false);
   useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
     const saved = input.mapWorkspace?.drawings;
     if (!saved) return;
     if (saved.runs?.length) {
       for (const run of saved.runs) {
-        dispatch({ type: 'ADD_RUN', run: run as any });
+        dispatch({ type: 'ADD_RUN', run: { ...run, createdAt: run.createdAt ?? new Date().toISOString() } as any });
       }
     }
     if (saved.equipment?.length) {
       for (const eq of saved.equipment) {
-        dispatch({ type: 'ADD_EQUIPMENT', equipment: eq as any });
+        dispatch({ type: 'ADD_EQUIPMENT', equipment: { ...eq, properties: {} } as any });
       }
     }
     // Only run on mount
@@ -220,6 +139,28 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
     dispatch({ type: 'RESET' });
   }, [mapState]);
 
+  // Map instance ref for snapshot capture
+  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
+  const handleMapReady = useCallback((map: mapboxgl.Map) => {
+    mapInstanceRef.current = map;
+  }, []);
+
+  /** Capture the current map canvas as a data URL and persist to input */
+  const captureMapSnapshot = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    try {
+      const dataUrl = map.getCanvas().toDataURL('image/png');
+      const cur = inputRef.current;
+      onInputChange({
+        ...cur,
+        mapWorkspace: { ...(cur.mapWorkspace ?? {} as any), mapSnapshotDataUrl: dataUrl },
+      } as EstimateInput);
+    } catch {
+      // Canvas capture may fail in some environments (e.g., WebGL context lost)
+    }
+  }, [onInputChange]);
+
   const [patchBatch, setPatchBatch] = useState<PatchBatch | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -257,6 +198,14 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
     };
   }, []);
 
+  // Capture map snapshot periodically (every 10s when drawings exist) for PDF export.
+  // Avoids calling onInputChange from unmount cleanup which is unsafe in React 18.
+  useEffect(() => {
+    if (mapState.runs.length === 0 && mapState.equipment.length === 0) return;
+    const interval = setInterval(captureMapSnapshot, 10_000);
+    return () => clearInterval(interval);
+  }, [mapState.runs.length, mapState.equipment.length, captureMapSnapshot]);
+
   // Show a toast notification that auto-dismisses
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -287,6 +236,32 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
         .catch(() => {});
     }
   }, [input.site.address, mapState.siteAddress]);
+
+  // ── Auto-persist drawings independently of patch resolution ──
+  // This ensures map work survives navigation and refresh, decoupled from patch review.
+  const drawingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (drawingSaveRef.current) clearTimeout(drawingSaveRef.current);
+    drawingSaveRef.current = setTimeout(() => {
+      const cur = inputRef.current;
+      const drawings = {
+        runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label, createdAt: r.createdAt })),
+        equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
+      };
+      // Only write if drawings actually changed (avoid infinite loops)
+      const existingDrawings = cur.mapWorkspace?.drawings;
+      const runsChanged = JSON.stringify(existingDrawings?.runs) !== JSON.stringify(drawings.runs);
+      const equipChanged = JSON.stringify(existingDrawings?.equipment) !== JSON.stringify(drawings.equipment);
+      if (runsChanged || equipChanged) {
+        onInputChange({
+          ...cur,
+          mapWorkspace: { ...(cur.mapWorkspace ?? {} as any), drawings },
+        } as EstimateInput);
+      }
+    }, 500);
+    return () => { if (drawingSaveRef.current) clearTimeout(drawingSaveRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapState.runs, mapState.equipment, onInputChange]);
 
   // Debounced patch generation — merges map patches with existing AI/questionnaire patches
   // Uses inputRef.current to avoid re-triggering when patches are applied
@@ -325,6 +300,18 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapState]);
 
+  // ── Auto-apply auto-accepted patches from sync ──
+  const lastAppliedBatchRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!patchBatch || patchBatch.batchId === lastAppliedBatchRef.current) return;
+    const autoAccepted = patchBatch.patches.filter((p) => p.autoAccepted && p.status === 'accepted');
+    if (autoAccepted.length > 0) {
+      lastAppliedBatchRef.current = patchBatch.batchId;
+      const newInput = applyPatches(inputRef.current, autoAccepted);
+      onInputChange(newInput);
+    }
+  }, [patchBatch, onInputChange]);
+
   // ── Callbacks ──
 
   const performAddressChange = useCallback(
@@ -336,8 +323,15 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
       setStreetViewAnalysis(null);
       setShowQuestionnaire(false);
       setPatchBatch(null);
+      // Immediately persist address + coordinates to estimate input
+      const cur = inputRef.current;
+      onInputChange({
+        ...cur,
+        site: { ...cur.site, address },
+        mapWorkspace: { ...(cur.mapWorkspace ?? {} as any), siteCoordinates: coordinates },
+      } as EstimateInput);
     },
-    [],
+    [onInputChange],
   );
 
   const handleAddressSelect = useCallback(
@@ -450,26 +444,18 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
             p.id === patchId ? { ...p, status } : p,
           ),
         };
-        // If all patches resolved, apply accepted ones
-        if (updated.patches.every((p) => p.status !== 'pending')) {
-          let newInput = applyPatches(inputRef.current, updated.patches);
-          // Persist map drawings so they survive navigation
-          newInput = {
-            ...newInput,
-            mapWorkspace: {
-              ...(newInput.mapWorkspace ?? {}),
-              drawings: {
-                runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label })),
-                equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
-              },
-            },
-          } as EstimateInput;
-          onInputChange(newInput);
+        // Apply incrementally: when a single patch is accepted, apply it immediately
+        if (status === 'accepted') {
+          const acceptedPatch = updated.patches.find((p) => p.id === patchId);
+          if (acceptedPatch) {
+            const newInput = applyPatches(inputRef.current, [acceptedPatch]);
+            onInputChange(newInput);
+          }
         }
         return updated;
       });
     },
-    [onInputChange, mapState.runs, mapState.equipment],
+    [onInputChange],
   );
 
   const handleAcceptPatch = useCallback(
@@ -491,22 +477,12 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
           p.status === 'pending' ? { ...p, status: 'accepted' as const } : p,
         ),
       };
-      let newInput = applyPatches(inputRef.current, updated.patches);
-      // Persist map drawings so they survive navigation
-      newInput = {
-        ...newInput,
-        mapWorkspace: {
-          ...(newInput.mapWorkspace ?? {}),
-          drawings: {
-            runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label })),
-            equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
-          },
-        },
-      } as EstimateInput;
+      // Apply all newly accepted patches (drawings persist via auto-save effect)
+      const newInput = applyPatches(inputRef.current, updated.patches);
       onInputChange(newInput);
       return updated;
     });
-  }, [onInputChange, mapState.runs, mapState.equipment]);
+  }, [onInputChange]);
 
   const handleRejectAll = useCallback(() => {
     setPatchBatch((prev) => {
@@ -533,24 +509,15 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
             : p,
         ),
       };
-      if (updated.patches.every((p) => p.status !== 'pending')) {
-        let newInput = applyPatches(inputRef.current, updated.patches);
-        // Persist map drawings so they survive navigation
-        newInput = {
-          ...newInput,
-          mapWorkspace: {
-            ...(newInput.mapWorkspace ?? {}),
-            drawings: {
-              runs: mapState.runs.map((r) => ({ id: r.id, runType: r.runType, geometry: r.geometry, lengthFt: r.lengthFt, label: r.label })),
-              equipment: mapState.equipment.map((e) => ({ id: e.id, equipmentType: e.equipmentType, geometry: e.geometry, label: e.label })),
-            },
-          },
-        } as EstimateInput;
+      // Apply the newly accepted patches (drawings persist via auto-save effect)
+      const justAccepted = updated.patches.filter((p) => idSet.has(p.id) && p.status === 'accepted');
+      if (justAccepted.length > 0) {
+        const newInput = applyPatches(inputRef.current, justAccepted);
         onInputChange(newInput);
       }
       return updated;
     });
-  }, [onInputChange, mapState.runs, mapState.equipment]);
+  }, [onInputChange]);
 
   // ── Street View AI analysis ──
 
@@ -814,10 +781,21 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
         }`}
       >
         {leftPanelOpen && (
-          <SiteInfoPanel
-            mapState={mapState}
-            onAddressSelect={handleAddressSelect}
-          />
+          <div className="flex h-full flex-col overflow-y-auto">
+            <SiteInfoPanel
+              mapState={mapState}
+              onAddressSelect={handleAddressSelect}
+            />
+            <div className="shrink-0 border-t border-gray-100 p-3">
+              <PlanUploadPanel
+                siteCoordinates={mapState.siteCoordinates}
+                onApply={(runs, equipment) => {
+                  dispatchWithUndo({ type: 'LOAD_AI_RUNS', runs, equipment });
+                  showToast('Applied plan suggestions — review on map');
+                }}
+              />
+            </div>
+          </div>
         )}
       </div>
 
@@ -927,6 +905,7 @@ export function MapWorkspace({ input, estimate, onInputChange }: MapWorkspacePro
               onEquipmentDelete={handleEquipmentDelete}
               onFeatureSelect={handleFeatureSelect}
               onPointToolPlace={handlePointToolPlace}
+              onMapReady={handleMapReady}
             />
           </>
         ) : (

@@ -2,6 +2,7 @@
 
 import { useEstimate } from '@/contexts/EstimateContext';
 import { SelectField, BoolField, InputField, FormGrid } from '../FormField';
+import { NudgeBanner } from '../NudgeBanner';
 
 const PARKING_TYPES = [
   { value: 'surface_lot', label: 'Surface Lot' },
@@ -28,6 +29,7 @@ export function ParkingSection() {
 
   return (
     <>
+      <NudgeBanner tab="Parking" />
       <div className="mb-5">
         <p className="mb-3 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--system-blue)' }}>Environment</p>
         <FormGrid>

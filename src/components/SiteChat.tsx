@@ -141,6 +141,10 @@ export function SiteChat() {
 
   const showSuggestions = messages.length <= 1 && !loading;
 
+  if (pathname?.startsWith('/e/')) {
+    return null;
+  }
+
   return (
     <>
       {/* Floating chat window */}
@@ -300,7 +304,7 @@ export function SiteChat() {
 
 // ── Markdown-lite renderer for assistant messages ──────────────────
 
-function AssistantMessage({ content }: { content: string }) {
+export function AssistantMessage({ content }: { content: string }) {
   // Simple markdown rendering: bold, bullets, numbered lists, code
   const lines = content.split('\n');
 

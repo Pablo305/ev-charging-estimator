@@ -2,6 +2,7 @@
 
 import { useEstimate } from '@/contexts/EstimateContext';
 import { InputField, SelectField, BoolField, FormGrid } from '../FormField';
+import { NudgeBanner } from '../NudgeBanner';
 
 const SERVICE_TYPES = [
   { value: '120v', label: '120V' },
@@ -14,9 +15,19 @@ const SERVICE_TYPES = [
 export function ElectricalSection() {
   const { input, updateField } = useEstimate();
   const e = input.electrical;
+  const mw = input.mapWorkspace;
 
   return (
     <>
+      {/* Nudges handle capacity warnings via nudge engine — no duplicate inline banners */}
+      <NudgeBanner tab="Electrical" />
+
+      {!e.availableCapacityKnown && input.charger.count > 0 && (
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-[0.75rem] text-blue-700">
+          Electrical capacity unknown. A site survey is recommended before finalizing the estimate.
+        </div>
+      )}
+
       <div className="mb-5">
         <p className="mb-3 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--system-blue)' }}>Service & Capacity</p>
         <FormGrid>
@@ -42,22 +53,60 @@ export function ElectricalSection() {
         <p className="mb-3 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]" style={{ color: '#636366' }}>Additional Details</p>
         <InputField label="Electrical Room Description" value={e.electricalRoomDescription} onChange={(v) => updateField('electrical.electricalRoomDescription', v)} colSpan={3} />
       </div>
-      {input.mapWorkspace && (input.mapWorkspace.conduitDistance_ft || input.mapWorkspace.feederDistance_ft) && (
+
+      {/* Comprehensive Map-Derived Values */}
+      {mw && (
         <div className="mt-4 rounded-[var(--radius-sm)] border-0 bg-[rgba(0,122,255,0.04)] px-4 py-3">
           <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--system-blue)' }}>Map-Derived Values</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {input.mapWorkspace.conduitDistance_ft != null && (
+            {mw.conduitDistance_ft != null && mw.conduitDistance_ft > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(0,122,255,0.08)', color: 'var(--system-blue)' }}>
-                Conduit: {input.mapWorkspace.conduitDistance_ft} ft (from map)
+                Conduit: {mw.conduitDistance_ft} ft
               </span>
             )}
-            {input.mapWorkspace.feederDistance_ft != null && (
+            {mw.feederDistance_ft != null && mw.feederDistance_ft > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(5,150,105,0.08)', color: '#059669' }}>
-                Feeder: {input.mapWorkspace.feederDistance_ft} ft (from map)
+                Feeder: {mw.feederDistance_ft} ft
+              </span>
+            )}
+            {mw.trenchingDistance_ft != null && mw.trenchingDistance_ft > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(217,119,6,0.08)', color: '#D97706' }}>
+                Trench: {mw.trenchingDistance_ft} ft
+              </span>
+            )}
+            {mw.boringDistance_ft != null && mw.boringDistance_ft > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}>
+                Bore: {mw.boringDistance_ft} ft
+              </span>
+            )}
+            {mw.concreteCuttingDistance_ft != null && mw.concreteCuttingDistance_ft > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(220,38,38,0.08)', color: '#DC2626' }}>
+                Concrete Cut: {mw.concreteCuttingDistance_ft} ft
+              </span>
+            )}
+            {mw.chargerCountFromMap != null && mw.chargerCountFromMap > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(0,0,0,0.04)', color: '#374151' }}>
+                Map Chargers: {mw.chargerCountFromMap}
+              </span>
+            )}
+            {/* Equipment flags from map drawings */}
+            {mw.drawings?.equipment?.some((eq) => eq.equipmentType === 'transformer') && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(255,149,0,0.08)', color: 'var(--system-orange)' }}>
+                Transformer (on map)
+              </span>
+            )}
+            {mw.drawings?.equipment?.some((eq) => eq.equipmentType === 'switchgear') && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(255,149,0,0.08)', color: 'var(--system-orange)' }}>
+                Switchgear (on map)
+              </span>
+            )}
+            {mw.drawings?.equipment?.some((eq) => eq.equipmentType === 'meter_room') && (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.75rem] font-medium" style={{ background: 'rgba(255,149,0,0.08)', color: 'var(--system-orange)' }}>
+                Meter Room (on map)
               </span>
             )}
           </div>
-          <p className="mt-1.5 text-[0.6875rem] text-gray-400">These values override the Distance to Panel field above when generating the estimate.</p>
+          <p className="mt-1.5 text-[0.6875rem] text-gray-400">These values from the Map Workspace are used when generating the estimate.</p>
         </div>
       )}
     </>

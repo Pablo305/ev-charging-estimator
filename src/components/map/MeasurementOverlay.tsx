@@ -4,6 +4,7 @@ import type { RunSegment, EquipmentPlacement } from '@/lib/map/types';
 import { RUN_TYPE_CONFIG, EQUIPMENT_TYPE_CONFIG } from '@/lib/map/constants';
 import { sumRunsByType, countEquipmentByType } from '@/lib/map/measurements';
 import type { RunType, EquipmentType } from '@/lib/map/types';
+import { EquipmentIcon } from './EquipmentIcons';
 
 interface MeasurementOverlayProps {
   runs: readonly RunSegment[];
@@ -68,7 +69,7 @@ export function MeasurementOverlay({ runs, equipment }: MeasurementOverlayProps)
           key={s.type}
           className="flex items-center gap-2 rounded border border-gray-100 bg-white px-3 py-2 text-sm"
         >
-          <span className="text-sm">{s.config.icon}</span>
+          <EquipmentIcon type={s.type} size={18} />
           <span className="flex-1 text-gray-700">{s.config.label}</span>
           <span className="font-mono font-medium text-gray-900">
             {s.count}x
