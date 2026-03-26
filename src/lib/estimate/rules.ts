@@ -428,11 +428,14 @@ function installLaborRules(
 
   const installItem = findPricebookItem(installItemId);
   if (installItem) {
+    const installQty = isDual
+      ? (charger.pedestalCount > 0 ? charger.pedestalCount : Math.ceil(charger.count / 2))
+      : charger.count;
     items.push(
-      pricebookLine(installItem, charger.count, {
+      pricebookLine(installItem, installQty, {
         ruleName: 'Charger install labor',
-        ruleReason: `${charger.count}x ${installItem.description} at $${installItem.catalogPrice}/ea`,
-        sourceInputs: ['charger.count', 'charger.mountType', 'charger.portType', 'charger.brand'],
+        ruleReason: `${installQty}x ${installItem.description} at $${installItem.catalogPrice}/ea`,
+        sourceInputs: ['charger.count', 'charger.pedestalCount', 'charger.mountType', 'charger.portType', 'charger.brand'],
       }),
     );
   }
@@ -739,17 +742,20 @@ function civilRules(
       }
     }
 
-    // Concrete pads (for pedestal mount on surface)
-    if (charger.mountType === 'pedestal' && parkingEnvironment.type === 'surface_lot') {
+    // Concrete pads (for pedestal mount on surface, or padRequired)
+    if (
+      (charger.mountType === 'pedestal' || input.accessories.padRequired) &&
+      parkingEnvironment.type === 'surface_lot'
+    ) {
       const padItem = findPricebookItem('civil-concrete-pad');
       if (padItem) {
         const padCount = charger.pedestalCount > 0 ? charger.pedestalCount : charger.count;
-        if (padCount >= 2) {
+        if (padCount > 0) {
           items.push(
             pricebookLine(padItem, padCount, {
               ruleName: 'Concrete pads for pedestals',
-              ruleReason: `${padCount}x concrete pads at $${padItem.catalogPrice}/ea. Minimum order 2.`,
-              sourceInputs: ['charger.mountType', 'charger.pedestalCount', 'parkingEnvironment.type'],
+              ruleReason: `${padCount}x concrete pads at $${padItem.catalogPrice}/ea`,
+              sourceInputs: ['charger.mountType', 'charger.pedestalCount', 'parkingEnvironment.type', 'accessories.padRequired'],
               confidence: 'medium',
             }),
           );
@@ -760,8 +766,8 @@ function civilRules(
 
   // ── Concrete Removal & Restoration (when trenching through concrete areas) ──
   if (parkingEnvironment.surfaceType === 'concrete' && parkingEnvironment.trenchingRequired !== false) {
-    const trenchDist = input.mapWorkspace?.trenchingDistance_ft ?? distance;
-    const removalQty = Math.max(1, Math.ceil(trenchDist / 15)); // ~1 CY per 15 LF
+    const trenchDistForConcrete = input.mapWorkspace?.trenchingDistance_ft ?? baseDistance;
+    const removalQty = Math.max(1, Math.ceil(trenchDistForConcrete / 15)); // ~1 CY per 15 LF
     const concreteRemovalItem = findPricebookItem('civil-concrete-removal');
     if (concreteRemovalItem) {
       items.push(pricebookLine(concreteRemovalItem, removalQty, {
@@ -963,6 +969,29 @@ function constructionSupportRules(
     }
   }
 
+  // Equipment rental for non-Supercharger projects with civil work
+  if (
+    !isSupercharger &&
+    (input.parkingEnvironment.trenchingRequired === true ||
+      input.parkingEnvironment.boringRequired === true ||
+      input.parkingEnvironment.coringRequired === true)
+  ) {
+    const rental = findPricebookItem('misc-equipment-rental');
+    if (rental) {
+      items.push(
+        pricebookLine(rental, 1, {
+          ruleName: 'Equipment rental',
+          ruleReason: 'Equipment rental for civil / electrical work',
+          sourceInputs: ['parkingEnvironment.trenchingRequired'],
+          manualReviewRequired: true,
+          manualReviewReason: 'Verify rental duration and equipment type',
+          confidence: 'low',
+          unitPrice: 0,
+        }),
+      );
+    }
+  }
+
   return { items, reviews };
 }
 
@@ -1092,17 +1121,24 @@ function networkRules(
   const reviews: ManualReviewTrigger[] = [];
   const { network } = input;
 
-  if (network.type === 'none' || network.type === 'customer_lan' || network.type === 'included_in_package') {
-    if (network.type === 'customer_lan') {
-      reviews.push(
-        review({
-          field: 'network.type',
-          condition: 'Customer LAN',
-          severity: 'info',
-          message: 'Network equipment excluded — customer providing LAN connectivity.',
+  // WiFi install labor when Bullet is responsible, even on customer LAN
+  if (
+    network.wifiInstallResponsibility === 'bullet' &&
+    (network.type === 'customer_lan' || network.type === 'wifi_bridge')
+  ) {
+    const wifiInstall = findPricebookItem('network-wifi-install');
+    if (wifiInstall) {
+      items.push(
+        pricebookLine(wifiInstall, 1, {
+          ruleName: 'WiFi equipment install',
+          ruleReason: `Install owner-provided WiFi equipment at $${wifiInstall.catalogPrice}`,
+          sourceInputs: ['network.wifiInstallResponsibility', 'network.type'],
         }),
       );
     }
+  }
+
+  if (network.type === 'none' || network.type === 'customer_lan' || network.type === 'included_in_package') {
     return { items, reviews };
   }
 
@@ -1184,28 +1220,47 @@ function accessoryRules(
     }
   }
 
-  // ── Wheel Stops ──
+  // ── Wheel Stops (rubber) ──
   if (accessories.wheelStopQty > 0) {
-    const wsItem = findPricebookItem('sitework-wheel-stops');
+    const wsItem = findPricebookItem('site-rubber-wheelstop');
     if (wsItem) {
       items.push(
         pricebookLine(wsItem, accessories.wheelStopQty, {
-          ruleName: 'Wheel stops',
-          ruleReason: `${accessories.wheelStopQty}x wheel stops at $${wsItem.catalogPrice}/ea`,
+          ruleName: 'Rubber wheel stops',
+          ruleReason: `${accessories.wheelStopQty}x rubber wheel stops at $${wsItem.catalogPrice}/ea`,
           sourceInputs: ['accessories.wheelStopQty'],
         }),
       );
     }
   }
 
+  // ── Striping ──
+  if (accessories.stripingRequired) {
+    const stripingItem = findPricebookItem('site-striping');
+    if (stripingItem) {
+      const stripingQty = charger.count > 0 ? charger.count : 1;
+      items.push(
+        pricebookLine(stripingItem, stripingQty, {
+          ruleName: 'Parking striping',
+          ruleReason: `${stripingQty}x stall striping at $${stripingItem.catalogPrice}/ea`,
+          sourceInputs: ['accessories.stripingRequired', 'charger.count'],
+        }),
+      );
+    }
+  }
+
   // ── Misc Mounting Hardware ──
+  const hardwareQty =
+    charger.pedestalCount > 0 && charger.pedestalCount < charger.count
+      ? charger.pedestalCount
+      : charger.count;
   const hardwareItem = findPricebookItem('material-mounting-hardware');
-  if (hardwareItem) {
+  if (hardwareItem && hardwareQty > 0) {
     items.push(
-      pricebookLine(hardwareItem, charger.count, {
+      pricebookLine(hardwareItem, hardwareQty, {
         ruleName: 'Mounting hardware',
-        ruleReason: `${charger.count}x misc mounting hardware & BOS at $${hardwareItem.catalogPrice}/ea`,
-        sourceInputs: ['charger.count'],
+        ruleReason: `${hardwareQty}x misc mounting hardware & BOS at $${hardwareItem.catalogPrice}/ea`,
+        sourceInputs: ['charger.count', 'charger.pedestalCount'],
       }),
     );
   }

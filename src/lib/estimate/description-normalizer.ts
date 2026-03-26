@@ -72,6 +72,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'furnish install pvc schedule 40 up to 2 w 4 conductors',
       'furnish & install pvc schedule 40-up to 2" w/ #4 conductors',
+      'pvc schedule 40 up to 2 with 4 conductors',
+      'pvc schedule 40 up to 2" with #4 conductors',
     ],
     canonical: 'pvc-conduit-2in',
   },
@@ -122,6 +124,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'install provided bolt down bollard',
       'install provided bolt-down bollard',
+      'steel safety bollards',
+      'steel safety bollards 4 x 36 42 includes materials labor',
     ],
     canonical: 'install-bollard',
   },
@@ -138,6 +142,9 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
   {
     patterns: [
       'concrete pads for pedestals',
+      'install 3000 psi concrete pads',
+      '3000 psi concrete pads',
+      'concrete pads',
     ],
     canonical: 'concrete-pads',
   },
@@ -204,6 +211,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'install striping per stall',
       'install striping-per stall',
+      'install striping per stall',
     ],
     canonical: 'install-striping',
   },
@@ -217,6 +225,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'install owner provided wi fi equipment',
       'install owner provided wi-fi equipment',
+      'install owner-provided wifi equipment',
     ],
     canonical: 'wifi-install',
   },
@@ -286,6 +295,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'furnish install 1 1 4 emt conduit',
       'furnish & install 1 1/4 emt conduit',
+      'emt conduit 1 1 4',
+      'emt conduit 1-1/4"',
     ],
     canonical: 'emt-conduit-1-25in',
   },
@@ -293,6 +304,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'furnish install 3 conduit pvc schedule 40',
       'furnish & install 3" conduit (pvc schedule 40)',
+      'pvc schedule 40 80 conduit 3',
+      'pvc schedule 40/80 conduit 3"',
     ],
     canonical: 'pvc-conduit-3in',
   },

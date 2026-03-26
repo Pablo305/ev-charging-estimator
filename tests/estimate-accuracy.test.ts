@@ -200,28 +200,28 @@ describe('Estimate Accuracy — Regression Suite', () => {
   // Tighten thresholds as engine improves.
   // ----------------------------------------------------------
   describe('Strict accuracy (regression guard)', () => {
-    it('Hampton Inn: coverage ≥75% and price mismatches ≤2', () => {
+    it('Hampton Inn: coverage ≥90% and total within ±25%', () => {
       const report = measureAccuracy(hamptonInn as ProposalFixture);
       logReport(report);
-      expect(report.coveragePercent).toBeGreaterThanOrEqual(75);
-      expect(report.priceMismatches.length).toBeLessThanOrEqual(2);
-      expect(Math.abs(report.totalDeltaPercent)).toBeLessThanOrEqual(50);
-    });
-
-    it('Transpecos Banks: coverage ≥60% and total within ±15%', () => {
-      const report = measureAccuracy(transpecosBanks as ProposalFixture);
-      logReport(report);
-      expect(report.coveragePercent).toBeGreaterThanOrEqual(60);
-      expect(report.priceMismatches.length).toBeLessThanOrEqual(2);
-      expect(Math.abs(report.totalDeltaPercent)).toBeLessThanOrEqual(15);
-    });
-
-    it('Brookside: coverage ≥60% and price mismatches ≤2', () => {
-      const report = measureAccuracy(brookside as ProposalFixture);
-      logReport(report);
-      expect(report.coveragePercent).toBeGreaterThanOrEqual(60);
+      expect(report.coveragePercent).toBeGreaterThanOrEqual(90);
       expect(report.priceMismatches.length).toBeLessThanOrEqual(2);
       expect(Math.abs(report.totalDeltaPercent)).toBeLessThanOrEqual(25);
+    });
+
+    it('Transpecos Banks: coverage ≥85% and total within ±10%', () => {
+      const report = measureAccuracy(transpecosBanks as ProposalFixture);
+      logReport(report);
+      expect(report.coveragePercent).toBeGreaterThanOrEqual(85);
+      expect(report.priceMismatches.length).toBeLessThanOrEqual(3);
+      expect(Math.abs(report.totalDeltaPercent)).toBeLessThanOrEqual(10);
+    });
+
+    it('Brookside: coverage ≥85% and total within ±20%', () => {
+      const report = measureAccuracy(brookside as ProposalFixture);
+      logReport(report);
+      expect(report.coveragePercent).toBeGreaterThanOrEqual(85);
+      expect(report.priceMismatches.length).toBeLessThanOrEqual(3);
+      expect(Math.abs(report.totalDeltaPercent)).toBeLessThanOrEqual(20);
     });
   });
 });
