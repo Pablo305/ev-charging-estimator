@@ -63,6 +63,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
       'furnish install emt conduit up to 2 w up to 4 conductors',
       'furnish & install emt conduit-up to 2" w/ up to #4 conductors',
       'furnish install emt conduit up to 2 w 4 conductors',
+      'emt conduit wire breakers connectors and strut cradles',
+      'emt conduit wire breakers connectors and strut cradles includes materials labor',
     ],
     canonical: 'emt-conduit-2in',
   },
@@ -78,6 +80,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
       'base design eng 3 4 sheet site plan riser 1 line cd50 cd100',
       'base design/eng-3-4 sheet, site plan, riser, 1-line, cd50-cd100',
       'base design eng 3 4 sheet site plan riser 1 line cd50 cd100 load study load calcs property line stake garage field sketch as builts',
+      'engineered and stamped plan set',
     ],
     canonical: 'design-engineering',
   },
@@ -85,6 +88,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'load study load calcs',
       'load study/load calcs',
+      'load calculations',
     ],
     canonical: 'load-calcs',
   },
@@ -92,6 +96,9 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'permit coordination and filing up to 2 visits in person',
       'permit coordination and filing-up to 2 visits in person',
+      'permit coordination filing up to 2 visits in person',
+      'permit coordination filing (2 visits)',
+      'permit coordination filing 2 visits',
     ],
     canonical: 'permit-coordination',
   },
@@ -106,6 +113,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
   {
     patterns: [
       'install signage and stencils',
+      'ev signage (includes materials labor)',
+      'ev signage includes materials labor',
     ],
     canonical: 'install-signage',
   },
@@ -121,6 +130,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
       'trenching (no conduit) up to 36 w and no more than 4 d',
       'trenching (no conduit)-up to 36" w and no more than 4\' d',
       'trenching no conduit up to 36 w and no more than 4 d',
+      'trenching (assuming soft normal soil conditions)',
+      'trenching assuming soft normal soil conditions',
     ],
     canonical: 'trenching-standard',
   },
@@ -133,6 +144,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
   {
     patterns: [
       'site visit',
+      'site walk evaluation',
+      'site walk / evaluation',
     ],
     canonical: 'site-visit',
   },
@@ -148,6 +161,8 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
       'permit fees cost 10',
       'permit fees cost + 10%',
       'permit fees- cost + 10%',
+      'permit fees (billed at actual cost 10 )',
+      'permit fees billed at actual cost 10',
     ],
     canonical: 'permit-fees',
   },
@@ -169,6 +184,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
       'utility mark out',
       'utility mark-out',
       'utility markout',
+      'private utility mark out and coordination',
     ],
     canonical: 'utility-markout',
   },
@@ -208,6 +224,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'core drilling 1 6 concrete cmu',
       'core drilling 1"-6" concrete/cmu',
+      'core drilling 1 6',
     ],
     canonical: 'core-drilling',
   },
@@ -222,6 +239,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'concrete curb gutter 6 in x 24 in',
       'concrete curb & gutter, 6 in x 24 in',
+      'concrete curb gutter 6 x24',
     ],
     canonical: 'curb-gutter',
   },
@@ -229,6 +247,7 @@ export const DESCRIPTION_ALIASES: ReadonlyArray<{
     patterns: [
       'concrete header curb 6 in',
       'concrete header curb, 6 in',
+      'concrete header curb 6',
     ],
     canonical: 'header-curb',
   },

@@ -652,6 +652,75 @@ function civilRules(
     }
   }
 
+  // ── Concrete Removal & Restoration (when trenching through concrete areas) ──
+  if (parkingEnvironment.surfaceType === 'concrete' && parkingEnvironment.trenchingRequired !== false) {
+    const trenchDist = input.mapWorkspace?.trenchingDistance_ft ?? distance;
+    const removalQty = Math.max(1, Math.ceil(trenchDist / 15)); // ~1 CY per 15 LF
+    const concreteRemovalItem = findPricebookItem('civil-concrete-removal');
+    if (concreteRemovalItem) {
+      items.push(pricebookLine(concreteRemovalItem, removalQty, {
+        ruleName: 'Concrete removal',
+        ruleReason: `${removalQty} CY concrete removal for conduit trenching at $${concreteRemovalItem.catalogPrice}/CY`,
+        sourceInputs: ['parkingEnvironment.surfaceType'],
+        confidence: 'medium',
+      }));
+    }
+    const concreteRestoreItem = findPricebookItem('civil-concrete-restore');
+    if (concreteRestoreItem) {
+      items.push(pricebookLine(concreteRestoreItem, removalQty, {
+        ruleName: 'Concrete restoration',
+        ruleReason: `${removalQty} CY concrete restoration after trenching at $${concreteRestoreItem.catalogPrice}/CY`,
+        sourceInputs: ['parkingEnvironment.surfaceType'],
+        confidence: 'medium',
+      }));
+    }
+  }
+
+  // ── Core Drilling (for conduit penetrations in concrete/masonry) ──
+  if (parkingEnvironment.coringRequired === true) {
+    const coreDrillItem = findPricebookItem('civil-core-small');
+    if (coreDrillItem) {
+      const coreQty = Math.max(1, Math.ceil(charger.count / 2));
+      items.push(pricebookLine(coreDrillItem, coreQty, {
+        ruleName: 'Core drilling',
+        ruleReason: `${coreQty}x core drilling 1"-6" at $${coreDrillItem.catalogPrice}/ea for conduit penetrations`,
+        sourceInputs: ['parkingEnvironment.coringRequired', 'charger.count'],
+        confidence: 'medium',
+      }));
+    }
+    const scanItem = findPricebookItem('civil-scan-xray');
+    if (scanItem) {
+      items.push(pricebookLine(scanItem, 1, {
+        ruleName: 'Scan/X-ray',
+        ruleReason: `Wall/floor scan at $${scanItem.catalogPrice}/ea — required before any coring`,
+        sourceInputs: ['parkingEnvironment.coringRequired'],
+        confidence: 'high',
+      }));
+    }
+  }
+
+  // ── Curb & Gutter (for surface lot pedestal installations) ──
+  if (parkingEnvironment.type === 'surface_lot' && charger.mountType === 'pedestal' && charger.count > 0) {
+    const curbItem = findPricebookItem('civil-curb-gutter');
+    if (curbItem) {
+      items.push(pricebookLine(curbItem, charger.count, {
+        ruleName: 'Concrete curb & gutter',
+        ruleReason: `${charger.count}x curb sections at $${curbItem.catalogPrice}/LF for charger pedestals`,
+        sourceInputs: ['parkingEnvironment.type', 'charger.mountType', 'charger.count'],
+        confidence: 'medium',
+      }));
+    }
+    const headerItem = findPricebookItem('civil-header-curb');
+    if (headerItem) {
+      items.push(pricebookLine(headerItem, charger.count, {
+        ruleName: 'Concrete header curb',
+        ruleReason: `${charger.count}x header curb sections at $${headerItem.catalogPrice}/LF`,
+        sourceInputs: ['parkingEnvironment.type', 'charger.count'],
+        confidence: 'medium',
+      }));
+    }
+  }
+
   // ── No parking environment specified ──
   if (parkingEnvironment.type === null) {
     reviews.push(
@@ -684,6 +753,36 @@ function permitDesignRules(
         pricebookLine(permitItem, 1, {
           ruleName: 'Permit fees',
           ruleReason: 'Permit fees billed at actual cost + 10% markup. Final amount determined after permit submission.',
+          sourceInputs: ['permit.responsibility'],
+          confidence: 'high',
+        }),
+      );
+    }
+  }
+
+  // ── Site Visit ──
+  if (permit.responsibility === 'bullet' || permit.responsibility === null) {
+    const siteVisitItem = findPricebookItem('deseng-site-walk');
+    if (siteVisitItem) {
+      items.push(
+        pricebookLine(siteVisitItem, 1, {
+          ruleName: 'Site visit',
+          ruleReason: `Initial site evaluation at $${siteVisitItem.catalogPrice}. Can be credited back on project award.`,
+          sourceInputs: ['permit.responsibility'],
+          confidence: 'high',
+        }),
+      );
+    }
+  }
+
+  // ── Permit Coordination ──
+  if (permit.responsibility === 'bullet' || permit.responsibility === null) {
+    const permitCoordItem = findPricebookItem('deseng-permit-coord');
+    if (permitCoordItem) {
+      items.push(
+        pricebookLine(permitCoordItem, 1, {
+          ruleName: 'Permit coordination',
+          ruleReason: `Permit coordination and filing — up to 2 in-person visits at $${permitCoordItem.catalogPrice}.`,
           sourceInputs: ['permit.responsibility'],
           confidence: 'high',
         }),
