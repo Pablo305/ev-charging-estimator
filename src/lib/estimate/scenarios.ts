@@ -70,7 +70,7 @@ const hamptonInn: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Main electrical room ground floor near loading dock',
+    disconnectRequired: null, electricalRoomDescription: 'Main electrical room ground floor near loading dock',
   },
   civil: {
     installationLocationDescription:
@@ -176,7 +176,7 @@ const downtownApartment: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Electrical room on P1 level. Chargers on P6. Must route through 5 floors.',
+    disconnectRequired: null, electricalRoomDescription: 'Electrical room on P1 level. Chargers on P6. Must route through 5 floors.',
   },
   civil: {
     installationLocationDescription:
@@ -284,7 +284,7 @@ const mixedComplex: EstimateInput = {
     utilityCoordinationRequired: true,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription:
+    disconnectRequired: null, electricalRoomDescription:
       'New construction - electrical room in parking structure B1 level',
   },
   civil: {
@@ -392,7 +392,7 @@ const superchargerStation: EstimateInput = {
     utilityCoordinationRequired: true,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Existing 480V 3-phase service at fuel station. Dedicated pad for transformer.',
+    disconnectRequired: null, electricalRoomDescription: 'Existing 480V 3-phase service at fuel station. Dedicated pad for transformer.',
   },
   civil: {
     installationLocationDescription:
@@ -503,7 +503,7 @@ const hotelSurfaceLot: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Electrical closet on first floor, east side of building.',
+    disconnectRequired: null, electricalRoomDescription: 'Electrical closet on first floor, east side of building.',
   },
   civil: {
     installationLocationDescription:
@@ -609,7 +609,7 @@ const hiltonProperty: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: 2,
-    electricalRoomDescription: 'Main electrical room at rear of building, ground floor. Long run to front lot.',
+    disconnectRequired: null, electricalRoomDescription: 'Main electrical room at rear of building, ground floor. Long run to front lot.',
   },
   civil: {
     installationLocationDescription:
@@ -715,7 +715,7 @@ const luxuryApartments: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: 1,
-    electricalRoomDescription: 'Meter bank near carport area. Sub-panel install required.',
+    disconnectRequired: null, electricalRoomDescription: 'Meter bank near carport area. Sub-panel install required.',
   },
   civil: {
     installationLocationDescription:
@@ -821,7 +821,7 @@ const medicalCenter: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Utility closet adjacent to parking area. Short run to wall-mount locations.',
+    disconnectRequired: null, electricalRoomDescription: 'Utility closet adjacent to parking area. Short run to wall-mount locations.',
   },
   civil: {
     installationLocationDescription:
@@ -934,7 +934,7 @@ const vineyardWinery: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Main panel in tasting room building. Run to parking area ~75 ft.',
+    disconnectRequired: null, electricalRoomDescription: 'Main panel in tasting room building. Run to parking area ~75 ft.',
   },
   civil: {
     installationLocationDescription:
@@ -1040,7 +1040,7 @@ const shoppingCenter: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: 2,
-    electricalRoomDescription: 'Electrical room at back of anchor tenant space. Long run to front parking area requires 2 junction boxes.',
+    disconnectRequired: null, electricalRoomDescription: 'Electrical room at back of anchor tenant space. Long run to front parking area requires 2 junction boxes.',
   },
   civil: {
     installationLocationDescription:
@@ -1146,7 +1146,7 @@ const officeGarage: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: 3,
-    electricalRoomDescription: 'Electrical room on B1. Chargers on P2. Route through 3 floors via existing conduit risers. 3 junction boxes.',
+    disconnectRequired: null, electricalRoomDescription: 'Electrical room on B1. Chargers on P2. Route through 3 floors via existing conduit risers. 3 junction boxes.',
   },
   civil: {
     installationLocationDescription:
@@ -1252,7 +1252,7 @@ const carDealershipService: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Panel in service bay adjacent to charger locations.',
+    disconnectRequired: null, electricalRoomDescription: 'Panel in service bay adjacent to charger locations.',
   },
   civil: {
     installationLocationDescription:
@@ -1358,7 +1358,7 @@ const churchCommunity: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: null,
-    electricalRoomDescription: 'Main panel in utility room, adjacent to parking lot. Short run to exterior wall.',
+    disconnectRequired: null, electricalRoomDescription: 'Main panel in utility room, adjacent to parking lot. Short run to exterior wall.',
   },
   civil: {
     installationLocationDescription:
@@ -1464,7 +1464,7 @@ const multiTenantResidential: EstimateInput = {
     utilityCoordinationRequired: false,
     meterRoomRequired: null,
     junctionBoxCount: 4,
-    electricalRoomDescription: 'Main electrical room in B1. Chargers across P1 and P2 levels. Route through existing risers. 4 junction boxes needed for long runs.',
+    disconnectRequired: null, electricalRoomDescription: 'Main electrical room in B1. Chargers across P1 and P2 levels. Route through existing risers. 4 junction boxes needed for long runs.',
   },
   civil: {
     installationLocationDescription:

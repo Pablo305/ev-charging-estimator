@@ -22,6 +22,7 @@ export function emptyInput(): EstimateInput {
       switchgearRequired: null, distanceToPanel_ft: null, utilityCoordinationRequired: null,
       meterRoomRequired: null,
       junctionBoxCount: null,
+      disconnectRequired: null,
       electricalRoomDescription: '',
     },
     civil: { installationLocationDescription: '' },
@@ -35,5 +36,20 @@ export function emptyInput(): EstimateInput {
     signageBollards: { responsibility: null },
     estimateControls: { pricingTier: 'msrp', taxRate: 7.0, contingencyPercent: 10, markupPercent: 20 },
     notes: '',
+    mapWorkspace: {
+      conduitDistance_ft: null,
+      feederDistance_ft: null,
+      trenchingDistance_ft: null,
+      boringDistance_ft: null,
+      concreteCuttingDistance_ft: null,
+      chargerCountFromMap: null,
+      siteCoordinates: null,
+      pvcConduitDistance_ft: null,
+      cableTrayDistance_ft: null,
+      concretePadCount: null,
+      hasPanelPlaced: null,
+      lightingCount: null,
+      drawings: null,
+    },
   };
 }

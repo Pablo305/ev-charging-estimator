@@ -96,6 +96,8 @@ export interface EstimateInput {
     meterRoomRequired: boolean | null;
     /** Count of pull/junction boxes suggested from map markers */
     junctionBoxCount: number | null;
+    /** Disconnect switch required (from map placement) */
+    disconnectRequired: boolean | null;
     electricalRoomDescription: string;
   };
   civil: {
@@ -160,6 +162,16 @@ export interface EstimateInput {
     concreteCuttingDistance_ft: number | null;
     chargerCountFromMap: number | null;
     siteCoordinates: [number, number] | null;
+    /** PVC conduit distance from map */
+    pvcConduitDistance_ft: number | null;
+    /** Cable tray distance from map */
+    cableTrayDistance_ft: number | null;
+    /** Number of concrete pads placed on map */
+    concretePadCount: number | null;
+    /** Whether electrical panel marker was placed on map */
+    hasPanelPlaced: boolean | null;
+    /** Number of lighting fixtures placed on map */
+    lightingCount: number | null;
     /** Captured Mapbox canvas screenshot for PDF export */
     mapSnapshotDataUrl?: string;
     drawings?: {

@@ -211,6 +211,11 @@ export const FIELD_MAPPINGS: readonly FieldMapping[] = [
     fieldPath: 'mapWorkspace.lightingCount',
     aggregation: 'COUNT',
   },
+  {
+    equipmentType: 'disconnect',
+    fieldPath: 'electrical.disconnectRequired',
+    aggregation: 'BOOLEAN',
+  },
 ] as const;
 
 // ── Routing factor for straight-line → conduit distance ──

@@ -63,7 +63,7 @@ function ensureDefaults(body: Record<string, unknown>): EstimateInput {
       utilityCoordinationRequired: input.electrical?.utilityCoordinationRequired ?? null,
       meterRoomRequired: input.electrical?.meterRoomRequired ?? null,
       junctionBoxCount: input.electrical?.junctionBoxCount ?? null,
-      electricalRoomDescription: input.electrical?.electricalRoomDescription ?? '',
+      disconnectRequired: null, electricalRoomDescription: input.electrical?.electricalRoomDescription ?? '',
     },
     civil: {
       installationLocationDescription: input.civil?.installationLocationDescription ?? '',

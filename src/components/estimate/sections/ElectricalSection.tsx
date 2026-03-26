@@ -3,6 +3,7 @@
 import { useEstimate } from '@/contexts/EstimateContext';
 import { InputField, SelectField, BoolField, FormGrid } from '../FormField';
 import { NudgeBanner } from '../NudgeBanner';
+import { MapBadge } from '../MapBadge';
 
 const SERVICE_TYPES = [
   { value: '120v', label: '120V' },
@@ -42,10 +43,22 @@ export function ElectricalSection() {
       <div className="mb-5">
         <p className="mb-3 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--system-orange)' }}>Upgrades & Major Equipment</p>
         <FormGrid>
-          <BoolField label="Panel Upgrade Required?" value={e.panelUpgradeRequired} onChange={(v) => updateField('electrical.panelUpgradeRequired', v)} />
-          <BoolField label="Transformer Required?" value={e.transformerRequired} onChange={(v) => updateField('electrical.transformerRequired', v)} />
-          <BoolField label="Switchgear Required?" value={e.switchgearRequired} onChange={(v) => updateField('electrical.switchgearRequired', v)} />
-          <BoolField label="Utility Coordination?" value={e.utilityCoordinationRequired} onChange={(v) => updateField('electrical.utilityCoordinationRequired', v)} />
+          <div className="flex items-center gap-1">
+            <BoolField label="Panel Upgrade Required?" value={e.panelUpgradeRequired} onChange={(v) => updateField('electrical.panelUpgradeRequired', v)} />
+            {mw?.hasPanelPlaced && <MapBadge label="Panel on map" />}
+          </div>
+          <div className="flex items-center gap-1">
+            <BoolField label="Transformer Required?" value={e.transformerRequired} onChange={(v) => updateField('electrical.transformerRequired', v)} />
+            {mw?.drawings?.equipment?.some(eq => eq.equipmentType === 'transformer') && <MapBadge />}
+          </div>
+          <div className="flex items-center gap-1">
+            <BoolField label="Switchgear Required?" value={e.switchgearRequired} onChange={(v) => updateField('electrical.switchgearRequired', v)} />
+            {mw?.drawings?.equipment?.some(eq => eq.equipmentType === 'switchgear') && <MapBadge />}
+          </div>
+          <div className="flex items-center gap-1">
+            <BoolField label="Utility Coordination?" value={e.utilityCoordinationRequired} onChange={(v) => updateField('electrical.utilityCoordinationRequired', v)} />
+            {mw?.drawings?.equipment?.some(eq => eq.equipmentType === 'utility_meter') && <MapBadge />}
+          </div>
         </FormGrid>
       </div>
 

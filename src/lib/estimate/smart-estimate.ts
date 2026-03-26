@@ -542,6 +542,11 @@ export function buildSmartEstimate(smartInput: SmartEstimateInput): SmartEstimat
       concreteCuttingDistance_ft: civilResult.coringRequired ? Math.round(conduitFt * 0.2) : null,
       chargerCountFromMap: chargerResult.count,
       siteCoordinates: smartInput.siteCoordinates,
+      pvcConduitDistance_ft: null,
+      cableTrayDistance_ft: null,
+      concretePadCount: chargerResult.mountType === 'pedestal' ? chargerResult.count : null,
+      hasPanelPlaced: true,
+      lightingCount: null,
     },
   };
 

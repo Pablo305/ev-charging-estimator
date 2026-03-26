@@ -176,6 +176,11 @@ export function useSmartEstimate({
         concreteCuttingDistance_ft: smartResult.input.mapWorkspace?.concreteCuttingDistance_ft ?? null,
         chargerCountFromMap: smartResult.input.mapWorkspace?.chargerCountFromMap ?? null,
         siteCoordinates: smartResult.input.mapWorkspace?.siteCoordinates ?? null,
+        pvcConduitDistance_ft: smartResult.input.mapWorkspace?.pvcConduitDistance_ft ?? null,
+        cableTrayDistance_ft: smartResult.input.mapWorkspace?.cableTrayDistance_ft ?? null,
+        concretePadCount: smartResult.input.mapWorkspace?.concretePadCount ?? null,
+        hasPanelPlaced: smartResult.input.mapWorkspace?.hasPanelPlaced ?? null,
+        lightingCount: smartResult.input.mapWorkspace?.lightingCount ?? null,
         // Preserve existing drawings and snapshot
         drawings: current.mapWorkspace?.drawings ?? smartResult.input.mapWorkspace?.drawings,
         mapSnapshotDataUrl: current.mapWorkspace?.mapSnapshotDataUrl,
