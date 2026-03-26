@@ -445,10 +445,12 @@ function electricalRules(
     const distance = input.mapWorkspace?.conduitDistance_ft ?? electrical.distanceToPanel_ft ?? 50; // map > form > default
     const distanceKnown = (input.mapWorkspace?.conduitDistance_ft != null) || electrical.distanceToPanel_ft !== null;
 
+    // Only apply override pricing for complex routing (>100ft or fire-rated penetrations)
+    const useConduitOverride = distance > 100 || input.parkingEnvironment.fireRatedPenetrations === true;
     items.push(
       pricebookLine(conduitItem, distance, {
         ruleName: 'Conduit/wire/breakers',
-        ruleReason: `${distance} LF of EMT conduit, wire, breakers at $${resolvePrice(conduitItem, true).price}/ft. ${input.mapWorkspace?.conduitDistance_ft != null ? 'Distance from map measurement.' : distanceKnown ? 'Distance from SOW.' : 'Distance estimated at 50ft — verify at site walk.'}`,
+        ruleReason: `${distance} LF of EMT conduit, wire, breakers at $${resolvePrice(conduitItem, useConduitOverride).price}/ft. ${input.mapWorkspace?.conduitDistance_ft != null ? 'Distance from map measurement.' : distanceKnown ? 'Distance from SOW.' : 'Distance estimated at 50ft — verify at site walk.'}`,
         sourceInputs: [input.mapWorkspace?.conduitDistance_ft != null ? 'mapWorkspace.conduitDistance_ft' : 'electrical.distanceToPanel_ft', 'charger.count'],
         manualReviewRequired: !distanceKnown,
         manualReviewReason: !distanceKnown
