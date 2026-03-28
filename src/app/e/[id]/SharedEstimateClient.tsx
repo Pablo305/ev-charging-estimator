@@ -382,7 +382,7 @@ export function SharedEstimateClient({ record }: { record: SharedEstimateRecord 
   const toggleCategory = (key: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); }
       return next;
     });
   };
@@ -390,7 +390,7 @@ export function SharedEstimateClient({ record }: { record: SharedEstimateRecord 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   };
@@ -402,11 +402,6 @@ export function SharedEstimateClient({ record }: { record: SharedEstimateRecord 
       setSortField(field);
       setSortDir('asc');
     }
-  };
-
-  const sortIcon = (field: typeof sortField) => {
-    if (sortField !== field) return <span className="opacity-30 ml-1">&#8597;</span>;
-    return <span className="ml-1">{sortDir === 'asc' ? '&#9650;' : '&#9660;'}</span>;
   };
 
   // --- Map measurement summary ---
@@ -742,20 +737,20 @@ export function SharedEstimateClient({ record }: { record: SharedEstimateRecord 
                           className="py-2.5 pr-3 cursor-pointer hover:text-gray-900 transition-colors select-none"
                           onClick={() => handleSort('description')}
                         >
-                          Description <span dangerouslySetInnerHTML={{ __html: sortField === 'description' ? (sortDir === 'asc' ? '&#9650;' : '&#9660;') : '<span class="opacity-30">&#8597;</span>' }} />
+                          Description {sortField === 'description' ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : <span className="opacity-30">{'\u2195'}</span>}
                         </th>
                         <th className="py-2.5 pr-3 w-20">Category</th>
                         <th
                           className="py-2.5 pr-3 w-16 cursor-pointer hover:text-gray-900 transition-colors select-none"
                           onClick={() => handleSort('quantity')}
                         >
-                          Qty <span dangerouslySetInnerHTML={{ __html: sortField === 'quantity' ? (sortDir === 'asc' ? '&#9650;' : '&#9660;') : '<span class="opacity-30">&#8597;</span>' }} />
+                          Qty {sortField === 'quantity' ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : <span className="opacity-30">{'\u2195'}</span>}
                         </th>
                         <th
                           className="py-2.5 text-right w-28 cursor-pointer hover:text-gray-900 transition-colors select-none"
                           onClick={() => handleSort('extendedPrice')}
                         >
-                          Amount <span dangerouslySetInnerHTML={{ __html: sortField === 'extendedPrice' ? (sortDir === 'asc' ? '&#9650;' : '&#9660;') : '<span class="opacity-30">&#8597;</span>' }} />
+                          Amount {sortField === 'extendedPrice' ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : <span className="opacity-30">{'\u2195'}</span>}
                         </th>
                         <th className="py-2.5 w-8 print:hidden" />
                       </tr>

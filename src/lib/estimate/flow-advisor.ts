@@ -21,7 +21,11 @@ export interface FlowAdvice {
 }
 
 function isEmpty(val: unknown): boolean {
-  return val === null || val === undefined || val === '' || val === 0;
+  return val === null || val === undefined || val === '';
+}
+
+function isEmptyOrZero(val: unknown): boolean {
+  return isEmpty(val) || val === 0;
 }
 
 export function getFlowAdvice(input: EstimateInput): FlowAdvice {
@@ -54,7 +58,7 @@ export function getFlowAdvice(input: EstimateInput): FlowAdvice {
     return { nextTab: 'Site', nextAction: 'Enter the site address', skipTabs, completionHints };
   }
 
-  if (isEmpty(input.charger.count) || input.charger.count === 0) {
+  if (isEmptyOrZero(input.charger.count)) {
     return { nextTab: 'Charger', nextAction: 'Specify charger count and type', skipTabs, completionHints };
   }
 

@@ -21,7 +21,7 @@ function scoreInputCompleteness(input: EstimateInput): number {
 
   const check = (value: unknown, weight: number = 1): void => {
     total += weight;
-    if (value !== null && value !== undefined && value !== '' && value !== 'unknown') {
+    if (value !== null && value !== undefined && value !== '' && value !== 'unknown' && value !== 0) {
       filled += weight;
     }
   };
@@ -84,7 +84,7 @@ function scoreInputCompleteness(input: EstimateInput): number {
     check(input.parkingEnvironment.fireRatedPenetrations);
   }
 
-  return Math.round((filled / total) * 100);
+  return total === 0 ? 0 : Math.round((filled / total) * 100);
 }
 
 // ============================================================
@@ -104,7 +104,16 @@ function determineConfidence(
 // Main Engine
 // ============================================================
 
+function safeNum(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export function generateEstimate(input: EstimateInput): EstimateOutput {
+  if (!input || typeof input !== 'object') {
+    throw new Error('generateEstimate: invalid input');
+  }
+
   const useSowImport =
     Array.isArray(input.rawLineItems) && input.rawLineItems.length > 0;
 
@@ -119,9 +128,12 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
     const rulesResult = runAllRules(input);
     items = rulesResult.items;
     reviews = rulesResult.reviews;
-    const mapResult = mapWorkspaceRules(input);
-    items.push(...mapResult.items);
-    reviews.push(...mapResult.reviews);
+
+    if (input.charger?.count > 0) {
+      const mapResult = mapWorkspaceRules(input);
+      items.push(...mapResult.items);
+      reviews.push(...mapResult.reviews);
+    }
 
     // Observed-range validation + median calibration when outside real proposal stats (pricebook-v2)
     const calibrated = validateAndCalibratePrices(items, {
@@ -171,14 +183,29 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
     accessoriesTotal +
     serviceTotal;
 
-  // Apply markup
-  const markedUpSubtotal =
-    subtotal * (1 + input.estimateControls.markupPercent / 100);
+  // Apply markup (NaN-safe — defensive against malformed estimateControls)
+  const markupPct = safeNum(input.estimateControls?.markupPercent);
+  const taxPct = safeNum(input.estimateControls?.taxRate);
+  const contingencyPct = safeNum(input.estimateControls?.contingencyPercent);
 
-  const tax = markedUpSubtotal * (input.estimateControls.taxRate / 100);
-  const contingency =
-    markedUpSubtotal * (input.estimateControls.contingencyPercent / 100);
+  const markedUpSubtotal = subtotal * (1 + markupPct / 100);
+  const tax = markedUpSubtotal * (taxPct / 100);
+  const contingency = markedUpSubtotal * (contingencyPct / 100);
   const total = markedUpSubtotal + tax + contingency;
+
+  // Warn about zero-priced items that should have real pricing
+  const zeroPriceItems = items.filter(
+    (li) => li.unitPrice === 0 && li.pricingSource !== 'catalog' && li.quantity > 0,
+  );
+  if (zeroPriceItems.length > 0) {
+    reviews.push({
+      id: `MR-ZERO-PRICE`,
+      field: 'lineItems',
+      condition: 'Items with $0 pricing',
+      severity: 'warning',
+      message: `${zeroPriceItems.length} line item(s) have $0 pricing and are not included in the total: ${zeroPriceItems.map((li) => li.description).join(', ')}`,
+    });
+  }
 
   // 4. Metadata
   const completeness = scoreInputCompleteness(input);
@@ -192,6 +219,7 @@ export function generateEstimate(input: EstimateInput): EstimateOutput {
     manualReviewTriggers: reviews,
     summary: {
       subtotal: Math.round(markedUpSubtotal * 100) / 100,
+      lineItemTotal: Math.round(subtotal * 100) / 100,
       tax: Math.round(tax * 100) / 100,
       contingency: Math.round(contingency * 100) / 100,
       total: Math.round(total * 100) / 100,

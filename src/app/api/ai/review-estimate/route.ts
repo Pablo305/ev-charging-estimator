@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(parsed);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: `Review failed: ${message}` }, { status: 502 });
+    console.error('Review estimate error:', err);
+    return NextResponse.json({ error: 'AI review service temporarily unavailable' }, { status: 502 });
   }
 }

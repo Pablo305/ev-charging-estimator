@@ -12,6 +12,7 @@ import {
   SERVICE_FEES,
   PricebookItem,
 } from './catalog';
+import { getChargePointPrice } from './chargepoint-pricing';
 
 // ============================================================
 // Helpers — Counter factory for request-scoped IDs
@@ -39,13 +40,22 @@ function createCounters(): IdCounters {
 
 let _counters: IdCounters = createCounters();
 
+function safeNum(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function line(
   partial: Omit<EstimateLineItem, 'id' | 'extendedPrice'>,
 ): EstimateLineItem {
+  const qty = safeNum(partial.quantity);
+  const price = safeNum(partial.unitPrice);
   return {
     ...partial,
+    quantity: qty,
+    unitPrice: price,
     id: _counters.nextLineId(),
-    extendedPrice: Math.round(partial.quantity * partial.unitPrice * 100) / 100,
+    extendedPrice: Math.round((qty * price + Number.EPSILON) * 100) / 100,
   };
 }
 
@@ -130,6 +140,9 @@ function chargerHardwareRules(
   const reviews: ManualReviewTrigger[] = [];
   const { charger, purchasingChargers, estimateControls } = input;
 
+  const brandLower = (charger.brand ?? '').toLowerCase();
+  const modelLower = (charger.model ?? '').toLowerCase();
+
   // Customer supplies chargers — skip hardware
   if (charger.isCustomerSupplied || purchasingChargers.responsibility === 'client') {
     reviews.push(
@@ -142,9 +155,6 @@ function chargerHardwareRules(
     );
     return { items, reviews };
   }
-
-  const brandLower = charger.brand.toLowerCase();
-  const modelLower = charger.model.toLowerCase();
 
   // ── Tesla Supercharger (L3 DCFC) ──
   if (
@@ -253,20 +263,41 @@ function chargerHardwareRules(
     }
 
     if (matched) {
+      let cpUnitPrice: number | undefined;
+      if (matched.catalogPrice === null) {
+        const cpPrice = getChargePointPrice(
+          charger.model || modelLower,
+          charger.mountType ?? mountKey,
+          charger.portType ?? portKey,
+        );
+        if (cpPrice) {
+          cpUnitPrice = cpPrice.total;
+        }
+      }
+
       items.push(
         pricebookLine(matched, charger.count, {
           ruleName: 'ChargePoint hardware',
-          ruleReason: `${charger.count}x ${matched.description}`,
+          ruleReason: cpUnitPrice
+            ? `${charger.count}x ${matched.description} at $${cpUnitPrice}/ea (from ChargePoint component pricing)`
+            : `${charger.count}x ${matched.description}`,
           sourceInputs: ['charger.brand', 'charger.model', 'charger.count', 'charger.mountType', 'charger.portType'],
+          unitPrice: cpUnitPrice,
+          pricingSource: cpUnitPrice ? 'catalog' : undefined,
+          manualReviewRequired: !cpUnitPrice && matched.catalogPrice === null,
+          manualReviewReason: !cpUnitPrice && matched.catalogPrice === null
+            ? `${matched.description} has no price in the pricebook. Manual pricing required.`
+            : undefined,
+          confidence: cpUnitPrice ? 'high' : matched.catalogPrice !== null ? 'high' : 'low',
         }),
       );
-      if (matched.catalogPrice === null) {
+      if (!cpUnitPrice && matched.catalogPrice === null) {
         reviews.push(
           review({
             field: 'charger.model',
             condition: 'No catalog price',
-            severity: 'critical',
-            message: `${matched.description} has no price in the pricebook. Manual pricing required.`,
+            severity: 'warning',
+            message: `${matched.description} has no catalog or component price. Manual pricing required.`,
           }),
         );
       }
@@ -336,7 +367,7 @@ function pedestalRules(
   const pedCount = charger.pedestalCount > 0 ? charger.pedestalCount : charger.count;
   const pedItem = findPricebookItem('pedestal-tesla-wc');
 
-  if (pedItem && input.charger.brand.toLowerCase().includes('tesla')) {
+  if (pedItem && (input.charger.brand ?? '').toLowerCase().includes('tesla')) {
     items.push(
       pricebookLine(pedItem, pedCount, {
         ruleName: 'Tesla pedestal',
@@ -369,8 +400,8 @@ function installLaborRules(
   const { charger, chargerInstall } = input;
 
   const isSupercharger =
-    charger.brand.toLowerCase().includes('tesla') &&
-    (charger.model.toLowerCase().includes('supercharger') || charger.chargingLevel === 'l3_dcfc');
+    (charger.brand ?? '').toLowerCase().includes('tesla') &&
+    ((charger.model ?? '').toLowerCase().includes('supercharger') || charger.chargingLevel === 'l3_dcfc');
 
   if (isSupercharger) {
     if (chargerInstall.responsibility === 'client') {
@@ -412,25 +443,11 @@ function installLaborRules(
     return { items, reviews };
   }
 
-  // Determine correct install labor item
-  const isWall = charger.mountType === 'wall';
   const isDual = charger.portType === 'dual';
-  const isXeal = charger.brand.toLowerCase().includes('xeal');
+  const isXeal = (charger.brand ?? '').toLowerCase().includes('xeal');
 
   let installItemId: string;
-  if (isXeal && isDual) {
-    installItemId = 'eleclbr-install-xeal-ped-dual';
-  } else if (isWall && isDual) {
-    installItemId = 'eleclbr-install-wall-dual';
-  } else if (isWall) {
-    installItemId = 'eleclbr-install-wall-single';
-  } else if (isDual) {
-    installItemId = 'eleclbr-install-ped-dual';
-  } else {
-    installItemId = 'eleclbr-install-ped-single';
-  }
 
-  // For wall mount, default to wall; for pedestal, default to pedestal
   if (charger.mountType === null || charger.mountType === 'other') {
     installItemId = isDual ? 'eleclbr-install-wall-dual' : 'eleclbr-install-wall-single';
     reviews.push(
@@ -438,9 +455,22 @@ function installLaborRules(
         field: 'charger.mountType',
         condition: 'Mount type unknown',
         severity: 'warning',
-        message: 'Mount type not specified — defaulting to wall-mounted install labor. Verify before finalizing.',
+        message: `Mount type ${charger.mountType === 'other' ? '"other"' : 'not specified'} — defaulting to wall-mounted install labor. Verify before finalizing.`,
       }),
     );
+  } else {
+    const isWall = charger.mountType === 'wall';
+    if (isXeal && isDual) {
+      installItemId = 'eleclbr-install-xeal-ped-dual';
+    } else if (isWall && isDual) {
+      installItemId = 'eleclbr-install-wall-dual';
+    } else if (isWall) {
+      installItemId = 'eleclbr-install-wall-single';
+    } else if (isDual) {
+      installItemId = 'eleclbr-install-ped-dual';
+    } else {
+      installItemId = 'eleclbr-install-ped-single';
+    }
   }
 
   const installItem = findPricebookItem(installItemId);
@@ -879,10 +909,10 @@ function civilRules(
       }
     }
 
-    // Concrete pads (for pedestal mount on surface, or padRequired)
+    // Concrete pads (for pedestal mount on surface/mixed, or padRequired)
     if (
       (charger.mountType === 'pedestal' || input.accessories.padRequired) &&
-      parkingEnvironment.type === 'surface_lot'
+      (parkingEnvironment.type === 'surface_lot' || parkingEnvironment.type === 'mixed')
     ) {
       const padItem = findPricebookItem('civil-concrete-pad');
       if (padItem) {
@@ -1089,8 +1119,8 @@ function constructionSupportRules(
 
   const isSupercharger =
     input.project.projectType === 'supercharger' ||
-    (input.charger.brand.toLowerCase().includes('tesla') &&
-      (input.charger.model.toLowerCase().includes('supercharger') ||
+    ((input.charger.brand ?? '').toLowerCase().includes('tesla') &&
+      ((input.charger.model ?? '').toLowerCase().includes('supercharger') ||
         input.charger.chargingLevel === 'l3_dcfc'));
 
   if (isSupercharger && input.charger.count >= 4) {
@@ -1496,11 +1526,11 @@ function softwareRules(
   const { charger } = input;
 
   // ChargePoint software only applies to ChargePoint chargers
-  if (!charger.brand.toLowerCase().includes('chargepoint')) {
+  if (!(charger.brand ?? '').toLowerCase().includes('chargepoint')) {
     return { items, reviews };
   }
 
-  if (charger.model.toLowerCase().includes('cpf50') || charger.model.toLowerCase().includes('cpf')) {
+  if ((charger.model ?? '').toLowerCase().includes('cpf50') || (charger.model ?? '').toLowerCase().includes('cpf')) {
     const activationItem = findPricebookItem('software-cp-fleet-activation');
     const cloudItem = findPricebookItem('software-cp-cloud-1yr');
 
@@ -1536,14 +1566,15 @@ function serviceFeeRules(
   const reviews: ManualReviewTrigger[] = [];
 
   const isSupercharger =
-    input.charger.brand.toLowerCase().includes('tesla') &&
-    (input.charger.model.toLowerCase().includes('supercharger') ||
+    (input.charger.brand ?? '').toLowerCase().includes('tesla') &&
+    ((input.charger.model ?? '').toLowerCase().includes('supercharger') ||
       input.charger.chargingLevel === 'l3_dcfc' ||
       input.project.projectType === 'supercharger');
 
   if (!isSupercharger) return { items, reviews };
 
-  const fee = SERVICE_FEES[0]; // Public PPU default
+  const fee = SERVICE_FEES.find((f) => f.id === 'svc-public-ppu') ?? SERVICE_FEES[0];
+  if (!fee) return { items, reviews };
   items.push(
     line({
       category: 'SOFTWARE',
@@ -1586,6 +1617,18 @@ export function runAllRules(
       }),
     );
     return { items: allItems, reviews: allReviews };
+  }
+
+  // Large deployment sanity gate
+  if (input.charger.count > 20) {
+    allReviews.push(
+      review({
+        field: 'charger.count',
+        condition: 'Large deployment',
+        severity: 'warning',
+        message: `${input.charger.count} chargers is a large deployment. Civil, accessory, and labor quantities should be manually verified.`,
+      }),
+    );
   }
 
   const rulesets = [

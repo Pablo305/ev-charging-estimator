@@ -46,7 +46,11 @@ export function mapReducer(state: MapWorkspaceState, action: MapAction): MapWork
       };
 
     case 'DELETE_RUN':
-      return { ...state, runs: state.runs.filter((r) => r.id !== action.id) };
+      return {
+        ...state,
+        runs: state.runs.filter((r) => r.id !== action.id),
+        selectedFeatureId: state.selectedFeatureId === action.id ? null : state.selectedFeatureId,
+      };
 
     case 'ADD_EQUIPMENT':
       return { ...state, equipment: [...state.equipment, action.equipment] };
@@ -60,7 +64,11 @@ export function mapReducer(state: MapWorkspaceState, action: MapAction): MapWork
       };
 
     case 'DELETE_EQUIPMENT':
-      return { ...state, equipment: state.equipment.filter((e) => e.id !== action.id) };
+      return {
+        ...state,
+        equipment: state.equipment.filter((e) => e.id !== action.id),
+        selectedFeatureId: state.selectedFeatureId === action.id ? null : state.selectedFeatureId,
+      };
 
     case 'SET_POWER_SOURCE':
       return { ...state, powerSourceLocation: action.coordinates };

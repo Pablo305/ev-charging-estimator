@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       createdAt: record.createdAt,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: `Failed to save share: ${message}` }, { status: 500 });
+    console.error('Share estimate error:', err);
+    return NextResponse.json({ error: 'Failed to save. Please try again.' }, { status: 500 });
   }
 }

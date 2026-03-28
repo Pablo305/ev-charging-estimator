@@ -27,6 +27,8 @@ export function LiveEstimateSummary({ autoEstimate }: LiveEstimateSummaryProps) 
       <div className="mx-auto max-w-7xl px-4">
         <button
           onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Collapse estimate summary' : 'Expand estimate summary'}
           className="flex w-full items-center justify-between py-3.5"
         >
           <div className="flex items-center gap-4">

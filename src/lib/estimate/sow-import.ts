@@ -32,15 +32,14 @@ function coerceCategory(raw: string | undefined, description: string): EstimateC
   return inferCategoryFromSowDescription(description);
 }
 
-let sowLineCounter = 0;
-
-function nextSowLineId(): string {
-  sowLineCounter += 1;
-  return `SOW-LI-${String(sowLineCounter).padStart(3, '0')}`;
-}
-
-export function resetSowLineIdCounter(): void {
-  sowLineCounter = 0;
+function createSowCounters() {
+  let sowLineCounter = 0;
+  return {
+    nextSowLineId(): string {
+      sowLineCounter += 1;
+      return `SOW-LI-${String(sowLineCounter).padStart(3, '0')}`;
+    },
+  };
 }
 
 /** Map pasted line description to an estimate category for rollups */
@@ -65,14 +64,14 @@ export function inferCategoryFromSowDescription(description: string): EstimateCa
 function shouldSkipSowLine(description: string): boolean {
   const d = description.trim().toLowerCase();
   if (!d) return true;
-  return /^subtotal|^total$|^sales tax|^thank you|^quotation/i.test(d);
+  return /^subtotal|^total\b|^sales tax|^thank you|^quotation/i.test(d);
 }
 
 /**
  * Build engine line items from tabular SOW rows. Uses printed extended amounts.
  */
 export function buildLineItemsFromSowImport(rows: SOWLineItem[]): EstimateLineItem[] {
-  resetSowLineIdCounter();
+  const counters = createSowCounters();
   const items: EstimateLineItem[] = [];
 
   for (const row of rows) {
@@ -88,7 +87,7 @@ export function buildLineItemsFromSowImport(rows: SOWLineItem[]): EstimateLineIt
     const manualReview = row.amount <= 0 && /tbd/i.test(row.description);
 
     items.push({
-      id: nextSowLineId(),
+      id: counters.nextSowLineId(),
       category,
       description: row.description.trim(),
       quantity: row.quantity,

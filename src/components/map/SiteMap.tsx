@@ -35,26 +35,112 @@ const POINT_TOOL_TYPES = new Set<string>(['power_source', 'charger_zone']);
 // Time window (ms) to suppress click events that are part of a double-click
 const DBLCLICK_THRESHOLD_MS = 300;
 
+function buildRunFeatureCollection(
+  runs: readonly RunSegment[],
+  override?: { id: string; geometry: LineString },
+): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: runs.map((run) => ({
+      type: 'Feature' as const,
+      properties: { id: run.id, runType: run.runType, lengthFt: run.lengthFt },
+      geometry: override?.id === run.id ? override.geometry : run.geometry,
+    })),
+  };
+}
+
+function buildRunLabelFeatureCollection(runs: readonly RunSegment[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: runs.map((run) => {
+      const coords = run.geometry.coordinates;
+      const midIdx = Math.floor(coords.length / 2);
+      return {
+        type: 'Feature' as const,
+        properties: { label: `${Math.round(run.lengthFt)} ft` },
+        geometry: { type: 'Point' as const, coordinates: coords[midIdx] ?? coords[0] },
+      };
+    }),
+  };
+}
+
+function updateRunSelectionStyles(map: mapboxgl.Map, selectedFeatureId: string | null) {
+  const selectedId = selectedFeatureId ?? '';
+
+  for (const runType of Object.keys(RUN_TYPE_CONFIG)) {
+    const layerId = `runs-${runType}`;
+    if (!map.getLayer(layerId)) continue;
+
+    map.setPaintProperty(layerId, 'line-width', [
+      'case',
+      ['==', ['get', 'id'], selectedId],
+      6,
+      4,
+    ]);
+    map.setPaintProperty(layerId, 'line-opacity', [
+      'case',
+      ['==', ['get', 'id'], selectedId],
+      1,
+      0.85,
+    ]);
+  }
+}
+
+function syncEquipmentMarkerStyle(
+  element: HTMLDivElement,
+  {
+    selected,
+    draggable,
+    hovered,
+  }: {
+    selected: boolean;
+    draggable: boolean;
+    hovered: boolean;
+  },
+) {
+  const scale = hovered ? 1.15 : selected ? 1.08 : 1;
+  element.style.transform = `scale(${scale})`;
+  element.style.border = selected ? '3px solid #1D4ED8' : '2px solid #2563EB';
+  element.style.boxShadow = selected
+    ? '0 0 0 2px rgba(37,99,235,0.18), 0 4px 12px rgba(0,0,0,0.35)'
+    : '0 2px 6px rgba(0,0,0,0.3)';
+  element.style.cursor = draggable ? 'grab' : 'pointer';
+}
+
+function translateLineString(
+  geometry: LineString,
+  deltaLng: number,
+  deltaLat: number,
+): LineString {
+  return {
+    type: 'LineString',
+    coordinates: geometry.coordinates.map(([lng, lat]) => [lng + deltaLng, lat + deltaLat]),
+  };
+}
+
+function getFeatureId(event: mapboxgl.MapLayerMouseEvent): string | null {
+  const id = event.features?.[0]?.properties?.id;
+  return typeof id === 'string' ? id : null;
+}
+
 export function SiteMap({
   siteCoordinates,
   runs,
   equipment,
   selectedTool,
+  selectedFeatureId,
   powerSourceLocation,
   chargerZones,
   onRunCreate,
-  onRunUpdate: _onRunUpdate,
+  onRunUpdate,
   onEquipmentPlace,
-  onEquipmentUpdate: _onEquipmentUpdate,
+  onEquipmentUpdate,
   onEquipmentDelete,
   onRunDelete,
   onFeatureSelect,
   onPointToolPlace,
   onMapReady,
 }: SiteMapProps) {
-  // TODO: Wire _onRunUpdate and _onEquipmentUpdate for drag-to-edit support
-  void _onRunUpdate;
-  void _onEquipmentUpdate;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -74,11 +160,39 @@ export function SiteMap({
   const onRunCreateRef = useRef(onRunCreate);
   onRunCreateRef.current = onRunCreate;
 
+  const onRunUpdateRef = useRef(onRunUpdate);
+  onRunUpdateRef.current = onRunUpdate;
+
+  const onRunDeleteRef = useRef(onRunDelete);
+  onRunDeleteRef.current = onRunDelete;
+
   const onEquipmentPlaceRef = useRef(onEquipmentPlace);
   onEquipmentPlaceRef.current = onEquipmentPlace;
 
+  const onEquipmentUpdateRef = useRef(onEquipmentUpdate);
+  onEquipmentUpdateRef.current = onEquipmentUpdate;
+
+  const onEquipmentDeleteRef = useRef(onEquipmentDelete);
+  onEquipmentDeleteRef.current = onEquipmentDelete;
+
+  const onFeatureSelectRef = useRef(onFeatureSelect);
+  onFeatureSelectRef.current = onFeatureSelect;
+
   const onPointToolPlaceRef = useRef(onPointToolPlace);
   onPointToolPlaceRef.current = onPointToolPlace;
+
+  const runsRef = useRef(runs);
+  runsRef.current = runs;
+
+  const selectedFeatureIdRef = useRef(selectedFeatureId);
+  selectedFeatureIdRef.current = selectedFeatureId;
+
+  const runDragRef = useRef<{
+    id: string;
+    startLngLat: [number, number];
+    originalGeometry: LineString;
+    hasMoved: boolean;
+  } | null>(null);
 
   // Refs for point tool markers
   const powerSourceMarkerRef = useRef<mapboxgl.Marker | null>(null);
@@ -132,6 +246,28 @@ export function SiteMap({
     }
   }
 
+  function setRunSources(
+    map: mapboxgl.Map,
+    runData: readonly RunSegment[],
+    override?: { id: string; geometry: LineString },
+  ) {
+    const source = map.getSource('runs') as mapboxgl.GeoJSONSource | undefined;
+    if (source) {
+      source.setData(buildRunFeatureCollection(runData, override));
+    }
+
+    const labelSource = map.getSource('run-labels') as mapboxgl.GeoJSONSource | undefined;
+    if (labelSource) {
+      labelSource.setData(
+        buildRunLabelFeatureCollection(
+          runData.map((run) =>
+            override?.id === run.id ? { ...run, geometry: override.geometry } : run,
+          ),
+        ),
+      );
+    }
+  }
+
   // ── Initialize map (once) ──
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -178,6 +314,8 @@ export function SiteMap({
           layout: { 'line-cap': 'round', 'line-join': 'round' },
         });
       }
+
+      updateRunSelectionStyles(map, selectedFeatureIdRef.current);
 
       // ── Drawing temp line (solid confirmed + dashed rubber-band) ──
       map.addSource('drawing-temp', {
@@ -253,12 +391,77 @@ export function SiteMap({
           'text-halo-width': 1.5,
         },
       });
+
+      for (const runType of Object.keys(RUN_TYPE_CONFIG)) {
+        const layerId = `runs-${runType}`;
+
+        map.on('mouseenter', layerId, () => {
+          if (!selectedToolRef.current && !runDragRef.current) {
+            map.getCanvas().style.cursor = 'pointer';
+          }
+        });
+
+        map.on('mouseleave', layerId, () => {
+          if (!selectedToolRef.current && !runDragRef.current) {
+            map.getCanvas().style.cursor = '';
+          }
+        });
+
+        map.on('click', layerId, (e) => {
+          if (selectedToolRef.current) return;
+
+          const featureId = getFeatureId(e);
+          if (!featureId) return;
+
+          e.preventDefault();
+          e.originalEvent.stopPropagation();
+          onFeatureSelectRef.current(featureId);
+        });
+
+        map.on('contextmenu', layerId, (e) => {
+          if (selectedToolRef.current) return;
+
+          const featureId = getFeatureId(e);
+          if (!featureId) return;
+
+          e.preventDefault();
+          e.originalEvent.stopPropagation();
+          onFeatureSelectRef.current(null);
+          onRunDeleteRef.current(featureId);
+        });
+
+        map.on('mousedown', layerId, (e) => {
+          if (selectedToolRef.current) return;
+
+          const featureId = getFeatureId(e);
+          if (!featureId || selectedFeatureIdRef.current !== featureId) return;
+
+          const run = runsRef.current.find((candidate) => candidate.id === featureId);
+          if (!run) return;
+
+          e.preventDefault();
+          e.originalEvent.stopPropagation();
+          map.dragPan.disable();
+          map.getCanvas().style.cursor = 'grabbing';
+          runDragRef.current = {
+            id: featureId,
+            startLngLat: [e.lngLat.lng, e.lngLat.lat],
+            originalGeometry: run.geometry,
+            hasMoved: false,
+          };
+        });
+      }
     });
 
     // ── Click handler (delayed to distinguish from dblclick) ──
     map.on('click', (e: mapboxgl.MapMouseEvent) => {
       const tool = selectedToolRef.current;
-      if (!tool) return;
+      if (!tool) {
+        if (!runDragRef.current) {
+          onFeatureSelectRef.current(null);
+        }
+        return;
+      }
 
       const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
 
@@ -293,7 +496,7 @@ export function SiteMap({
     // ── Double-click handler (finalize run) ──
     map.on('dblclick', (e: mapboxgl.MapMouseEvent) => {
       const tool = selectedToolRef.current;
-      if (!tool || EQUIPMENT_TYPES.has(tool)) return;
+      if (!tool || EQUIPMENT_TYPES.has(tool) || POINT_TOOL_TYPES.has(tool)) return;
 
       e.preventDefault();
       const draw = drawRef.current;
@@ -330,14 +533,46 @@ export function SiteMap({
 
     // ── Mouse move for rubber-band line ──
     map.on('mousemove', (e: mapboxgl.MapMouseEvent) => {
+      const runDrag = runDragRef.current;
+      if (runDrag) {
+        const deltaLng = e.lngLat.lng - runDrag.startLngLat[0];
+        const deltaLat = e.lngLat.lat - runDrag.startLngLat[1];
+        if (deltaLng !== 0 || deltaLat !== 0) {
+          runDrag.hasMoved = true;
+        }
+
+        setRunSources(map, runsRef.current, {
+          id: runDrag.id,
+          geometry: translateLineString(runDrag.originalGeometry, deltaLng, deltaLat),
+        });
+        return;
+      }
+
       const tool = selectedToolRef.current;
-      if (!tool || EQUIPMENT_TYPES.has(tool)) return;
+      if (!tool || EQUIPMENT_TYPES.has(tool) || POINT_TOOL_TYPES.has(tool)) return;
 
       const draw = drawRef.current;
       if (draw.points.length === 0) return;
 
       const cursor: [number, number] = [e.lngLat.lng, e.lngLat.lat];
       updateDrawingVisuals(map, draw.points, cursor);
+    });
+
+    map.on('mouseup', (e: mapboxgl.MapMouseEvent) => {
+      const runDrag = runDragRef.current;
+      if (!runDrag) return;
+
+      runDragRef.current = null;
+      map.dragPan.enable();
+      map.getCanvas().style.cursor = '';
+
+      if (!runDrag.hasMoved) return;
+
+      const deltaLng = e.lngLat.lng - runDrag.startLngLat[0];
+      const deltaLat = e.lngLat.lat - runDrag.startLngLat[1];
+      const geometry = translateLineString(runDrag.originalGeometry, deltaLng, deltaLat);
+      const lengthFt = measureRunLength(geometry);
+      onRunUpdateRef.current(runDrag.id, geometry, lengthFt);
     });
 
     // ── Right-click to cancel drawing ──
@@ -377,33 +612,7 @@ export function SiteMap({
     if (!map) return;
 
     const doUpdate = () => {
-      const source = map.getSource('runs') as mapboxgl.GeoJSONSource | undefined;
-      if (!source) return;
-
-      source.setData({
-        type: 'FeatureCollection',
-        features: runs.map((run) => ({
-          type: 'Feature' as const,
-          properties: { id: run.id, runType: run.runType, lengthFt: run.lengthFt },
-          geometry: run.geometry,
-        })),
-      });
-
-      const labelSource = map.getSource('run-labels') as mapboxgl.GeoJSONSource | undefined;
-      if (labelSource) {
-        labelSource.setData({
-          type: 'FeatureCollection',
-          features: runs.map((run) => {
-            const coords = run.geometry.coordinates;
-            const midIdx = Math.floor(coords.length / 2);
-            return {
-              type: 'Feature' as const,
-              properties: { label: `${Math.round(run.lengthFt)} ft` },
-              geometry: { type: 'Point' as const, coordinates: coords[midIdx] ?? coords[0] },
-            };
-          }),
-        });
-      }
+      setRunSources(map, runs);
     };
 
     if (styleLoadedRef.current) {
@@ -413,6 +622,22 @@ export function SiteMap({
       map.once('load', doUpdate);
     }
   }, [runs]);
+
+  // ── Highlight selected runs ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const doUpdate = () => {
+      updateRunSelectionStyles(map, selectedFeatureId);
+    };
+
+    if (styleLoadedRef.current) {
+      doUpdate();
+    } else {
+      map.once('load', doUpdate);
+    }
+  }, [selectedFeatureId]);
 
   // ── Sync equipment markers ──
   useEffect(() => {
@@ -431,40 +656,96 @@ export function SiteMap({
 
     // Add new markers
     for (const eq of equipment) {
-      if (markersRef.current.has(eq.id)) continue;
+      let marker = markersRef.current.get(eq.id);
+
+      if (!marker) {
+        const el = document.createElement('div');
+        el.className = 'map-equipment-marker';
+        el.style.cssText = `
+          width: 36px; height: 36px; border-radius: 8px;
+          background: white; border: 2px solid #2563EB;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          transition: transform 0.15s ease, box-shadow 0.15s ease, border 0.15s ease;
+        `;
+
+        el.addEventListener('mouseenter', () => {
+          el.dataset.hovered = 'true';
+          syncEquipmentMarkerStyle(el, {
+            selected: el.dataset.selected === 'true',
+            draggable: el.dataset.draggable === 'true',
+            hovered: true,
+          });
+        });
+
+        el.addEventListener('mouseleave', () => {
+          el.dataset.hovered = 'false';
+          syncEquipmentMarkerStyle(el, {
+            selected: el.dataset.selected === 'true',
+            draggable: el.dataset.draggable === 'true',
+            hovered: false,
+          });
+        });
+
+        el.addEventListener('contextmenu', (ev) => {
+          ev.preventDefault();
+          onFeatureSelectRef.current(null);
+          onEquipmentDeleteRef.current(eq.id);
+        });
+
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          onFeatureSelectRef.current(eq.id);
+        });
+
+        marker = new mapboxgl.Marker({ element: el, anchor: 'center', offset: [0, 0], draggable: false })
+          .setLngLat(eq.geometry.coordinates as [number, number])
+          .addTo(map);
+
+        marker.on('dragstart', () => {
+          el.style.cursor = 'grabbing';
+        });
+
+        marker.on('dragend', () => {
+          const lngLat = marker?.getLngLat();
+          if (!lngLat) return;
+
+          syncEquipmentMarkerStyle(el, {
+            selected: el.dataset.selected === 'true',
+            draggable: el.dataset.draggable === 'true',
+            hovered: el.dataset.hovered === 'true',
+          });
+          onEquipmentUpdateRef.current(eq.id, {
+            type: 'Point',
+            coordinates: [lngLat.lng, lngLat.lat],
+          });
+        });
+
+        markersRef.current.set(eq.id, marker);
+      }
 
       const config = EQUIPMENT_TYPE_CONFIG[eq.equipmentType];
-      const el = document.createElement('div');
-      el.className = 'map-equipment-marker';
-      el.style.cssText = `
-        width: 36px; height: 36px; border-radius: 8px;
-        background: white; border: 2px solid #2563EB;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        transition: transform 0.15s ease;
-      `;
-      el.innerHTML = getEquipmentSvgHtml(eq.equipmentType, 26);
-      el.title = `${config.label}: ${eq.label}`;
-      el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.15)'; });
-      el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
+      const element = marker.getElement() as HTMLDivElement;
+      const isSelected = selectedFeatureId === eq.id;
+      const isDraggable = isSelected && selectedTool === null;
 
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
+      element.innerHTML = getEquipmentSvgHtml(eq.equipmentType, 26);
+      element.title = `${config.label}: ${eq.label}`;
+      element.dataset.selected = String(isSelected);
+      element.dataset.draggable = String(isDraggable);
+      element.dataset.hovered = element.dataset.hovered ?? 'false';
+
+      marker
         .setLngLat(eq.geometry.coordinates as [number, number])
-        .addTo(map);
+        .setDraggable(isDraggable);
 
-      el.addEventListener('contextmenu', (ev) => {
-        ev.preventDefault();
-        onEquipmentDelete(eq.id);
+      syncEquipmentMarkerStyle(element, {
+        selected: isSelected,
+        draggable: isDraggable,
+        hovered: element.dataset.hovered === 'true',
       });
-
-      el.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        onFeatureSelect(eq.id);
-      });
-
-      markersRef.current.set(eq.id, marker);
     }
-  }, [equipment, onEquipmentDelete, onFeatureSelect]);
+  }, [equipment, selectedFeatureId, selectedTool]);
 
   // ── Update drawing line color when tool changes ──
   useEffect(() => {

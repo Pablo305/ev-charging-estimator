@@ -102,10 +102,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json(response);
   } catch (err: unknown) {
+    console.error('Parse SOW error:', err);
     const message = err instanceof Error ? err.message : 'Unknown error';
     if (message.includes('timeout') || message.includes('aborted')) {
       return NextResponse.json({ error: 'AI request timed out' }, { status: 504 });
     }
-    return NextResponse.json({ error: `SOW parse failed: ${message}` }, { status: 502 });
+    return NextResponse.json({ error: 'Document parsing service temporarily unavailable' }, { status: 502 });
   }
 }

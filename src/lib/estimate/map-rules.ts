@@ -15,26 +15,23 @@ interface RuleResult {
   reviews: ManualReviewTrigger[];
 }
 
-let lineCounter = 0;
-let reviewCounter = 0;
-
-function resetCounters(): void {
-  lineCounter = 0;
-  reviewCounter = 0;
-}
-
-function nextLineId(): string {
-  lineCounter += 1;
-  return `MAP-LI-${String(lineCounter).padStart(3, '0')}`;
-}
-
-function nextReviewId(): string {
-  reviewCounter += 1;
-  return `MAP-MR-${String(reviewCounter).padStart(3, '0')}`;
+function createMapCounters() {
+  let lineCounter = 0;
+  let reviewCounter = 0;
+  return {
+    nextLineId(): string {
+      lineCounter += 1;
+      return `MAP-LI-${String(lineCounter).padStart(3, '0')}`;
+    },
+    nextReviewId(): string {
+      reviewCounter += 1;
+      return `MAP-MR-${String(reviewCounter).padStart(3, '0')}`;
+    },
+  };
 }
 
 export function mapWorkspaceRules(input: EstimateInput): RuleResult {
-  resetCounters();
+  const counters = createMapCounters();
 
   if (!input.mapWorkspace) {
     return { items: [], reviews: [] };
@@ -55,7 +52,7 @@ export function mapWorkspaceRules(input: EstimateInput): RuleResult {
     const diff = Math.abs(formDist - mapDist);
     if (diff > 20) {
       reviews.push({
-        id: nextReviewId(),
+        id: counters.nextReviewId(),
         field: 'electrical.distanceToPanel_ft',
         condition: 'Map vs form distance mismatch',
         severity: diff > 50 ? 'critical' : 'warning',
@@ -71,7 +68,7 @@ export function mapWorkspaceRules(input: EstimateInput): RuleResult {
     mw.chargerCountFromMap !== input.charger.count
   ) {
     reviews.push({
-      id: nextReviewId(),
+      id: counters.nextReviewId(),
       field: 'charger.count',
       condition: 'Map vs form charger count mismatch',
       severity: 'warning',
@@ -79,15 +76,21 @@ export function mapWorkspaceRules(input: EstimateInput): RuleResult {
     });
   }
 
-  // ── Feeder run line items (not covered by existing rules) ──
-  if (mw.feederDistance_ft !== null && mw.feederDistance_ft > 0) {
+  // ── Feeder run line items (only when no conduit already priced by electricalRules) ──
+  const conduitAlreadyPriced =
+    mw.conduitDistance_ft != null ||
+    input.electrical.distanceToPanel_ft != null ||
+    (input.electrical.pvcConduit4in_ft != null && input.electrical.pvcConduit4in_ft > 0) ||
+    (input.electrical.pvcConduit3in_ft != null && input.electrical.pvcConduit3in_ft > 0);
+
+  if (mw.feederDistance_ft !== null && mw.feederDistance_ft > 0 && !conduitAlreadyPriced) {
     const feederItem = findPricebookItem('eleclbrmat-conduit-wire');
     if (feederItem) {
       const resolved = resolvePrice(feederItem, true);
       const unitPrice = resolved.price ?? 0;
       const ext = Math.round(mw.feederDistance_ft * unitPrice * 100) / 100;
       items.push({
-        id: nextLineId(),
+        id: counters.nextLineId(),
         category: 'ELEC LBR MAT',
         description: `Feeder cable run (from map measurement)`,
         quantity: mw.feederDistance_ft,
@@ -108,7 +111,7 @@ export function mapWorkspaceRules(input: EstimateInput): RuleResult {
   // ── Bore cap warning ──
   if (mw.boringDistance_ft !== null && mw.boringDistance_ft >= 50) {
     reviews.push({
-      id: nextReviewId(),
+      id: counters.nextReviewId(),
       field: 'mapWorkspace.boringDistance_ft',
       condition: 'Boring distance at cap',
       severity: 'warning',
@@ -119,7 +122,7 @@ export function mapWorkspaceRules(input: EstimateInput): RuleResult {
   // ── Concrete cut cap warning ──
   if (mw.concreteCuttingDistance_ft !== null && mw.concreteCuttingDistance_ft >= 100) {
     reviews.push({
-      id: nextReviewId(),
+      id: counters.nextReviewId(),
       field: 'mapWorkspace.concreteCuttingDistance_ft',
       condition: 'Concrete cutting distance at cap',
       severity: 'warning',

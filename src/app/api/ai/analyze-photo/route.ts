@@ -110,10 +110,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json(parsed);
   } catch (err: unknown) {
+    console.error('Analyze photo error:', err);
     const message = err instanceof Error ? err.message : 'Unknown error';
     if (message.includes('timeout') || message.includes('aborted')) {
       return NextResponse.json({ error: 'AI request timed out — try fewer or smaller files' }, { status: 504 });
     }
-    return NextResponse.json({ error: `Photo analysis failed: ${message}` }, { status: 502 });
+    return NextResponse.json({ error: 'Photo analysis service temporarily unavailable' }, { status: 502 });
   }
 }

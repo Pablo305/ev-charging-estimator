@@ -192,17 +192,18 @@ function inferChargerConfig(
     };
   }
 
-  // Mixed — count L2 majority
-  const l2Count = placements.filter((p) => p.type === 'l2').length;
-  const majority = l2Count >= count / 2 ? 'l2' : 'l3_dcfc';
+  // Mixed L2/L3 — use L3 as primary level since it drives electrical sizing,
+  // but preserve the total count so both types are represented in the estimate.
+  // The L3 pricing path handles larger infrastructure requirements.
+  const l3Count = placements.filter((p) => p.type === 'l3').length;
   return {
     brand: 'Tesla',
-    model: majority === 'l2' ? 'Universal Wall Connector Gen 3' : 'Supercharger V4',
+    model: l3Count >= 1 ? 'Supercharger V4' : 'Universal Wall Connector Gen 3',
     count,
-    chargingLevel: majority,
+    chargingLevel: l3Count >= 1 ? 'l3_dcfc' : 'l2',
     mountType: 'pedestal',
-    unitPrice: majority === 'l2' ? 750 : 50000,
-    confidence: 0.5,
+    unitPrice: l3Count >= 1 ? 50000 : 750,
+    confidence: 0.4,
   };
 }
 

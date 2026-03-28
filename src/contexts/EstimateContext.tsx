@@ -106,7 +106,20 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
       if (stored) {
         const parsed = JSON.parse(stored);
         // Merge with emptyInput to fill any missing fields from schema changes
-        const merged = { ...emptyInput(), ...(typeof parsed === 'object' && parsed !== null ? parsed : {}) } as EstimateInput;
+        const defaults = emptyInput();
+        const data = typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : {};
+        const defRecord = defaults as unknown as Record<string, unknown>;
+        const accRecord = { ...defaults } as unknown as Record<string, unknown>;
+        for (const key of Object.keys(defRecord)) {
+          const defVal = defRecord[key];
+          const storedVal = data[key];
+          if (defVal && typeof defVal === 'object' && !Array.isArray(defVal) && storedVal && typeof storedVal === 'object' && !Array.isArray(storedVal)) {
+            accRecord[key] = { ...(defVal as object), ...(storedVal as object) };
+          } else if (storedVal !== undefined) {
+            accRecord[key] = storedVal;
+          }
+        }
+        const merged = accRecord as unknown as EstimateInput;
         dispatch({ type: 'LOAD_FROM_STORAGE', input: merged });
       }
     } catch {

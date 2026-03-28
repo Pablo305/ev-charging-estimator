@@ -67,9 +67,9 @@ export async function GET(
       note: 'Use /api/generate-estimate with normalized input to generate estimate',
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Monday item fetch error:', err);
     return NextResponse.json(
-      { error: `Failed to fetch from monday.com: ${message}` },
+      { error: 'Failed to fetch project data' },
       { status: 500 },
     );
   }

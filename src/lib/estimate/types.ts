@@ -304,7 +304,10 @@ export interface EstimateOutput {
   exclusions: EstimateExclusion[];
   manualReviewTriggers: ManualReviewTrigger[];
   summary: {
+    /** Post-markup subtotal (lineItemTotal * (1 + markupPercent/100)) */
     subtotal: number;
+    /** Pre-markup sum of all line item extendedPrice values */
+    lineItemTotal: number;
     tax: number;
     contingency: number;
     total: number;

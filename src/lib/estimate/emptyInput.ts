@@ -47,7 +47,7 @@ export function emptyInput(): EstimateInput {
     chargerInstall: { responsibility: null },
     purchasingChargers: { responsibility: null },
     signageBollards: { responsibility: null },
-    estimateControls: { pricingTier: 'msrp', taxRate: 7.0, contingencyPercent: 10, markupPercent: 20 },
+    estimateControls: { pricingTier: 'msrp', taxRate: 8.25, contingencyPercent: 10, markupPercent: 20 },
     notes: '',
     mapWorkspace: {
       conduitDistance_ft: null,

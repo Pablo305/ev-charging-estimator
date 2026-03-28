@@ -140,9 +140,9 @@ export async function POST(request: Request) {
     const output = generateEstimate(input);
     return NextResponse.json(output);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Generate estimate error:', err);
     return NextResponse.json(
-      { error: `Failed to generate estimate: ${message}` },
+      { error: 'Estimate generation failed. Please try again.' },
       { status: 500 },
     );
   }

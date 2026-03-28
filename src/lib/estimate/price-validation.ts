@@ -66,10 +66,10 @@ export function validateAndCalibratePrices(
     let unitPrice = li.unitPrice;
     let adjusted = false;
 
+    const originalStatus = status;
     if (apply && status !== 'in_range') {
       unitPrice = Math.round(range.median * 100) / 100;
       adjusted = true;
-      status = 'in_range';
     }
 
     const updated: EstimateLineItem =
@@ -84,7 +84,7 @@ export function validateAndCalibratePrices(
 
     next.push(updated);
 
-    if (status !== 'in_range' || adjusted) {
+    if (originalStatus !== 'in_range' || adjusted) {
       issues.push({
         lineItemId: li.id,
         description: li.description,
@@ -92,7 +92,7 @@ export function validateAndCalibratePrices(
         observedMin: range.min,
         observedMax: range.max,
         observedMedian: range.median,
-        status,
+        status: originalStatus,
         adjustedToMedian: adjusted,
       });
     }

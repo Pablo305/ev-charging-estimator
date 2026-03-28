@@ -68,8 +68,9 @@ export function useAutoEstimate(): AutoEstimateResult {
       return;
     }
 
+    setIsGenerating(true);
+
     debounceRef.current = setTimeout(() => {
-      setIsGenerating(true);
       try {
         const result = generateEstimate(input);
         setEstimate(result);
