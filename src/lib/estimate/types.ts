@@ -30,6 +30,11 @@ export interface EstimateInput {
       | 'remove_replace'
       | 'commission_only'
       | 'service_work'
+      | 'service_call'
+      | 'service_ticket'
+      | 'change_order'
+      | 'invoice'
+      | 'residential'
       | 'supercharger';
     timeline: string;
     isNewConstruction: boolean | null;
