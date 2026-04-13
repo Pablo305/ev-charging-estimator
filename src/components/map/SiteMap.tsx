@@ -101,11 +101,11 @@ function syncEquipmentMarkerStyle(
   const badge = element.querySelector<HTMLDivElement>('[data-role="badge"]');
   const scale = hovered ? 1.12 : selected ? 1.05 : 1;
 
-  element.style.transform = `translateZ(0) scale(${scale})`;
   element.style.cursor = draggable ? 'grab' : 'pointer';
   element.style.zIndex = selected ? '15' : hovered ? '14' : '10';
 
   if (badge) {
+    badge.style.transform = `scale(${scale})`;
     badge.style.border = selected ? '2px solid #1D4ED8' : '1.5px solid #2563EB';
     badge.style.boxShadow = selected
       ? '0 6px 18px rgba(15,23,42,0.35)'
