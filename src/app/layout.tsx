@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/Providers";
-import { SiteChat } from "@/components/SiteChat";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,7 +30,6 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <SiteChat />
         </Providers>
       </body>
     </html>
