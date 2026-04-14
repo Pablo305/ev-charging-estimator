@@ -55,12 +55,12 @@ export function GuidedEstimateFlow({ onEstimateGenerated }: GuidedEstimateFlowPr
     // Step 4: Installation type - need a type selected
     if (installationType) completed.add(4);
 
-    // Step 5: Conditional details - check required fields for the type
+    // Step 5: Conditional details - check only non-map required fields
+    // Map-derived fields are auto-populated when user places chargers/panel
     if (installationType) {
       const fields = getConditionalFields(installationType);
-      const requiredFields = fields.filter((f) => f.required);
+      const requiredFields = fields.filter((f) => f.required && !f.mapDerived);
       if (requiredFields.length === 0) {
-        // No required fields (e.g., service call, equipment purchase)
         completed.add(5);
       } else {
         const allFilled = requiredFields.every((f) => {

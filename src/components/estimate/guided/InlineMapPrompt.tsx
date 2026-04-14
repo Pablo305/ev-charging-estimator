@@ -78,15 +78,18 @@ export function InlineMapPrompt({ fields }: InlineMapPromptProps) {
       updateField('mapWorkspace.conduitDistance_ft', buffered);
       updateField('mapWorkspace.trenchingDistance_ft', buffered);
       updateField('mapWorkspace.pvcConduitDistance_ft', buffered);
+      updateField('electrical.wire500mcm_ft', buffered);
+      updateField('mapWorkspace.concreteCuttingDistance_ft', 0);
       updateField('electrical.distanceToPanel_ft', chargerPlacements.length > 0
         ? Math.round(measurePointDistance(panelPlacement.geometry, chargerPlacements[0].geometry) * 1.15)
         : null,
       );
     }
 
-    // Concrete pads = charger count (if they're on non-concrete surface)
+    // Concrete pads = charger count
     if (chargerCount > 0) {
       updateField('mapWorkspace.concretePadCount', chargerCount);
+      updateField('accessories.padRequired', true);
     }
   }, [chargerPlacements, panelPlacement, updateField]);
 
