@@ -1,6 +1,11 @@
 'use client';
 
 import { useEstimate } from '@/contexts/EstimateContext';
+import {
+  INSTALLATION_TYPES,
+  getTemplateForInstallationType,
+  type InstallationType,
+} from '@/lib/estimate/guided-flow-config';
 
 interface StepReviewGenerateProps {
   onGenerate: () => void;
@@ -33,8 +38,37 @@ function Field({ label, value }: { label: string; value: string | number | null 
   );
 }
 
+function formatResponsibility(value: string | null | undefined): string {
+  if (value === 'bullet') return 'Bullet EV';
+  if (value === 'client') return 'Client';
+  if (value === 'tbd') return 'TBD';
+  return 'Not set';
+}
+
+function getInstallationTypeName(projectType: string, parkingType: string | null | undefined): string {
+  const match = INSTALLATION_TYPES.find((t) => {
+    if (t.projectType !== projectType) return false;
+    if (t.parkingType !== undefined && t.parkingType !== null && t.parkingType !== parkingType) return false;
+    return true;
+  });
+  return match?.label ?? projectType;
+}
+
 export function StepReviewGenerate({ onGenerate }: StepReviewGenerateProps) {
   const { input } = useEstimate();
+
+  const installTypeName = getInstallationTypeName(
+    input.project.projectType,
+    input.parkingEnvironment?.type,
+  );
+
+  // Derive installation type for template lookup
+  const installMatch = INSTALLATION_TYPES.find((t) => {
+    if (t.projectType !== input.project.projectType) return false;
+    if (t.parkingType !== undefined && t.parkingType !== null && t.parkingType !== input.parkingEnvironment?.type) return false;
+    return true;
+  });
+  const template = installMatch ? getTemplateForInstallationType(installMatch.id) : undefined;
 
   return (
     <div className="space-y-6">
@@ -50,7 +84,7 @@ export function StepReviewGenerate({ onGenerate }: StepReviewGenerateProps) {
           <Field label="Rep Name" value={input.project.salesRep} />
           <Field label="Project Name" value={input.project.name} />
           <Field label="Company Name" value={input.customer.companyName} />
-          <Field label="Project Type" value={input.project.projectType} />
+          <Field label="Installation Type" value={installTypeName} />
         </Section>
 
         <Section title="Contact & Site">
@@ -58,20 +92,27 @@ export function StepReviewGenerate({ onGenerate }: StepReviewGenerateProps) {
           <Field label="Phone" value={input.customer.contactPhone} />
           <Field label="Email" value={input.customer.contactEmail} />
           <Field label="Job Site Address" value={input.site.address} />
+          <Field label="State" value={input.site.state} />
         </Section>
 
         <Section title="Equipment">
-          <Field label="Purchasing Responsibility" value={input.purchasingChargers.responsibility} />
+          <Field label="Purchasing Responsibility" value={formatResponsibility(input.purchasingChargers.responsibility)} />
+          <Field label="Charger Brand" value={input.charger.brand} />
+          <Field label="Charger Model" value={input.charger.model} />
           <Field label="Charger Count" value={input.charger.count} />
           <Field label="Pedestal Count" value={input.charger.pedestalCount} />
           <Field label="Mount Type" value={input.charger.mountType} />
+          <Field label="Port Type" value={input.charger.portType} />
+          <Field label="Charging Level" value={input.charger.chargingLevel} />
         </Section>
 
-        <Section title="Electrical">
+        <Section title="Electrical & Civil">
           <Field label="Conduit Distance (ft)" value={input.mapWorkspace?.conduitDistance_ft} />
           <Field label="Trenching Distance (ft)" value={input.mapWorkspace?.trenchingDistance_ft} />
           <Field label="PVC Conduit (ft)" value={input.mapWorkspace?.pvcConduitDistance_ft} />
           <Field label="Concrete Cutting (ft)" value={input.mapWorkspace?.concreteCuttingDistance_ft} />
+          <Field label="Wire Length (ft)" value={input.electrical?.wire500mcm_ft} />
+          <Field label="Core Drilling Required" value={input.parkingEnvironment?.coringRequired} />
         </Section>
 
         <Section title="Accessories">
@@ -80,6 +121,14 @@ export function StepReviewGenerate({ onGenerate }: StepReviewGenerateProps) {
           <Field label="Concrete Pads Required" value={input.accessories.padRequired} />
           <Field label="Concrete Pad Count" value={input.mapWorkspace?.concretePadCount} />
         </Section>
+
+        {template && (
+          <Section title="Template Info">
+            <Field label="Template" value={template.name} />
+            <Field label="Payment Terms" value={template.paymentTerms} />
+            <Field label="Complexity" value={template.complexity} />
+          </Section>
+        )}
       </div>
 
       <div className="pt-4">

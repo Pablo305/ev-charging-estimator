@@ -10,7 +10,18 @@ export function StepEquipmentPurchase() {
   const isClient = input.purchasingChargers.responsibility === 'client';
 
   function handleSelection(purchasing: boolean) {
-    updateField('purchasingChargers.responsibility', purchasing ? 'bullet' : 'client');
+    if (purchasing) {
+      updateField('purchasingChargers.responsibility', 'bullet');
+      updateField('charger.brand', 'Tesla');
+      updateField('charger.model', 'Universal Wall Connector Gen3');
+      updateField('charger.chargingLevel', 'l2');
+      updateField('charger.volts', 240);
+      updateField('charger.mountType', 'pedestal');
+      updateField('charger.portType', 'single');
+    } else {
+      updateField('purchasingChargers.responsibility', 'client');
+      updateField('charger.isCustomerSupplied', true);
+    }
   }
 
   return (

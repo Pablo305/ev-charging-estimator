@@ -123,17 +123,9 @@ const INSTALL_TYPE_OPTIONS = [
   { value: 'pedestal_dual', label: 'Pedestal Mounted Charger, Dual Port' },
 ];
 
-const CORE_DRILLING_GARAGE_OPTIONS = [
-  { value: '0', label: '0 \u2014 Panel is in the open' },
-  { value: '1', label: '1 \u2014 Panel inside same-floor room' },
-  { value: '2', label: '2 \u2014 Panel one floor away' },
-  { value: '3', label: '3 \u2014 Panel two floors away' },
-];
-
-const CORE_DRILLING_LOT_OPTIONS = [
-  { value: '0', label: '0 \u2014 Panel outside, in the open' },
-  { value: '1', label: '1 \u2014 Panel inside a room or building' },
-  { value: '2', label: '2 \u2014 Panel behind multiple walls' },
+const CORE_DRILLING_OPTIONS = [
+  { value: 'true', label: 'Yes \u2014 Core drilling required' },
+  { value: 'false', label: 'No \u2014 No core drilling needed' },
 ];
 
 export const CONDITIONAL_FIELDS: Record<InstallationType, ConditionalField[]> = {
@@ -157,7 +149,7 @@ export const CONDITIONAL_FIELDS: Record<InstallationType, ConditionalField[]> = 
       id: 'numRemoved',
       label: 'Number of Chargers Being Removed',
       inputType: 'number',
-      fieldPath: 'accessories.debrisRemoval',
+      fieldPath: 'notes',
       required: true,
       min: 0,
       placeholder: '0',
@@ -225,11 +217,11 @@ export const CONDITIONAL_FIELDS: Record<InstallationType, ConditionalField[]> = 
     },
     {
       id: 'coreDrilling',
-      label: 'Core Drilling Penetrations',
-      inputType: 'select',
+      label: 'Core Drilling Required?',
+      inputType: 'radio',
       fieldPath: 'parkingEnvironment.coringRequired',
       required: true,
-      options: CORE_DRILLING_GARAGE_OPTIONS,
+      options: CORE_DRILLING_OPTIONS,
     },
     {
       id: 'emtConduitLength',
@@ -329,11 +321,11 @@ export const CONDITIONAL_FIELDS: Record<InstallationType, ConditionalField[]> = 
     },
     {
       id: 'coreDrilling',
-      label: 'Core Drilling',
-      inputType: 'select',
+      label: 'Core Drilling Required?',
+      inputType: 'radio',
       fieldPath: 'parkingEnvironment.coringRequired',
       required: true,
-      options: CORE_DRILLING_LOT_OPTIONS,
+      options: CORE_DRILLING_OPTIONS,
     },
     {
       id: 'totalConductorLength',

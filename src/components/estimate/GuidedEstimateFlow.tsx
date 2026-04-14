@@ -65,7 +65,7 @@ export function GuidedEstimateFlow({ onEstimateGenerated }: GuidedEstimateFlowPr
       } else {
         const allFilled = requiredFields.every((f) => {
           const val = getNestedValue(input as unknown as Record<string, unknown>, f.fieldPath);
-          return val !== null && val !== undefined && val !== '' && val !== 0;
+          return val !== null && val !== undefined && val !== '';
         });
         if (allFilled) completed.add(5);
       }

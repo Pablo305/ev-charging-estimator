@@ -57,6 +57,8 @@ export function StepInstallationType() {
           ...(base.site),
           ...(prefilled.site ?? {}),
           address: input.site.address,
+          state: input.site.state,
+          siteType: input.site.siteType,
         },
         mapWorkspace: {
           ...(base.mapWorkspace),
@@ -73,6 +75,10 @@ export function StepInstallationType() {
           ...(prefilled.charger ?? {}),
           count: input.charger.count,
           pedestalCount: input.charger.pedestalCount,
+          brand: input.charger.brand,
+          model: input.charger.model,
+          chargingLevel: input.charger.chargingLevel,
+          volts: input.charger.volts,
         },
       };
 
