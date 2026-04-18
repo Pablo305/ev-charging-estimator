@@ -4,7 +4,7 @@ import { useReducer, useEffect, useCallback, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useEstimate } from '@/contexts/EstimateContext';
 import { mapReducer, initialMapState } from '@/lib/map/workspace-reducer';
-import { measurePointDistance } from '@/lib/map/measurements';
+import { measurePointDistance, deriveRunLengths } from '@/lib/map/measurements';
 import type { ConditionalField } from '@/lib/estimate/guided-flow-config';
 import type { EquipmentType, PointToolType, RunType } from '@/lib/map/types';
 import type { LineString, Point } from 'geojson';
@@ -66,24 +66,29 @@ export function InlineMapPrompt({ fields }: InlineMapPromptProps) {
     // Update panel placed flag
     updateField('mapWorkspace.hasPanelPlaced', !!panelPlacement);
 
-    // Calculate distance from panel to each charger (sum for total conduit/conductor)
+    // Calculate conduit/trench run length using trunk-and-branch topology.
+    //
+    // Prior implementation SUMMED distance from panel to every charger, which is
+    // only correct for independent home-runs. Commercial parking-lot installs
+    // use a single trunk from panel to the furthest drop, with branches along
+    // the run — summing overstated conduit by ~3× on multi-charger jobs.
+    //
+    // Formula:
+    //   trunk   = max( distance(panel, charger_i) )
+    //   wire_ft = sum( distance(panel, charger_i) )   // wire IS per-drop
+    //   conduit = (trunk + 15ft * (n-1)) * 1.15       // shared conduit trench
     if (panelPlacement && chargerPlacements.length > 0) {
-      let totalDistance = 0;
-      for (const charger of chargerPlacements) {
-        totalDistance += measurePointDistance(panelPlacement.geometry, charger.geometry);
-      }
-      // Add 15% buffer for routing (not straight-line)
-      const buffered = Math.round(totalDistance * 1.15);
-
-      updateField('mapWorkspace.conduitDistance_ft', buffered);
-      updateField('mapWorkspace.trenchingDistance_ft', buffered);
-      updateField('mapWorkspace.pvcConduitDistance_ft', buffered);
-      updateField('electrical.wire500mcm_ft', buffered);
-      updateField('mapWorkspace.concreteCuttingDistance_ft', 0);
-      updateField('electrical.distanceToPanel_ft', chargerPlacements.length > 0
-        ? Math.round(measurePointDistance(panelPlacement.geometry, chargerPlacements[0].geometry) * 1.15)
-        : null,
+      const distances = chargerPlacements.map((c) =>
+        measurePointDistance(panelPlacement.geometry, c.geometry),
       );
+      const { conduitFt, wireFt, trunkFt } = deriveRunLengths(distances);
+
+      updateField('mapWorkspace.conduitDistance_ft', conduitFt);
+      updateField('mapWorkspace.trenchingDistance_ft', conduitFt);
+      updateField('mapWorkspace.pvcConduitDistance_ft', conduitFt);
+      updateField('electrical.wire500mcm_ft', wireFt);
+      updateField('mapWorkspace.concreteCuttingDistance_ft', 0);
+      updateField('electrical.distanceToPanel_ft', trunkFt);
     }
 
     // Concrete pads = charger count

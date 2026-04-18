@@ -6,6 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import type { RunSegment, EquipmentPlacement, RunType, EquipmentType, PointToolType } from '@/lib/map/types';
 import { RUN_TYPE_CONFIG, EQUIPMENT_TYPE_CONFIG } from '@/lib/map/constants';
 import { measureRunLength } from '@/lib/map/measurements';
+import { shouldRecenterViewport } from '@/lib/map/viewport-stability';
 import { getEquipmentSvgHtml } from './EquipmentIcons';
 import type { LineString, Point } from 'geojson';
 
@@ -154,6 +155,13 @@ export function SiteMap({
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const styleLoadedRef = useRef(false);
 
+  // Track the last set of coordinates we auto-centered on, by VALUE not reference.
+  // setDeep in EstimateContext uses JSON.parse(JSON.stringify(...)) which creates
+  // new array references for siteCoordinates on every unrelated updateField call
+  // (e.g. chargerCountFromMap). Without value-comparison, every marker placement
+  // would re-fire flyTo and yank the viewport back to the geocoded center.
+  const lastCenteredCoordsRef = useRef<[number, number] | null>(null);
+
   // Drawing state — all in a single ref to avoid stale closures
   const drawRef = useRef<{
     points: [number, number][];
@@ -284,6 +292,12 @@ export function SiteMap({
 
     const initialCenter = siteCoordinates ?? [-80.1918, 25.7617];
     const initialZoom = siteCoordinates ? 18 : 12;
+
+    // Seed the value-tracker so the flyTo effect doesn't re-fly to the same
+    // coordinates right after initial mount (the map is already centered here).
+    if (siteCoordinates) {
+      lastCenteredCoordsRef.current = [siteCoordinates[0], siteCoordinates[1]];
+    }
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -608,9 +622,27 @@ export function SiteMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Fly to coordinates when they change ──
+  // ── Fly to coordinates when a NEW address is geocoded ──
+  //
+  // BUG FIX: previous implementation fired flyTo on every siteCoordinates
+  // reference change. Because EstimateContext's setDeep uses
+  // JSON.parse(JSON.stringify(state)), ANY updateField call (e.g.
+  // chargerCountFromMap, hasPanelPlaced triggered by the auto-calc effect in
+  // InlineMapPrompt) creates a new siteCoordinates array reference even
+  // though the lat/lng values haven't changed. That caused the map to
+  // re-center and re-zoom every time a charger was placed, forcing users to
+  // repeatedly adjust their view.
+  //
+  // Fix: compare by VALUE, not reference. Only fly when the numeric
+  // coordinates actually differ from the last centered position.
   useEffect(() => {
     if (!mapRef.current || !siteCoordinates) return;
+
+    if (!shouldRecenterViewport(lastCenteredCoordsRef.current, siteCoordinates)) {
+      return;
+    }
+
+    lastCenteredCoordsRef.current = [siteCoordinates[0], siteCoordinates[1]];
     mapRef.current.flyTo({ center: siteCoordinates, zoom: 18, duration: 1500 });
   }, [siteCoordinates]);
 

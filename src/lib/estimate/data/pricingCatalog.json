@@ -1,0 +1,1312 @@
+[
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CP6021B-50A-L5.5",
+    "productId": "charger-chargepoint-cp6021b-50a-l5-5",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CP6021B-50A",
+    "unitPrice": 8214.26
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CP6021B-80A-L5.5 - Dual Port, Pedestal Mounted, 18' Cable",
+    "productId": "charger-chargepoint-cp6021b-80a-l5-5-dual-port-pedestal-mounted-18-cable",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 11396.81
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CP6621B-80A-L5.5 - Dual Port, Pedestal Mounted, 23' Cable",
+    "productId": "charger-chargepoint-cp6621b-80a-l5-5-dual-port-pedestal-mounted-23-cable",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 10851.74
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CPF50 – Dual Pedestal with CMK",
+    "productId": "charger-chargepoint-cpf50-dual-pedestal-with-cmk",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 3130
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CPF50 - Dual Port, Pedestal Mounted",
+    "productId": "charger-chargepoint-cpf50-dual-port-pedestal-mounted",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 5460.89
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CPF50 - L18-PEDMNT-CMK6-DUAL-GW-USA",
+    "productId": "charger-chargepoint-cpf50-l18-pedmnt-cmk6-dual-gw-usa",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CPF50 - Dual",
+    "unitPrice": 3165
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CT4013 - Single Port, Wall Mounted, 18' Cable",
+    "productId": "charger-chargepoint-ct4013-single-port-wall-mounted-18-cable",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 5845.5
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CT4021 - Dual Port, Pedestal Mounted, 18' Cable",
+    "productId": "charger-chargepoint-ct4021-dual-port-pedestal-mounted-18-cable",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 8251.2
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CT4021 – GW1 DUAL OUTPUT BOLLARD UNIT + CHGPNT CT4001-CCM (Concrete Mounting Kit)",
+    "productId": "charger-chargepoint-ct4021-gw1-dual-output-bollard-unit-chgpnt-ct4001-ccm-concrete-mountin",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CT4021 - Dual",
+    "unitPrice": 7934.09
+  },
+  {
+    "category": "CHARGER",
+    "description": "ChargePoint CT4025 - Dual Port, Pedestal Mounted, 23' Cable",
+    "productId": "charger-chargepoint-ct4025-dual-port-pedestal-mounted-23-cable",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 8919.8
+  },
+  {
+    "category": "CHARGER",
+    "description": "Tesla Universal Wall Connector (Gen 3) – Model 1734412‑02",
+    "productId": "charger-tesla-universal-wall-connector-gen-3-model-1734412-02",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 710
+  },
+  {
+    "category": "CIVIL",
+    "description": "Asphalt Removal",
+    "productId": "civil-asphalt-removal",
+    "sourceTemplate": "resi-ev",
+    "unit": "SF",
+    "unitPrice": 8.5
+  },
+  {
+    "category": "CIVIL",
+    "description": "Asphalt Restoration",
+    "productId": "civil-asphalt-restoration",
+    "sourceTemplate": "resi-ev",
+    "unit": "SF",
+    "unitPrice": 33
+  },
+  {
+    "category": "CIVIL",
+    "description": "Boring by hand (Under hard surface)",
+    "productId": "civil-boring-by-hand-under-hard-surface",
+    "sourceTemplate": "service-ticket",
+    "unit": "per foot",
+    "unitPrice": 40
+  },
+  {
+    "category": "CIVIL",
+    "description": "Concrete Curb & Gutter, 6 in X 24 in",
+    "productId": "civil-concrete-curb-gutter-6-in-x-24-in",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 80
+  },
+  {
+    "category": "CIVIL",
+    "description": "Concrete Cutting & Trenching",
+    "productId": "civil-concrete-cutting-trenching",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 45
+  },
+  {
+    "category": "CIVIL",
+    "description": "Concrete Header Curb, 6 in",
+    "productId": "civil-concrete-header-curb-6-in",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 50
+  },
+  {
+    "category": "CIVIL",
+    "description": "Concrete Pads for Pedestals",
+    "productId": "civil-concrete-pads-for-pedestals",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 600
+  },
+  {
+    "category": "CIVIL",
+    "description": "Concrete Removal",
+    "productId": "civil-concrete-removal",
+    "sourceTemplate": "resi-ev",
+    "unit": "CY",
+    "unitPrice": 725
+  },
+  {
+    "category": "CIVIL",
+    "description": "Concrete Restoration",
+    "productId": "civil-concrete-restoration",
+    "sourceTemplate": "resi-ev",
+    "unit": "CY",
+    "unitPrice": 600
+  },
+  {
+    "category": "CIVIL",
+    "description": "Core Drilling 1\"-6\" concrete/CMU",
+    "productId": "civil-core-drilling-1-6-concrete-cmu",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 550
+  },
+  {
+    "category": "CIVIL",
+    "description": "Core Drilling >6\" concrete/CMU",
+    "productId": "civil-core-drilling-6-concrete-cmu",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 800
+  },
+  {
+    "category": "CIVIL",
+    "description": "Coring & Slab Scanning For Conduit Routing",
+    "productId": "civil-coring-slab-scanning-for-conduit-routing",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 312
+  },
+  {
+    "category": "CIVIL",
+    "description": "Curb Removal",
+    "productId": "civil-curb-removal",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 24
+  },
+  {
+    "category": "CIVIL",
+    "description": "Encasement of Conduits",
+    "productId": "civil-encasement-of-conduits",
+    "sourceTemplate": "resi-ev",
+    "unit": "CY",
+    "unitPrice": 450
+  },
+  {
+    "category": "CIVIL",
+    "description": "Install 3000 Psi Concrete Pads",
+    "productId": "civil-install-3000-psi-concrete-pads",
+    "sourceTemplate": "service-ticket",
+    "unit": "per pedestal location & will involve a second visit (minimum order is 2)",
+    "unitPrice": 650
+  },
+  {
+    "category": "CIVIL",
+    "description": "Scan/X-ray-Wall/Floor",
+    "productId": "civil-scan-x-ray-wall-floor",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 600
+  },
+  {
+    "category": "CIVIL",
+    "description": "Trenching (assuming soft/normal soil conditions)",
+    "productId": "civil-trenching-assuming-soft-normal-soil-conditions",
+    "sourceTemplate": "service-ticket",
+    "unit": "per foot",
+    "unitPrice": 30
+  },
+  {
+    "category": "DES/ENG",
+    "description": "As-Built Drawings",
+    "productId": "des-eng-as-built-drawings",
+    "sourceTemplate": "service-ticket",
+    "unit": "For when a permit is approved but then things change & you deviate from the plan",
+    "unitPrice": 500
+  },
+  {
+    "category": "DES/ENG",
+    "description": "Engineered And Stamped Plan Set",
+    "productId": "des-eng-engineered-and-stamped-plan-set",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 3500
+  },
+  {
+    "category": "DES/ENG",
+    "description": "Load Calculations",
+    "productId": "des-eng-load-calculations",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 900
+  },
+  {
+    "category": "DES/ENG",
+    "description": "Private Utility Mark-Out And Coordination",
+    "productId": "des-eng-private-utility-mark-out-and-coordination",
+    "sourceTemplate": "service-ticket",
+    "unit": "TBD - if public property, it's free. this can range from $800-$2000",
+    "unitPrice": 2000
+  },
+  {
+    "category": "DES/ENG",
+    "description": "Site Walk / Evaluation",
+    "productId": "des-eng-site-walk-evaluation",
+    "sourceTemplate": "service-ticket",
+    "unit": "We can credit this back",
+    "unitPrice": 400
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "As Built",
+    "productId": "design-engineering-as-built",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 900
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Base Design/Eng-3-4 sheet, site plan, riser, 1-line, CD50-CD100",
+    "productId": "design-engineering-base-design-eng-3-4-sheet-site-plan-riser-1-line-cd50-cd100",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 4250
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Load Study/Load Calcs",
+    "productId": "design-engineering-load-study-load-calcs",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 1050
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Permit Coordination and Filing-Up to 2 visits in person",
+    "productId": "design-engineering-permit-coordination-and-filing-up-to-2-visits-in-person",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 950
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Permitting Documentation and Submittal (Includes One Line Diagram)",
+    "productId": "design-engineering-permitting-documentation-and-submittal-includes-one-line-diagram",
+    "sourceTemplate": "resi-ev",
+    "unit": "RESI",
+    "unitPrice": 300
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Property Line Stake/Garage Field Sketch",
+    "productId": "design-engineering-property-line-stake-garage-field-sketch",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 1500
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Site Visit",
+    "productId": "design-engineering-site-visit",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 1000
+  },
+  {
+    "category": "DESIGN/ENGINEERING",
+    "description": "Utility Coordination-Up to 2 visits in person",
+    "productId": "design-engineering-utility-coordination-up-to-2-visits-in-person",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 950
+  },
+  {
+    "category": "ELEC LBR",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "elec-lbr-installation-commissioning-of-pedestal-mounted-charger-dual-port",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 1600
+  },
+  {
+    "category": "ELEC LBR",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Single Port",
+    "productId": "elec-lbr-installation-commissioning-of-pedestal-mounted-charger-single-port",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 850
+  },
+  {
+    "category": "ELEC LBR",
+    "description": "Installation & Commissioning Of Wall-Mounted Charger - Dual Port",
+    "productId": "elec-lbr-installation-commissioning-of-wall-mounted-charger-dual-port",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 1600
+  },
+  {
+    "category": "ELEC LBR",
+    "description": "Installation & Commissioning Of Wall-Mounted Charger - Single Port",
+    "productId": "elec-lbr-installation-commissioning-of-wall-mounted-charger-single-port",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 850
+  },
+  {
+    "category": "ELEC LBR MAT",
+    "description": "Austin Energy Approved Sub-Meter",
+    "productId": "elec-lbr-mat-austin-energy-approved-sub-meter",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 1300
+  },
+  {
+    "category": "ELEC LBR MAT",
+    "description": "Emt Conduit, Wire, Breakers, Connectors, And Strut Cradles (Includes Materials + Labor)",
+    "productId": "elec-lbr-mat-emt-conduit-wire-breakers-connectors-and-strut-cradles-includes-materials-lab",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 32
+  },
+  {
+    "category": "ELEC LBR MAT",
+    "description": "EV Dedicated Sub-Panel for Sub-Metering (Includes Materials + Labor)",
+    "productId": "elec-lbr-mat-ev-dedicated-sub-panel-for-sub-metering-includes-materials-labor",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 1050
+  },
+  {
+    "category": "ELEC LBR",
+    "description": "Removal And Disposal Of Existing Ev Chargers",
+    "productId": "elec-lbr-removal-and-disposal-of-existing-ev-chargers",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 400
+  },
+  {
+    "category": "ELEC LBR",
+    "description": "Xeal - Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "elec-lbr-xeal-installation-commissioning-of-pedestal-mounted-charger-dual-port",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 2300
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 1 1/4 EMT Conduit",
+    "productId": "electrical-furnish-install-1-1-4-emt-conduit",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 18
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 1\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-1-conduit-pvc-schedule-40",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 15
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--commissioning-only",
+    "sourceTemplate": "commissioning-only",
+    "unit": "LF",
+    "unitPrice": 25,
+    "variant": "commissioning-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--equipment-only",
+    "sourceTemplate": "equipment-only",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "equipment-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--garage-full-turnkey",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "garage-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--install-commission",
+    "sourceTemplate": "install-commission",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "install-commission"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--parking-lot-full-turnkey",
+    "sourceTemplate": "parking-lot-full-turnkey",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "parking-lot-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--remove-replace",
+    "sourceTemplate": "remove-replace",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "remove-replace"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--resi-ev",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "resi-ev"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 2\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-2-conduit-pvc-schedule-40--supercharger",
+    "sourceTemplate": "supercharger",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "supercharger"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 3\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-3-conduit-pvc-schedule-40",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 20
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 4\" Conduit (PVC Schedule 40)",
+    "productId": "electrical-furnish-install-4-conduit-pvc-schedule-40",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 24
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install 4\" EMT Conduit",
+    "productId": "electrical-furnish-install-4-emt-conduit",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 85
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install EMT Conduit-Up to 2\" w/ up to #4 Conductors",
+    "productId": "electrical-furnish-install-emt-conduit-up-to-2-w-up-to-4-conductors",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 32
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Furnish & Install PVC Schedule 40-Up to 2\" w/ #4 Conductors",
+    "productId": "electrical-furnish-install-pvc-schedule-40-up-to-2-w-4-conductors",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 20
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--commissioning-only",
+    "sourceTemplate": "commissioning-only",
+    "unit": "EA",
+    "unitPrice": 1800,
+    "variant": "commissioning-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--equipment-only",
+    "sourceTemplate": "equipment-only",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "equipment-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--garage-full-turnkey",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "garage-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--install-commission",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "install-commission"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--parking-lot-full-turnkey",
+    "sourceTemplate": "parking-lot-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "parking-lot-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--remove-replace",
+    "sourceTemplate": "remove-replace",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "remove-replace"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--resi-ev",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "resi-ev"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-dual-port--supercharger",
+    "sourceTemplate": "supercharger",
+    "unit": "EA",
+    "unitPrice": 1850,
+    "variant": "supercharger"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Pedestal-Mounted Charger - Single Port",
+    "productId": "electrical-installation-commissioning-of-pedestal-mounted-charger-single-port",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 975
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Wall-Mounted Charger - Dual Port",
+    "productId": "electrical-installation-commissioning-of-wall-mounted-charger-dual-port",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 1600
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Of Wall-Mounted Charger - Single Port",
+    "productId": "electrical-installation-commissioning-of-wall-mounted-charger-single-port",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 850
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation & Commissioning Superchargers",
+    "productId": "electrical-installation-commissioning-superchargers",
+    "sourceTemplate": "supercharger",
+    "unit": "EA",
+    "unitPrice": 975
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--commissioning-only",
+    "sourceTemplate": "commissioning-only",
+    "unit": "LF",
+    "unitPrice": 14,
+    "variant": "commissioning-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--equipment-only",
+    "sourceTemplate": "equipment-only",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "equipment-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--garage-full-turnkey",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "garage-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--install-commission",
+    "sourceTemplate": "install-commission",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "install-commission"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--parking-lot-full-turnkey",
+    "sourceTemplate": "parking-lot-full-turnkey",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "parking-lot-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--remove-replace",
+    "sourceTemplate": "remove-replace",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "remove-replace"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--resi-ev",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "resi-ev"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Installation of Conductors-Up to #4",
+    "productId": "electrical-installation-of-conductors-up-to-4--supercharger",
+    "sourceTemplate": "supercharger",
+    "unit": "LF",
+    "unitPrice": 30,
+    "variant": "supercharger"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Level 2 EV Charger Installation (Customer Supplied Charger)",
+    "productId": "electrical-level-2-ev-charger-installation-customer-supplied-charger",
+    "sourceTemplate": "resi-ev",
+    "unit": "RESI",
+    "unitPrice": 995
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--commissioning-only",
+    "sourceTemplate": "commissioning-only",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "commissioning-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--equipment-only",
+    "sourceTemplate": "equipment-only",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "equipment-only"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--garage-full-turnkey",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "garage-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--install-commission",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "install-commission"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--parking-lot-full-turnkey",
+    "sourceTemplate": "parking-lot-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "parking-lot-full-turnkey"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--remove-replace",
+    "sourceTemplate": "remove-replace",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "remove-replace"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--resi-ev",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 400,
+    "variant": "resi-ev"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Removal And Disposal Of Existing Ev Charger",
+    "productId": "electrical-removal-and-disposal-of-existing-ev-charger--supercharger",
+    "sourceTemplate": "supercharger",
+    "unit": "EA",
+    "unitPrice": 100,
+    "variant": "supercharger"
+  },
+  {
+    "category": "ELECTRICAL",
+    "description": "Xeal - Installation & Commissioning Of Pedestal-Mounted Charger - Dual Port",
+    "productId": "electrical-xeal-installation-commissioning-of-pedestal-mounted-charger-dual-port",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 2300
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Base Design/Eng-3-4 sheet, site plan, riser, 1-line, CD50-CD100",
+    "productId": "equipment-base-design-eng-3-4-sheet-site-plan-riser-1-line-cd50-cd100",
+    "sourceTemplate": "commissioning-only",
+    "unit": "EA",
+    "unitPrice": 2500
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Concrete Wheelstops",
+    "productId": "equipment-concrete-wheelstops",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 350
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Furnish and Install Rubber Wheelstops",
+    "productId": "equipment-furnish-and-install-rubber-wheelstops",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 275
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Lighting & Lighting Foundation (Lighting Furnished by Owner)",
+    "productId": "equipment-install-lighting-lighting-foundation-lighting-furnished-by-owner",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 2200
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--commissioning-only",
+    "sourceTemplate": "commissioning-only",
+    "unit": "EA",
+    "unitPrice": 500,
+    "variant": "commissioning-only"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--equipment-only",
+    "sourceTemplate": "equipment-only",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "equipment-only"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--garage-full-turnkey",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "garage-full-turnkey"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--install-commission",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "install-commission"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--parking-lot-full-turnkey",
+    "sourceTemplate": "parking-lot-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "parking-lot-full-turnkey"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--remove-replace",
+    "sourceTemplate": "remove-replace",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "remove-replace"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--resi-ev",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "resi-ev"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Provided Bolt-Down Bollard",
+    "productId": "equipment-install-provided-bolt-down-bollard--supercharger",
+    "sourceTemplate": "supercharger",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "supercharger"
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Signage and Stencils",
+    "productId": "equipment-install-signage-and-stencils",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 400
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Install Striping-Per stall",
+    "productId": "equipment-install-striping-per-stall",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 220
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Misc. Mounting Hardware & BOS (Materials Only)",
+    "productId": "equipment-misc-mounting-hardware-bos-materials-only",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 165
+  },
+  {
+    "category": "EQUIPMENT",
+    "description": "Misc. Wall Mounting Hardware & BOS",
+    "productId": "equipment-misc-wall-mounting-hardware-bos",
+    "sourceTemplate": "resi-ev",
+    "unit": "RESI",
+    "unitPrice": 10
+  },
+  {
+    "category": "EQUIPMENT PADS",
+    "description": "Cast in Place Concrete for Integrated Curb/Post Foundations (Monolithic)",
+    "productId": "equipment-pads-cast-in-place-concrete-for-integrated-curb-post-foundations-monolithic",
+    "sourceTemplate": "install-commission",
+    "unit": "CY",
+    "unitPrice": 475
+  },
+  {
+    "category": "EQUIPMENT PADS",
+    "description": "Cast in Place for Trash/Recycle Bins",
+    "productId": "equipment-pads-cast-in-place-for-trash-recycle-bins",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 500
+  },
+  {
+    "category": "EQUIPMENT PADS",
+    "description": "Cast in Place Foundations for Posts",
+    "productId": "equipment-pads-cast-in-place-foundations-for-posts",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 850
+  },
+  {
+    "category": "MATERIAL",
+    "description": "Misc. Mounting Hardware & BOS (Materials Only)",
+    "productId": "material-misc-mounting-hardware-bos-materials-only",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 165
+  },
+  {
+    "category": "NETWORK",
+    "description": "Teltonika RUT M50",
+    "productId": "network-teltonika-rut-m50",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 2400
+  },
+  {
+    "category": "OTHER",
+    "description": "Construction Fence",
+    "productId": "other-construction-fence",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 13
+  },
+  {
+    "category": "OTHER",
+    "description": "Equipment Rental",
+    "productId": "other-equipment-rental",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "TBD",
+    "unitPrice": 1500
+  },
+  {
+    "category": "OTHER",
+    "description": "Install Owner Provided Connectivity Extender",
+    "productId": "other-install-owner-provided-connectivity-extender",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 450
+  },
+  {
+    "category": "OTHER",
+    "description": "Install Owner Provided Wi-Fi Equipment",
+    "productId": "other-install-owner-provided-wi-fi-equipment",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 450
+  },
+  {
+    "category": "OTHER",
+    "description": "Mobilization/Demobilization",
+    "productId": "other-mobilization-demobilization",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 3000
+  },
+  {
+    "category": "OTHER",
+    "description": "On-Site Traffic Control, Safety Fence",
+    "productId": "other-on-site-traffic-control-safety-fence",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 1100
+  },
+  {
+    "category": "OTHER",
+    "description": "Out of Geographic Range-Per Mile after 60-Each way",
+    "productId": "other-out-of-geographic-range-per-mile-after-60-each-way",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 10
+  },
+  {
+    "category": "OTHER",
+    "description": "Unforeseen Rock and Masonry Removal",
+    "productId": "other-unforeseen-rock-and-masonry-removal",
+    "sourceTemplate": "resi-ev",
+    "unit": "CY",
+    "unitPrice": 325
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal",
+    "productId": "pedestal-tesla-wall-connector-pedestal--equipment-only",
+    "sourceTemplate": "equipment-only",
+    "unit": "EA",
+    "unitPrice": 515,
+    "variant": "equipment-only"
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal",
+    "productId": "pedestal-tesla-wall-connector-pedestal--garage-full-turnkey",
+    "sourceTemplate": "garage-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 515,
+    "variant": "garage-full-turnkey"
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal",
+    "productId": "pedestal-tesla-wall-connector-pedestal--install-commission",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 515,
+    "variant": "install-commission"
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal",
+    "productId": "pedestal-tesla-wall-connector-pedestal--parking-lot-full-turnkey",
+    "sourceTemplate": "parking-lot-full-turnkey",
+    "unit": "EA",
+    "unitPrice": 515,
+    "variant": "parking-lot-full-turnkey"
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal",
+    "productId": "pedestal-tesla-wall-connector-pedestal--remove-replace",
+    "sourceTemplate": "remove-replace",
+    "unit": "EA",
+    "unitPrice": 515,
+    "variant": "remove-replace"
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal",
+    "productId": "pedestal-tesla-wall-connector-pedestal--resi-ev",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 550,
+    "variant": "resi-ev"
+  },
+  {
+    "category": "PEDESTAL",
+    "description": "Tesla Wall Connector Pedestal (Includes Mounting Kit)",
+    "productId": "pedestal-tesla-wall-connector-pedestal-includes-mounting-kit",
+    "sourceTemplate": "commissioning-only",
+    "unit": "EA",
+    "unitPrice": 515
+  },
+  {
+    "category": "SAFETY",
+    "description": "On-Site Traffic Control, Safety Fence, And Trench Plates",
+    "productId": "safety-on-site-traffic-control-safety-fence-and-trench-plates",
+    "sourceTemplate": "service-ticket",
+    "unit": "Depending on site conditions, number of chargers & days of work",
+    "unitPrice": 1100
+  },
+  {
+    "category": "SITE WORK",
+    "description": "Ev Signage (Includes Materials + Labor)",
+    "productId": "site-work-ev-signage-includes-materials-labor",
+    "sourceTemplate": "service-ticket",
+    "unit": "Per Parking Spot",
+    "unitPrice": 300
+  },
+  {
+    "category": "SITE WORK",
+    "description": "Rubber Wheel Stops (Includes Materials + Labor)",
+    "productId": "site-work-rubber-wheel-stops-includes-materials-labor",
+    "sourceTemplate": "service-ticket",
+    "unit": "Per Parking Spot",
+    "unitPrice": 650
+  },
+  {
+    "category": "SITE WORK",
+    "description": "Steel Safety Bollards (4\" X 36\"/42\") (Includes Materials + Labor)",
+    "productId": "site-work-steel-safety-bollards-4-x-36-42-includes-materials-labor",
+    "sourceTemplate": "service-ticket",
+    "unit": "Per Bollard",
+    "unitPrice": 550
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "ChargePoint CPCLD-Community-1 – 1 Year - Prepaid ChargePoint Management Software for CPF50",
+    "productId": "software-chargepoint-cpcld-community-1-1-year-prepaid-chargepoint-management-software-for-",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 355
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "ChargePoint CPF - Active Fleet Application Only – Initial Station Activation & Configuration Service",
+    "productId": "software-chargepoint-cpf-active-fleet-application-only-initial-station-activation-configur",
+    "sourceTemplate": "service-ticket",
+    "unit": "",
+    "unitPrice": 126
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CHGPNT CP6000-ASSURE-1 (1 Yr Assure Warranty)",
+    "productId": "software-chgpnt-cp6000-assure-1-1-yr-assure-warranty",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CP6021B-50A",
+    "unitPrice": 534.88
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CHGPNT CPCLD-COMMERCIAL-1 (1 Yr Cloud Plan)",
+    "productId": "software-chgpnt-cpcld-commercial-1-1-yr-cloud-plan",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CT4021 - Dual",
+    "unitPrice": 464.84
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CHGPNT CPCLD-COMMUNITY-1 (1 Yr Cloud Plan)",
+    "productId": "software-chgpnt-cpcld-community-1-1-yr-cloud-plan",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CPF50 - Dual",
+    "unitPrice": 357
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CHGPNT CPF-ACTIVE FLEET (Station Activation)",
+    "productId": "software-chgpnt-cpf-active-fleet-station-activation",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CPF50 - Dual",
+    "unitPrice": 128
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CHGPNT CPSUPPORT-ACTIVE (Activation)",
+    "productId": "software-chgpnt-cpsupport-active-activation",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CT4021 - Dual",
+    "unitPrice": 317.11
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CHGPNT CT4000-ASSURE-1 (1 Yr Assure Warranty)",
+    "productId": "software-chgpnt-ct4000-assure-1-1-yr-assure-warranty",
+    "sourceTemplate": "commissioning-only",
+    "unit": "CT4021 - Dual",
+    "unitPrice": 764.12
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CP6021B-80A-L5.5 - 1 Year Cloud Plan",
+    "productId": "software-cp6021b-80a-l5-5-1-year-cloud-plan",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 929.68
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CP6621B-80A-L5.5 - 1 Year Cloud Plan",
+    "productId": "software-cp6621b-80a-l5-5-1-year-cloud-plan",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 929.68
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CPF50 - Dual Port, Pedestal Mounted - 1 Year Cloud Plan",
+    "productId": "software-cpf50-dual-port-pedestal-mounted-1-year-cloud-plan",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 713.18
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CT4013 - 1 Year Cloud Plan",
+    "productId": "software-ct4013-1-year-cloud-plan",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 439.37
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CT4021 - 1 Year Cloud Plan",
+    "productId": "software-ct4021-1-year-cloud-plan",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 929.68
+  },
+  {
+    "category": "SOFTWARE",
+    "description": "CT4025 - 1 Year Cloud Plan",
+    "productId": "software-ct4025-1-year-cloud-plan",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 929.68
+  },
+  {
+    "category": "TRENCHING",
+    "description": "Road Plates",
+    "productId": "trenching-road-plates",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 48
+  },
+  {
+    "category": "TRENCHING",
+    "description": "Trenching(No Conduit)-Over 36\" W and no more than 4' D",
+    "productId": "trenching-trenching-no-conduit-over-36-w-and-no-more-than-4-d",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 67
+  },
+  {
+    "category": "TRENCHING",
+    "description": "Trenching (No Conduit)-Up to 36\" W and no more than 4' D",
+    "productId": "trenching-trenching-no-conduit-up-to-36-w-and-no-more-than-4-d",
+    "sourceTemplate": "resi-ev",
+    "unit": "LF",
+    "unitPrice": 45
+  },
+  {
+    "category": "TRENCHING",
+    "description": "Utility Mark-out",
+    "productId": "trenching-utility-mark-out",
+    "sourceTemplate": "resi-ev",
+    "unit": "EA",
+    "unitPrice": 2000
+  },
+  {
+    "category": "WARRANTY",
+    "description": "CP6021B-80A-L5.5 - 1 Year Assure Warranty",
+    "productId": "warranty-cp6021b-80a-l5-5-1-year-assure-warranty",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 547.62
+  },
+  {
+    "category": "WARRANTY",
+    "description": "CP6621B-80A-L5.5 - 1 Year Assure Warranty",
+    "productId": "warranty-cp6621b-80a-l5-5-1-year-assure-warranty",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 547.62
+  },
+  {
+    "category": "WARRANTY",
+    "description": "CPF50 - Dual Port, Pedestal Mounted - 1 Year Assure Warranty",
+    "productId": "warranty-cpf50-dual-port-pedestal-mounted-1-year-assure-warranty",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 191.03
+  },
+  {
+    "category": "WARRANTY",
+    "description": "CT4021 - 1 Year Assure Warranty",
+    "productId": "warranty-ct4021-1-year-assure-warranty",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 764.12
+  },
+  {
+    "category": "WARRANTY",
+    "description": "CT4025 - 1 Year Assure Warranty",
+    "productId": "warranty-ct4025-1-year-assure-warranty",
+    "sourceTemplate": "install-commission",
+    "unit": "EA",
+    "unitPrice": 764.12
+  }
+]

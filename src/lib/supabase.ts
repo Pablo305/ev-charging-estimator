@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -10,12 +11,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 /** Client-safe Supabase client (uses anon key, respects RLS) */
 export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey)
   : null;
 
 /** Server-only Supabase client (bypasses RLS — use only in API routes) */
 export const supabaseAdmin = supabaseUrl && supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey)
+  ? createClient<Database>(supabaseUrl, supabaseServiceKey)
   : null;
 
 export function isSupabaseAvailable(): boolean {

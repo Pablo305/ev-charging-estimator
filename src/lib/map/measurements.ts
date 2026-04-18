@@ -51,3 +51,43 @@ export function countEquipmentByType(
   const types = Array.isArray(type) ? type : [type];
   return equipment.filter((e) => types.includes(e.equipmentType)).length;
 }
+
+/**
+ * Derived conduit/wire lengths for a trunk-and-branch install topology.
+ *
+ * Commercial parking-lot installs use one shared conduit trunk from the panel
+ * to the furthest drop, with short branches at each charger. Prior code summed
+ * panel-to-charger distances as if every charger needed its own home-run trench,
+ * which overstated conduit by ~3× on multi-charger jobs.
+ *
+ * wireFt stays as the SUM — each drop needs its own conductors.
+ * conduitFt is trunk + per-charger branch, × routing factor.
+ */
+export const INTER_CHARGER_BRANCH_FT = 15;
+export const ROUTING_FACTOR = 1.15;
+
+export interface DerivedRunLengths {
+  /** Total wire length (sum of panel→each-charger distances) × routing factor */
+  wireFt: number;
+  /** Shared conduit trench length (max distance + per-charger branch) × routing factor */
+  conduitFt: number;
+  /** Max panel-to-charger distance × routing factor (used as electrical.distanceToPanel_ft) */
+  trunkFt: number;
+}
+
+export function deriveRunLengths(
+  distancesFt: readonly number[],
+): DerivedRunLengths {
+  if (distancesFt.length === 0) {
+    return { wireFt: 0, conduitFt: 0, trunkFt: 0 };
+  }
+  const trunk = Math.max(...distancesFt);
+  const wireTotal = distancesFt.reduce((a, b) => a + b, 0);
+  const branchesFt = INTER_CHARGER_BRANCH_FT * (distancesFt.length - 1);
+
+  return {
+    wireFt: Math.round(wireTotal * ROUTING_FACTOR),
+    conduitFt: Math.round((trunk + branchesFt) * ROUTING_FACTOR),
+    trunkFt: Math.round(trunk * ROUTING_FACTOR),
+  };
+}

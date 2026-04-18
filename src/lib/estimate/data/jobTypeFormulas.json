@@ -1,0 +1,1581 @@
+{
+  "commissioning-only": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-commissioning-of-tesla-chargers",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Commissioning of Tesla Chargers",
+          "colK_or_L_price": 120,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-troubleshooting-and-reporting-as-needed",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Troubleshooting and Reporting (as needed)",
+          "colK_or_L_price": 85,
+          "colM_extended": "*Final amount will depend on time spent troubleshooting unresponsive chargers",
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-this-proposal-covers-commissioning-of-tesla-chargers-only-excluded-from-our-sco",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "This proposal covers commissioning of Tesla chargers only. Excluded from our scope are the supply of chargers,\npedestals, or software; transformer or main panel upgrades, feeders, fuses, or ADA measures; design, engineering,\npermitting, and associated fees or coordination; civil work such as trenching, boring, drilling, concrete/asphalt work,\npads, bollards, curbs, or striping; conduit and conductor installation, sub-panels, mounting hardware, or other electrical infrastructure; networking or connectivity equipment and installation; and site logistics such as equipment rental, fencing, trench plates, or rock/masonry removal. Troubleshooting, if required, will be billed separately on a time and materials basis.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 23
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "note-troubleshooting-rates-only-apply-where-tesla-chargers-are-not-functioning-due-to-inst",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Troubleshooting rates only apply where Tesla chargers are not functioning due to installation or electrical issues\nperformed by others. Our role is to diagnose the problem, prepare a written report, and provide it to the owner so\ncorrective action can be taken by their electrician.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 24
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "wifi-requirement-tesla-chargers-also-require-wi-fi-connectivity-to-operate-properly-if-iss",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla chargers also require Wi-Fi connectivity to operate properly. If issues are related to Wi-Fi or network outages, coordination with the property’s technology department will be necessary, as Bullet EV cannot resolve connectivity-related problems.\n\nTesla Universal Wall Connector Connectivity Guidelines",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 25
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 41
+      }
+    ],
+    "templateSource": "8- COMMISSIONING ONLY.xlsx"
+  },
+  "equipment-only": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "charger-tesla-universal-wall-connector-gen-3-model-1734412-02",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Universal Wall Connector (Gen 3) – Model 1734412‑02",
+          "colK_or_L_price": 710,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "pedestal-tesla-wall-connector-pedestal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Wall Connector Pedestal",
+          "colK_or_L_price": 515,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-this-proposal-is-for-equipment-purchase-and-delivery-only-pricing-includes-proc",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "This proposal is for equipment purchase and delivery only. Pricing includes procurement of the listed chargers and related equipment and delivery to the project site only. This proposal does not include installation, commissioning, programming, configuration, activation, permitting, utility coordination, site preparation, electrical work, trenching, concrete, mounting, network setup, freight beyond standard delivery, unloading, storage, warranty labor, maintenance, service, troubleshooting, or any other labor or onsite services unless specifically stated otherwise in this proposal.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 26
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 43
+      }
+    ],
+    "templateSource": "9 - EQUIPMENT ONLY PURCHASE.xlsx"
+  },
+  "garage-full-turnkey": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "charger-tesla-universal-wall-connector-gen-3-model-1734412-02",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Universal Wall Connector (Gen 3) – Model 1734412‑02",
+          "colK_or_L_price": 710,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "pedestal-tesla-wall-connector-pedestal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Wall Connector Pedestal",
+          "colK_or_L_price": 515,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-site-visit",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Site Visit",
+          "colK_or_L_price": 1000,
+          "colM_extended": 1000,
+          "isBlankQty": false
+        },
+        "row": 21
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-base-design-eng-3-4-sheet-site-plan-riser-1-line-cd50-cd100",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Base Design/Eng-3-4 sheet, site plan, riser, 1-line, CD50-CD100",
+          "colK_or_L_price": 4250,
+          "colM_extended": 4250,
+          "isBlankQty": false
+        },
+        "row": 22
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-load-study-load-calcs",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Load Study/Load Calcs",
+          "colK_or_L_price": 1050,
+          "colM_extended": 1050,
+          "isBlankQty": false
+        },
+        "row": 23
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-permit-coordination-and-filing-up-to-2-visits-in-person",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Permit Coordination and Filing-Up to 2 visits in person",
+          "colK_or_L_price": 950,
+          "colM_extended": 950,
+          "isBlankQty": false
+        },
+        "row": 24
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-utility-coordination-up-to-2-visits-in-person",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Utility Coordination-Up to 2 visits in person",
+          "colK_or_L_price": 950,
+          "colM_extended": 950,
+          "isBlankQty": false
+        },
+        "row": 25
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-permit-fees-cost-10",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Permit Fees- Cost + 10%",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 26
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-as-built",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "As Built",
+          "colK_or_L_price": 900,
+          "colM_extended": 900,
+          "isBlankQty": false
+        },
+        "row": 27
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "civil-scan-x-ray-wall-floor",
+        "qtyFrom": "derived.MAX(ROUNDUP(E32/2,0),1)",
+        "raw": {
+          "colE_qty": "=MAX(ROUNDUP(E32/2,0),1)",
+          "colG_description": "Scan/X-ray-Wall/Floor",
+          "colK_or_L_price": 600,
+          "colM_extended": 600,
+          "isBlankQty": false
+        },
+        "row": 28
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-core-drilling-1-6-concrete-cmu",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Core Drilling 1\"-6\" concrete/CMU",
+          "colK_or_L_price": 550,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 29
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-misc-mounting-hardware-bos-materials-only",
+        "qtyFrom": "derived.E32",
+        "raw": {
+          "colE_qty": "=E32",
+          "colG_description": "Misc. Mounting Hardware & BOS (Materials Only)",
+          "colK_or_L_price": 165,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 30
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-emt-conduit-up-to-2-w-up-to-4-conductors",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install EMT Conduit-Up to 2\" w/ up to #4 Conductors",
+          "colK_or_L_price": 32,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 31
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-install-provided-bolt-down-bollard",
+        "qtyFrom": "derived.E19",
+        "raw": {
+          "colE_qty": "=E19",
+          "colG_description": "Install Provided Bolt-Down Bollard",
+          "colK_or_L_price": 550,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 33
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-install-signage-and-stencils",
+        "qtyFrom": "derived.E19",
+        "raw": {
+          "colE_qty": "=E19",
+          "colG_description": "Install Signage and Stencils",
+          "colK_or_L_price": 400,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 34
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "other-equipment-rental",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Equipment Rental",
+          "colK_or_L_price": 2000,
+          "colM_extended": 2000,
+          "isBlankQty": false
+        },
+        "row": 35
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-the-following-items-are-not-included-in-this-proposal-unless-specifically-noted",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "The following items are not included in this proposal unless specifically noted otherwise. Excluded scope includes utility owned equipment and upgrades such as transformers and related utility upgrades, main panel upgrades, main feeds, fuses, and any required ADA compliance measures as determined by the Authority Having Jurisdiction or the site owner. This proposal excludes all design, engineering, and permitting services, including site walks, load studies, engineered or stamped plan sets, as built drawings, permit fees, and extended utility or permitting coordination beyond two in person visits. All civil scope is excluded, including trenching, boring, core drilling, concrete or asphalt removal and restoration, curb or foundation work, transformer pad preparation, concrete bases for pedestals, conduit encasement, striping, signage, stenciling, wheel stops, and bollard installation. Electrical infrastructure beyond the charger and pedestal installation scope is excluded, including conduit and conductor installation, sub panels, balance of system materials, and mounting hardware not expressly listed. Networking and connectivity equipment, including Wi Fi, extenders, and network setup, are excluded and must be provided by the owner. Site logistics and safety items such as equipment rental, construction fencing, traffic control beyond blocking designated parking spaces, rock or masonry removal, irrigation repair, off site staging, and after hours work are also excluded.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 37
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "wifi-requirement-please-refer-to-the-following-document-for-tesla-wi-fi-guidance-and-conne",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Please refer to the following document for Tesla Wi Fi guidance and connectivity requirements. Tesla chargers require a reliable Wi Fi connection for proper operation and full functionality. If Wi Fi is not available at the installation site, Bullet Energy Solutions can provide a separate proposal for the networking infrastructure needed to support charger connectivity.\n\nTesla Universal Wall Connector Connectivity Guidelines",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 38
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 54
+      }
+    ],
+    "templateSource": "12 - (GARAGE) FULL TURNKEY.xlsx"
+  },
+  "install-commission": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "charger-tesla-universal-wall-connector-gen-3-model-1734412-02",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Universal Wall Connector (Gen 3) – Model 1734412‑02",
+          "colK_or_L_price": 710,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "pedestal-tesla-wall-connector-pedestal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Wall Connector Pedestal",
+          "colK_or_L_price": 515,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-misc-mounting-hardware-bos-materials-only",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Misc. Mounting Hardware & BOS (Materials Only)",
+          "colK_or_L_price": 165,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 22
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-the-following-items-are-not-included-in-this-proposal-unless-specifically-noted",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "The following items are not included in this proposal unless specifically noted otherwise. Excluded scope includes utility owned equipment and upgrades such as transformers and related utility upgrades, main panel upgrades, main feeds, fuses, and any required ADA compliance measures as determined by the Authority Having Jurisdiction or the site owner. This proposal excludes all design, engineering, and permitting services, including site walks, load studies, engineered or stamped plan sets, as built drawings, permit fees, and extended utility or permitting coordination beyond two in person visits. All civil scope is excluded, including trenching, boring, core drilling, concrete or asphalt removal and restoration, curb or foundation work, transformer pad preparation, concrete bases for pedestals, conduit encasement, striping, signage, stenciling, wheel stops, and bollard installation. Electrical infrastructure beyond the charger and pedestal installation scope is excluded, including conduit and conductor installation, sub panels, balance of system materials, and mounting hardware not expressly listed. Networking and connectivity equipment, including Wi Fi, extenders, and network setup, are excluded and must be provided by the owner. Site logistics and safety items such as equipment rental, construction fencing, traffic control beyond blocking designated parking spaces, rock or masonry removal, irrigation repair, off site staging, and after hours work are also excluded.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 29
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "wifi-requirement-please-refer-to-the-following-document-for-tesla-wi-fi-guidance-and-conne",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Please refer to the following document for Tesla Wi Fi guidance and connectivity requirements. Tesla chargers require a reliable Wi Fi connection for proper operation and full functionality. If Wi Fi is not available at the installation site, Bullet Energy Solutions can provide a separate proposal for the networking infrastructure needed to support charger connectivity.\n\nTesla Universal Wall Connector Connectivity Guidelines",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 30
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "site-confirmation-when-you-are-ready-for-installation-please-complete-the-following-form-s",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "When you are ready for installation, please complete the following form so our team can review site conditions, confirm site readiness, and identify any items that may need to be addressed in advance. This helps the installation proceed smoothly and reduces the risk of delays, dry runs, and related fees.\n\nSite Readiness Form",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 31
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 47
+      }
+    ],
+    "templateSource": "7 - INSTALL & COMMISSION TEMPLATE.xlsx"
+  },
+  "parking-lot-full-turnkey": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "charger-tesla-universal-wall-connector-gen-3-model-1734412-02",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Universal Wall Connector (Gen 3) – Model 1734412‑02",
+          "colK_or_L_price": 710,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "pedestal-tesla-wall-connector-pedestal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Wall Connector Pedestal",
+          "colK_or_L_price": 515,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-site-visit",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Site Visit",
+          "colK_or_L_price": 1000,
+          "colM_extended": 1000,
+          "isBlankQty": false
+        },
+        "row": 21
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-base-design-eng-3-4-sheet-site-plan-riser-1-line-cd50-cd100",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Base Design/Eng-3-4 sheet, site plan, riser, 1-line, CD50-CD100",
+          "colK_or_L_price": 4250,
+          "colM_extended": 4250,
+          "isBlankQty": false
+        },
+        "row": 22
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-load-study-load-calcs",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Load Study/Load Calcs",
+          "colK_or_L_price": 1050,
+          "colM_extended": 1050,
+          "isBlankQty": false
+        },
+        "row": 23
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-permit-coordination-and-filing-up-to-2-visits-in-person",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Permit Coordination and Filing-Up to 2 visits in person",
+          "colK_or_L_price": 950,
+          "colM_extended": 950,
+          "isBlankQty": false
+        },
+        "row": 24
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-utility-coordination-up-to-2-visits-in-person",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Utility Coordination-Up to 2 visits in person",
+          "colK_or_L_price": 950,
+          "colM_extended": 950,
+          "isBlankQty": false
+        },
+        "row": 25
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-permit-fees-cost-10",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Permit Fees- Cost + 10%",
+          "colK_or_L_price": 0,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 26
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-as-built",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "As Built",
+          "colK_or_L_price": 900,
+          "colM_extended": 900,
+          "isBlankQty": false
+        },
+        "row": 27
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "trenching-utility-mark-out",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Utility Mark-out",
+          "colK_or_L_price": 2000,
+          "colM_extended": 2000,
+          "isBlankQty": false
+        },
+        "row": 28
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "trenching-trenching-no-conduit-up-to-36-w-and-no-more-than-4-d",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Trenching (No Conduit)-Up to 36\" W and no more than 4' D",
+          "colK_or_L_price": 45,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 29
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-concrete-removal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Concrete Removal",
+          "colK_or_L_price": 725,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 30
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "civil-concrete-restoration",
+        "qtyFrom": "derived.E30",
+        "raw": {
+          "colE_qty": "=E30",
+          "colG_description": "Concrete Restoration",
+          "colK_or_L_price": 600,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 31
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "civil-concrete-pads-for-pedestals",
+        "qtyFrom": "derived.E20",
+        "raw": {
+          "colE_qty": "=E20",
+          "colG_description": "Concrete Pads for Pedestals",
+          "colK_or_L_price": 600,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 32
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-core-drilling-1-6-concrete-cmu",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Core Drilling 1\"-6\" concrete/CMU",
+          "colK_or_L_price": 550,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 33
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-installation-of-conductors-up-to-4",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Installation of Conductors-Up to #4",
+          "colK_or_L_price": 30,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 35
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-3-conduit-pvc-schedule-40",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 3\" Conduit (PVC Schedule 40)",
+          "colK_or_L_price": 20,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 36
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-misc-mounting-hardware-bos-materials-only",
+        "qtyFrom": "derived.E34",
+        "raw": {
+          "colE_qty": "=E34",
+          "colG_description": "Misc. Mounting Hardware & BOS (Materials Only)",
+          "colK_or_L_price": 165,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 37
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-install-provided-bolt-down-bollard",
+        "qtyFrom": "derived.E19",
+        "raw": {
+          "colE_qty": "=E19",
+          "colG_description": "Install Provided Bolt-Down Bollard",
+          "colK_or_L_price": 550,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 38
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-install-signage-and-stencils",
+        "qtyFrom": "derived.E19",
+        "raw": {
+          "colE_qty": "=E19",
+          "colG_description": "Install Signage and Stencils",
+          "colK_or_L_price": 400,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 39
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "other-equipment-rental",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Equipment Rental",
+          "colK_or_L_price": 1500,
+          "colM_extended": 1500,
+          "isBlankQty": false
+        },
+        "row": 40
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-the-following-items-are-not-included-in-this-proposal-unless-specifically-noted",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "The following items are not included in this proposal unless specifically noted otherwise. Excluded scope includes utility owned equipment and upgrades such as transformers and related utility upgrades, main panel upgrades, main feeds, fuses, and any required ADA compliance measures as determined by the Authority Having Jurisdiction or the site owner. This proposal excludes all design, engineering, and permitting services, including site walks, load studies, engineered or stamped plan sets, as built drawings, permit fees, and extended utility or permitting coordination beyond two in person visits. All civil scope is excluded, including trenching, boring, core drilling, concrete or asphalt removal and restoration, curb or foundation work, transformer pad preparation, concrete bases for pedestals, conduit encasement, striping, signage, stenciling, wheel stops, and bollard installation. Electrical infrastructure beyond the charger and pedestal installation scope is excluded, including conduit and conductor installation, sub panels, balance of system materials, and mounting hardware not expressly listed. Networking and connectivity equipment, including Wi Fi, extenders, and network setup, are excluded and must be provided by the owner. Site logistics and safety items such as equipment rental, construction fencing, traffic control beyond blocking designated parking spaces, rock or masonry removal, irrigation repair, off site staging, and after hours work are also excluded.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 43
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "wifi-requirement-please-refer-to-the-following-document-for-tesla-wi-fi-guidance-and-conne",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Please refer to the following document for Tesla Wi Fi guidance and connectivity requirements. Tesla chargers require a reliable Wi Fi connection for proper operation and full functionality. If Wi Fi is not available at the installation site, Bullet Energy Solutions can provide a separate proposal for the networking infrastructure needed to support charger connectivity.\n\nTesla Universal Wall Connector Connectivity Guidelines",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 44
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 60
+      }
+    ],
+    "templateSource": "13 - (PARKING LOT) FULL TURNKEY.xlsx"
+  },
+  "remove-replace": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "charger-tesla-universal-wall-connector-gen-3-model-1734412-02",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Universal Wall Connector (Gen 3) – Model 1734412‑02",
+          "colK_or_L_price": 710,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "pedestal-tesla-wall-connector-pedestal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla Wall Connector Pedestal",
+          "colK_or_L_price": 515,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-misc-mounting-hardware-bos-materials-only",
+        "qtyFrom": "derived.E21",
+        "raw": {
+          "colE_qty": "=E21",
+          "colG_description": "Misc. Mounting Hardware & BOS (Materials Only)",
+          "colK_or_L_price": 165,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 22
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "electrical-removal-and-disposal-of-existing-ev-charger",
+        "qtyFrom": "derived.E21",
+        "raw": {
+          "colE_qty": "=E21",
+          "colG_description": "Removal And Disposal Of Existing Ev Charger",
+          "colK_or_L_price": 400,
+          "colM_extended": 0,
+          "isBlankQty": false
+        },
+        "row": 23
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-this-proposal-does-not-include-transformer-procurement-or-utility-upgrades-main",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "This proposal does not include transformer procurement or utility upgrades, main panel upgrades or modifications to main service feeds or fusing, ADA compliance measures as required by the AHJ or owner, off-site staging or laydown areas, after-hours work outside of scheduled shutdown coordination, or traffic control beyond blocking designated parking spaces. Design, engineering, and permitting services are excluded, including site evaluations, load studies, engineered or stamped plan sets, as-built drawings, permit coordination beyond two in-person visits, utility coordination beyond two in-person visits, permit fees, and private utility mark-outs. All civil work is excluded, including trenching, boring, core drilling, concrete or asphalt removal and restoration, curb or foundation work, transformer or vault pads, pedestal concrete bases, conduit encasement, striping, signage, wheel stops, bollards, and ground preparation. Electrical infrastructure beyond the listed scope is excluded, including conduit, conductors, sub-panels, and networking or connectivity equipment. Site logistics and safety items such as equipment rentals, fencing, trench plates, rock or masonry removal, and irrigation repair are also excluded unless specifically noted otherwise.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 29
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "wifi-requirement-please-refer-to-the-following-document-for-tesla-wi-fi-guidance-and-conne",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Please refer to the following document for Tesla Wi Fi guidance and connectivity requirements. Tesla chargers require a reliable Wi Fi connection for proper operation and full functionality. If Wi Fi is not available at the installation site, Bullet Energy Solutions can provide a separate proposal for the networking infrastructure needed to support charger connectivity.\n\nTesla Universal Wall Connector Connectivity Guidelines",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 30
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "site-confirmation-when-you-are-ready-for-installation-please-complete-the-following-form-s",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "When you are ready for installation, please complete the following form so our team can review site conditions, confirm site readiness, and identify any items that may need to be addressed in advance. This helps the installation proceed smoothly and reduces the risk of delays, dry runs, and related fees.\n\nSite Readiness Form",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 31
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 47
+      }
+    ],
+    "templateSource": "10 - REMOVE & REPLACE.xlsx"
+  },
+  "resi-ev": {
+    "lineItems": [
+      {
+        "defectInTemplate": false,
+        "productId": "electrical-level-2-ev-charger-installation-customer-supplied-charger",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Level 2 EV Charger Installation (Customer Supplied Charger)",
+          "colK_or_L_price": 995,
+          "colM_extended": 995,
+          "isBlankQty": false
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "equipment-misc-wall-mounting-hardware-bos",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Misc. Wall Mounting Hardware & BOS",
+          "colK_or_L_price": 10,
+          "colM_extended": 10,
+          "isBlankQty": false
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "design-engineering-permitting-documentation-and-submittal-includes-one-line-diagram",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Permitting Documentation and Submittal (Includes One Line Diagram)",
+          "colK_or_L_price": 300,
+          "colM_extended": 300,
+          "isBlankQty": false
+        },
+        "row": 21
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "note-includes-installation-of-a-dedicated-circuit-breaker-in-the-main-garage-electrical-pa",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Includes installation of a dedicated circuit breaker in the main garage electrical panel and installation of the EV charger within 15 feet of the panel. Additional distance or scope beyond 15 feet will require a change order.",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 27
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "note-tesla-chargers-require-a-reliable-wi-fi-connection-to-operate-and-enable-full-functio",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Tesla chargers require a reliable Wi-Fi connection to operate and enable full functionality. If Wi-Fi is not available at the installation site, Bullet Energy Solutions can provide a separate proposal for the installation of the necessary networking infrastructure to support charger connectivity.",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 28
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "exclusions-exclusions-ev-charger-customer-supplied-wall-or-ceiling-patching-and-paint-conc",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Exclusions: EV charger (customer supplied); wall or ceiling patching and paint; concrete, stucco, or masonry repair; panel or service upgrades; trenching or restoration; concealed wiring or wall fishing; conduit or wire runs beyond 15 feet from the main garage panel; and any additional requirements or fees required by the AHJ or utility. Any excluded or additional scope requires a change order.",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 29
+      },
+      {
+        "defectInTemplate": false,
+        "productId": "cancellation-policy-client-understands-that-bullet-ev-incurs-costs-immediately-upon-projec",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": "Change Orders:\nAll changes to the original scope of work must be submitted in writing and approved by both parties through a signed Change Order. Approved changes may affect project cost, timeline, or scope. No additional work will be performed without written authorization via a Change Order.",
+          "colG_description": "Cancellation Policy:\nClient understands that Bullet EV incurs costs immediately upon project engagement, including but not limited to site evaluation, design review, and permitting preparation. If the Client cancels the project after the site evaluation has been completed, the initial deposit shall be non-refundable and retained to cover administrative and technical expenses. Cancellations before the site evaluation may be eligible for a partial refund, less incurred costs.",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": false
+        },
+        "row": 45
+      }
+    ],
+    "templateSource": "6 - RESI EV TEMPLATE_.xlsx"
+  },
+  "service-ticket": {
+    "lineItems": [
+      {
+        "defectInTemplate": false,
+        "productId": "enphase-envoy-replacement",
+        "qtyFrom": "constant:1",
+        "raw": {
+          "colE_qty": 1,
+          "colG_description": "Envoy Replacement",
+          "colK_or_L_price": 710,
+          "colM_extended": 710,
+          "isBlankQty": false
+        },
+        "row": 26
+      }
+    ],
+    "templateSource": "11 - SERVICE TICKET TEMPLATE.xlsx"
+  },
+  "supercharger": {
+    "lineItems": [
+      {
+        "defectInTemplate": true,
+        "productId": "design-engineering-site-visit",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Site Visit",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 19
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "design-engineering-base-design-eng-3-4-sheet-site-plan-riser-1-line-cd50-cd100-load-study-",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Base Design/Eng-3-4 sheet, site plan, riser, 1-line, CD50-CD100, Load Study/Load Calcs, Property Line Stake/Garage Field Sketch, As Builts",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 20
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "design-engineering-permit-coordination-and-filing-up-to-2-visits-in-person",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Permit Coordination and Filing-Up to 2 visits in person",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 21
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "design-engineering-utility-coordination-up-to-2-visits-in-person",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Utility Coordination-Up to 2 visits in person",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 22
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "design-engineering-permit-fees-cost-10",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Permit Fees- Cost + 10%",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 23
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "trenching-utility-mark-out",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Utility Mark-out",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 24
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "trenching-trenching-no-conduit-up-to-36-w-and-no-more-than-4-d",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Trenching (No Conduit)-Up to 36\" W and no more than 4' D",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 25
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-concrete-removal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Concrete Removal",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 26
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-concrete-restoration",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Concrete Restoration",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 27
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-encasement-of-conduits",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Encasement of Conduits",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 28
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "civil-main-panel-upgrade-meter-can-rack",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Main Panel Upgrade / Meter Can / Rack",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 29
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-pads-ground-prep-for-utility-provided-transformer-pad",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Ground Prep for Utility Provided Transformer Pad",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 30
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-pads-cast-in-place-concrete-for-integrated-curb-post-foundations-monolithic",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Cast in Place Concrete for Integrated Curb/Post Foundations (Monolithic)",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 31
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-pads-cast-in-place-foundations-for-posts",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Cast in Place Foundations for Posts",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 32
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-pads-equipment-post-pads-form-steel",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Equipment/Post Pads-Form/Steel",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 33
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-pads-equipment-pad-cabinets-switchgear",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Equipment Pad - Cabinets / Switchgear",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 34
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-pads-equipment-pad-transformer-6-piers-sonnen-tubes-steel",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Equipment Pad- Transformer-6 Piers, Sonnen Tubes, Steel",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 35
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-install-lighting-lighting-foundation-lighting-furnished-by-owner",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Install Lighting & Lighting Foundation (Lighting Furnished by Owner)",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 36
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-install-striping-per-stall",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Install Striping-Per stall",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 37
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-install-signage-and-stencils",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Install Signage and Stencils",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 38
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "equipment-install-provided-bolt-down-bollard",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Install Provided Bolt-Down Bollard",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 39
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-1-conduit-pvc-schedule-40",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 1\" Conduit (PVC Schedule 40)",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 40
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-3-conduit-pvc-schedule-40",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 3\" Conduit (PVC Schedule 40)",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 41
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-4-conduit-pvc-schedule-40",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 4\" Conduit (PVC Schedule 40)",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 42
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-1-emt-conduit",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 1\" EMT Conduit",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 43
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-2-emt-conduit",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 2\" EMT Conduit",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 44
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-3-emt-conduit",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 3\" EMT Conduit",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 45
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-install-4-emt-conduit",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish & Install 4\" EMT Conduit",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 46
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-furnish-500-600-mcm-comm-wire-bos",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Furnish 500/600 MCM / COMM WIRE & BOS",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 47
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "electrical-installation-commissioning-superchargers",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Installation & Commissioning Superchargers",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 48
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-unforeseen-rock-and-masonry-removal",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Unforeseen Rock and Masonry Removal",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 49
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-landscape-irrigation-repair",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Landscape / Irrigation Repair",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 50
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-install-owner-provided-wi-fi-equipment",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Install Owner Provided Wi-Fi Equipment",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 51
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-out-of-geographic-range-per-mile-after-60-each-way",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Out of Geographic Range-Per Mile after 60-Each way",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 52
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-on-site-traffic-control-safety-fence",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "On-Site Traffic Control, Safety Fence",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 53
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-construction-fence",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Construction Fence",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 54
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-trench-plates",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Trench Plates",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 55
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-mobilization-demobilization",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Mobilization/Demobilization",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 56
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-equipment-rental",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Equipment Rental",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 57
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-ev-lite-switchgear",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "EV Lite Switchgear",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 58
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "utility-transformer-upgrade",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Transformer Upgrade",
+          "colK_or_L_price": null,
+          "colM_extended": null,
+          "isBlankQty": true
+        },
+        "row": 59
+      },
+      {
+        "defectInTemplate": true,
+        "productId": "other-roll-off-dumpsters-portocans",
+        "qtyFrom": "user",
+        "raw": {
+          "colE_qty": null,
+          "colG_description": "Roll Off Dumpsters & Portocans",
+          "colK_or_L_price": null,
+          "colM_extended": 0,
+          "isBlankQty": true
+        },
+        "row": 60
+      }
+    ],
+    "templateSource": "ESTIMATE - SUPERCHARGER.xlsx"
+  }
+}
