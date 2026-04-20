@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const SESSION_TOKEN = 'bulletev-session-v1';
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/health'];
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/health', '/proposal/'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
