@@ -429,10 +429,10 @@ export const SHEET_MAP: Record<InstallationType, { sheetName: string; tabName: s
 export type GuidedStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const STEP_LABELS: Record<GuidedStep, string> = {
-  1: 'Rep & Project',
-  2: 'Contact & Site',
-  3: 'Equipment',
-  4: 'Installation Type',
+  1: 'Installation Type',
+  2: 'Rep & Project',
+  3: 'Contact & Site',
+  4: 'Equipment',
   5: 'Details',
   6: 'Review',
 };
