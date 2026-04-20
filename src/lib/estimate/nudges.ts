@@ -107,5 +107,45 @@ export function generateNudges(input: EstimateInput): Nudge[] {
     }
   }
 
+  // Map conduit distance vs form panel distance mismatch
+  if (mw?.conduitDistance_ft != null && input.electrical.distanceToPanel_ft != null) {
+    const diff = Math.abs(mw.conduitDistance_ft - input.electrical.distanceToPanel_ft);
+    if (diff > 20) {
+      nudges.push({
+        id: 'conduit-distance-mismatch',
+        targetTab: 'Electrical',
+        message: `Map conduit distance (${mw.conduitDistance_ft}ft) differs from panel distance (${input.electrical.distanceToPanel_ft}ft) by ${diff}ft. Map measurement will be used for pricing.`,
+        severity: diff > 50 ? 'warning' : 'info',
+      });
+    }
+  }
+
+  // Map has meter room but not flagged
+  if (mw && mw.drawings?.equipment?.some((e) => e.equipmentType === 'meter_room')) {
+    if (input.electrical.meterRoomRequired !== true) {
+      nudges.push({
+        id: 'meter-room-mismatch',
+        targetTab: 'Electrical',
+        message: 'A meter room is placed on the map but not flagged in the Electrical section.',
+        severity: 'info',
+      });
+    }
+  }
+
+  // Charger count > 0 but no chargers on map (and map has drawings)
+  if (input.charger.count > 0 && mw?.drawings && mw.drawings.equipment) {
+    const mapChargers = mw.drawings.equipment.filter(
+      (e) => e.equipmentType === 'charger_l2' || e.equipmentType === 'charger_l3',
+    ).length;
+    if (mapChargers === 0 && mw.drawings.equipment.length > 0) {
+      nudges.push({
+        id: 'no-chargers-on-map',
+        targetTab: 'Charger',
+        message: `Form has ${input.charger.count} charger(s) but none placed on the map. Use the Map Workspace to place charger markers.`,
+        severity: 'info',
+      });
+    }
+  }
+
   return nudges;
 }

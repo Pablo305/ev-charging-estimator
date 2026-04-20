@@ -115,5 +115,34 @@ export function detectContradictions(
     }
   }
 
+  // Map conduit distance vs form panel distance — large mismatch
+  const conduitFt = mapState.runs
+    .filter((r) => r.runType === 'conduit')
+    .reduce((sum, r) => sum + r.lengthFt, 0);
+  if (conduitFt > 0 && input.electrical.distanceToPanel_ft != null) {
+    const diff = Math.abs(conduitFt - input.electrical.distanceToPanel_ft);
+    if (diff > 50) {
+      contradictions.push({
+        id: next(),
+        severity: 'warning',
+        field: 'electrical.distanceToPanel_ft',
+        message: `Map conduit runs total ${Math.round(conduitFt)}ft but the form says ${input.electrical.distanceToPanel_ft}ft to panel. Map measurement is used for pricing.`,
+      });
+    }
+  }
+
+  // Charger count mismatch between map and form
+  const mapChargerCount = mapState.equipment.filter(
+    (e) => e.equipmentType === 'charger_l2' || e.equipmentType === 'charger_l3',
+  ).length;
+  if (mapChargerCount > 0 && input.charger.count > 0 && mapChargerCount !== input.charger.count) {
+    contradictions.push({
+      id: next(),
+      severity: 'warning',
+      field: 'charger.count',
+      message: `${mapChargerCount} charger(s) on map but form says ${input.charger.count}. Accept the map patch or update the form.`,
+    });
+  }
+
   return contradictions;
 }

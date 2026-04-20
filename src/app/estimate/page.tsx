@@ -21,6 +21,8 @@ export default function EstimatePage() {
   const autoEstimate = useAutoEstimate();
   const [output, setOutput] = useState<EstimateOutput | null>(null);
   const [shareStatus, setShareStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [proposalStatus, setProposalStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [proposalUrl, setProposalUrl] = useState<string | null>(null);
   const [expandedLines, setExpandedLines] = useState<Set<string>>(new Set());
 
   const handleGenerate = useCallback(() => {
@@ -45,6 +47,28 @@ export default function EstimatePage() {
     } catch {
       setShareStatus('error');
       setTimeout(() => setShareStatus('idle'), 5000);
+    }
+  }, [output]);
+
+  const handleShareProposal = useCallback(async () => {
+    if (!output) return;
+    setProposalStatus('loading');
+    setProposalUrl(null);
+    try {
+      const res = await fetch('/api/estimate/share-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ output }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Create proposal failed');
+      const full = `${window.location.origin}${data.url}`;
+      setProposalUrl(full);
+      await navigator.clipboard.writeText(full).catch(() => {});
+      setProposalStatus('done');
+    } catch {
+      setProposalStatus('error');
+      setTimeout(() => setProposalStatus('idle'), 5000);
     }
   }, [output]);
 
@@ -111,6 +135,9 @@ export default function EstimatePage() {
               toggleLine={toggleLine}
               onShareInteractive={handleShareInteractive}
               shareStatus={shareStatus}
+              onShareProposal={handleShareProposal}
+              proposalStatus={proposalStatus}
+              proposalUrl={proposalUrl}
               onDownloadPdfWithPreviews={handleDownloadPdfWithPreviews}
             />
           </div>
@@ -160,10 +187,13 @@ function SeverityBadge({ severity }: { severity: string }) {
 
 /* ── Estimate Results ────────────────────────────────────────── */
 
-function EstimateResults({ output, expandedLines, toggleLine, onShareInteractive, shareStatus, onDownloadPdfWithPreviews }: {
+function EstimateResults({ output, expandedLines, toggleLine, onShareInteractive, shareStatus, onShareProposal, proposalStatus, proposalUrl, onDownloadPdfWithPreviews }: {
   output: EstimateOutput; expandedLines: Set<string>; toggleLine: (id: string) => void;
   onShareInteractive: () => void;
   shareStatus: 'idle' | 'loading' | 'done' | 'error';
+  onShareProposal: () => void;
+  proposalStatus: 'idle' | 'loading' | 'done' | 'error';
+  proposalUrl: string | null;
   onDownloadPdfWithPreviews: () => void;
 }) {
   const { summary, metadata, lineItems, exclusions, manualReviewTriggers } = output;
@@ -220,7 +250,45 @@ function EstimateResults({ output, expandedLines, toggleLine, onShareInteractive
           {shareStatus === 'error' && (
             <span className="self-center text-[0.75rem] text-red-600">Could not create link</span>
           )}
+          <button
+            type="button"
+            onClick={() => void onShareProposal()}
+            disabled={proposalStatus === 'loading'}
+            className="lg-pill px-5 py-2.5 text-[0.8125rem] font-semibold text-white disabled:opacity-50"
+            style={{ background: 'var(--system-purple)' }}
+          >
+            {proposalStatus === 'loading' ? 'Creating proposal\u2026' : 'Create customer proposal'}
+          </button>
+          {proposalStatus === 'error' && (
+            <span className="self-center text-[0.75rem] text-red-600">Could not create proposal</span>
+          )}
         </div>
+
+        {proposalStatus === 'done' && proposalUrl && (
+          <div className="mt-4 p-4" style={{ borderRadius: 'var(--radius-sm)', background: 'rgba(175,82,222,0.06)', border: '0.5px solid rgba(175,82,222,0.25)' }}>
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-gray-500">
+              Customer proposal link (copied to clipboard)
+            </p>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <a
+                href={proposalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-[0.8125rem] font-medium text-gray-900 underline decoration-purple-300 underline-offset-4 hover:decoration-purple-500"
+              >
+                {proposalUrl}
+              </a>
+              <button
+                type="button"
+                onClick={() => { void navigator.clipboard.writeText(proposalUrl); }}
+                className="lg-pill self-start px-3 py-1 text-[0.6875rem] font-semibold text-gray-800 sm:self-center"
+                style={{ background: 'rgba(0,0,0,0.06)' }}
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Manual Review Triggers */}
