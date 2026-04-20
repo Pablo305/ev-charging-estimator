@@ -4,7 +4,7 @@ const SESSION_TOKEN = 'bulletev-session-v1';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/health'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public paths and static assets

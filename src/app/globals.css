@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Inter is loaded via next/font/google in src/app/layout.tsx; use var(--font-inter). */
 
 :root {
   --background: #f2f2f7;
@@ -352,7 +352,7 @@ body {
 
   background: hsl(var(--pp-background));
   color: hsl(var(--pp-foreground));
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -362,7 +362,7 @@ body {
 .proposal-portal h4,
 .proposal-portal h5,
 .proposal-portal h6 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
 }
 
