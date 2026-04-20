@@ -71,14 +71,20 @@ export default function EstimatePage() {
         {/* Header */}
         <header className="hero-canvas lg-ring" style={{ borderRadius: 'var(--radius-xl)', padding: 'clamp(1rem, 2vw, 1.5rem)' }}>
           <div className="relative flex items-center justify-between" style={{ zIndex: 1 }}>
-            <div className="text-white">
+            <Link href="/" className="text-white transition-opacity hover:opacity-80" aria-label="Go home">
               <p className="flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-white/50">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                 BulletEV
               </p>
               <h1 className="text-lg font-bold tracking-[-0.022em] sm:text-xl">Estimate Generator</h1>
-            </div>
+            </Link>
             <div className="flex items-center gap-2">
+              <Link
+                href="/estimate/map"
+                className="rounded-lg bg-white/10 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur hover:bg-white/20 transition-colors"
+              >
+                Map Takeoff Tool
+              </Link>
               <button
                 type="button"
                 onClick={() => { resetEstimate(); setOutput(null); }}
