@@ -364,6 +364,16 @@ function pedestalRules(
     return { items, reviews };
   }
 
+  // Tesla Superchargers ship with integrated posts — no separate pedestal
+  // line. Skip this rule for supercharger / DCFC jobs.
+  const isSupercharger =
+    input.project.projectType === 'supercharger' ||
+    charger.chargingLevel === 'l3_dcfc' ||
+    (charger.model ?? '').toLowerCase().includes('supercharger');
+  if (isSupercharger) {
+    return { items, reviews };
+  }
+
   const pedCount = charger.pedestalCount > 0 ? charger.pedestalCount : charger.count;
   const pedItem = findPricebookItem('pedestal-tesla-wc');
 

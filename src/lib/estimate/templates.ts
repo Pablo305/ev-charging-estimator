@@ -195,7 +195,10 @@ export const PROPOSAL_TEMPLATES: readonly ProposalTemplate[] = [
         pedestalCount: 0,
         portType: 'single',
         mountType: 'pedestal',
-        isCustomerSupplied: false,
+        // Tesla ships Supercharger equipment directly to site owners;
+        // Bullet EV only performs installation + commissioning. Hardware
+        // and pedestals are excluded from the estimate by default.
+        isCustomerSupplied: true,
         chargingLevel: 'l3_dcfc',
         ampsPerCharger: null,
         volts: 480,
@@ -206,7 +209,10 @@ export const PROPOSAL_TEMPLATES: readonly ProposalTemplate[] = [
         availableAmps: null,
         breakerSpaceAvailable: null,
         panelUpgradeRequired: null,
-        transformerRequired: true,
+        // Transformer need is site-specific; only add the line when the
+        // utility requires one. Leave null so the rule skips unless the
+        // user explicitly flips it.
+        transformerRequired: null,
         switchgearRequired: false,
         distanceToPanel_ft: null,
         utilityCoordinationRequired: true,
@@ -219,7 +225,7 @@ export const PROPOSAL_TEMPLATES: readonly ProposalTemplate[] = [
       designEngineering: { responsibility: 'bullet', stampedPlansRequired: true },
       makeReady: { responsibility: 'bullet' },
       chargerInstall: { responsibility: 'bullet' },
-      purchasingChargers: { responsibility: 'bullet' },
+      purchasingChargers: { responsibility: 'client' },
       signageBollards: { responsibility: 'signage_bollards' },
       estimateControls: {
         pricingTier: 'bulk_discount',
