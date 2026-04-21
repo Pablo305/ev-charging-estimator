@@ -438,6 +438,32 @@ function installLaborRules(
         }),
       );
     }
+
+    // Supercharger construction allowance — per-stall bundled civil cost
+    // (post foundations, conduit encasement, 500 MCM feeder, trenching).
+    // Site-specific variances are averaged; override when a site walk
+    // produces concrete, trench-LF, or encasement numbers.
+    // Target: lands total construction at ~$30k / port matching Bullet EV's
+    // typical Tesla Supercharger quoting basis.
+    if (charger.count > 0) {
+      const ALLOWANCE_PER_STALL = 6250;
+      items.push(
+        line({
+          category: 'CIVIL',
+          description: 'Supercharger Construction Allowance (Per-Stall Civil Bundle)',
+          quantity: charger.count,
+          unit: 'EA',
+          unitPrice: ALLOWANCE_PER_STALL,
+          pricingSource: 'allowance',
+          ruleName: 'Supercharger construction allowance',
+          ruleReason: `Bundled site-typical construction per stall (post foundations, conduit encasement, 500 MCM feeder, trenching). ${charger.count} stalls × $${ALLOWANCE_PER_STALL}/ea. Override if actual site quantities differ.`,
+          sourceInputs: ['project.projectType', 'charger.count'],
+          manualReviewRequired: true,
+          manualReviewReason: 'Allowance — confirm site-specific civil scope at walk',
+          confidence: 'medium',
+        }),
+      );
+    }
     return { items, reviews };
   }
 
