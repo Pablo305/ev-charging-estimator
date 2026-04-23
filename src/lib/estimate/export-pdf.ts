@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { EstimateOutput, EstimateLineItem } from './types';
 import type { SharedPreviewAssets } from './shared-types';
+import { resolveDisplayPreviewUrls } from '@/lib/map/static-preview-urls';
 
 function fmt(n: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
@@ -404,18 +405,26 @@ async function fetchUrlAsPreviewImage(
   }
 }
 
-/** Download PDF with embedded satellite / Street View previews when URLs are available (CORS must allow fetch). */
+/**
+ * Download PDF with embedded satellite / Street View previews.
+ *
+ * `previews` accepts either legacy URL-bearing records OR new shares that
+ * only carry `siteCoordinates`. `resolveDisplayPreviewUrls` reconstructs
+ * the URLs at export time using `NEXT_PUBLIC_*` tokens, so new shares
+ * don't regress on the previews that legacy shares used to embed.
+ */
 export async function exportEstimatePDFWithPreviews(
   output: EstimateOutput,
   previews?: SharedPreviewAssets,
 ): Promise<void> {
+  const resolved = resolveDisplayPreviewUrls(previews);
   const images: EstimatePdfPreviewImage[] = [];
-  if (previews?.satelliteStaticUrl) {
-    const img = await fetchUrlAsPreviewImage(previews.satelliteStaticUrl, 'Satellite (Mapbox)');
+  if (resolved.satelliteStaticUrl) {
+    const img = await fetchUrlAsPreviewImage(resolved.satelliteStaticUrl, 'Satellite (Mapbox)');
     if (img) images.push(img);
   }
-  if (previews?.streetViewStaticUrl) {
-    const img = await fetchUrlAsPreviewImage(previews.streetViewStaticUrl, 'Street View (Google)');
+  if (resolved.streetViewStaticUrl) {
+    const img = await fetchUrlAsPreviewImage(resolved.streetViewStaticUrl, 'Street View (Google)');
     if (img) images.push(img);
   }
   const doc = buildEstimatePdfDocument(output, { previewImages: images });

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { captureProjectMedia } from '@/lib/media/capture-service';
-
-const SESSION_TOKEN = process.env.SESSION_SECRET ?? 'bulletev-session-v1';
+import { isAuthenticated } from '@/lib/auth/session';
 
 interface ChargerBody {
   id: string;
@@ -15,11 +14,6 @@ interface CaptureBody {
   centerLat: number;
   centerLng: number;
   chargers: ChargerBody[];
-}
-
-function isAuthenticated(req: NextRequest): boolean {
-  const cookie = req.cookies.get('bulletev-auth');
-  return cookie?.value === SESSION_TOKEN;
 }
 
 function validateBody(raw: unknown): CaptureBody | string {

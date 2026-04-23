@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { renderSiteWithChargers, type ChargerPlacement } from '@/lib/media/ai-render';
-
-const SESSION_TOKEN = process.env.SESSION_SECRET ?? 'bulletev-session-v1';
+import { isAuthenticated } from '@/lib/auth/session';
 
 interface RenderBody {
   projectId: string;
-  satellitePhotoId: string;
+  sourcePhotoId: string;
   chargerPlacements: ChargerPlacement[];
   chargerModel?: string;
-}
-
-function isAuthenticated(req: NextRequest): boolean {
-  const cookie = req.cookies.get('bulletev-auth');
-  return cookie?.value === SESSION_TOKEN;
 }
 
 function validateBody(raw: unknown): RenderBody | string {
@@ -22,8 +16,8 @@ function validateBody(raw: unknown): RenderBody | string {
   if (typeof b.projectId !== 'string' || b.projectId.length === 0) {
     return 'projectId required';
   }
-  if (typeof b.satellitePhotoId !== 'string' || b.satellitePhotoId.length === 0) {
-    return 'satellitePhotoId required';
+  if (typeof b.sourcePhotoId !== 'string' || b.sourcePhotoId.length === 0) {
+    return 'sourcePhotoId required';
   }
   if (!Array.isArray(b.chargerPlacements)) return 'chargerPlacements required';
 
@@ -49,7 +43,7 @@ function validateBody(raw: unknown): RenderBody | string {
 
   return {
     projectId: b.projectId,
-    satellitePhotoId: b.satellitePhotoId,
+    sourcePhotoId: b.sourcePhotoId,
     chargerPlacements: placements,
     chargerModel: typeof b.chargerModel === 'string' ? b.chargerModel : undefined,
   };

@@ -1,12 +1,57 @@
-import { NextResponse } from 'next/server';
+/**
+ * GET /api/live/monday-item/[id]
+ *
+ * Proxy for Monday.com item lookup. The server-side MONDAY_API_TOKEN
+ * is used to call Monday's GraphQL API, and the raw item payload is
+ * returned to the caller. That makes this a privileged integration
+ * proxy — must be:
+ *
+ *   - authenticated (session cookie required)
+ *   - rate-limited per-IP so an auth'd user can't be turned into a
+ *     reflector against our Monday quota or a data-exfil channel.
+ *
+ * Before Phase 2.5.3 this route was anonymous. Any internet user could
+ * page through IDs and read item data.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { isAuthenticated } from '@/lib/auth/session';
+import { createRateLimiter, getClientIp } from '@/lib/auth/rate-limit';
+
+const RPM_LIMIT = Math.max(
+  1,
+  Number.parseInt(process.env.MONDAY_ITEM_RPM ?? '30', 10) || 30,
+);
+
+const limiter = createRateLimiter({
+  key: 'monday-item',
+  windowMs: 60_000,
+  max: RPM_LIMIT,
+});
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const token = process.env.MONDAY_API_TOKEN;
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
 
+  const ip = getClientIp(request);
+  const allowed = limiter.check(ip);
+  if (!allowed.ok) {
+    return NextResponse.json(
+      { error: 'rate limited', retryAfterSec: allowed.retryAfterSec },
+      { status: 429, headers: { 'Retry-After': String(allowed.retryAfterSec) } },
+    );
+  }
+
+  const { id } = await params;
+  if (!id || typeof id !== 'string') {
+    return NextResponse.json({ error: 'bad id' }, { status: 400 });
+  }
+
+  const token = process.env.MONDAY_API_TOKEN;
   if (!token) {
     return NextResponse.json(
       {
@@ -16,6 +61,8 @@ export async function GET(
       { status: 501 },
     );
   }
+
+  console.info('[monday-item] access', { id, ip });
 
   try {
     const query = `
@@ -61,7 +108,6 @@ export async function GET(
       );
     }
 
-    // Return raw item for now - normalization happens client-side or in a separate step
     return NextResponse.json({
       raw: item,
       note: 'Use /api/generate-estimate with normalized input to generate estimate',

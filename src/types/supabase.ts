@@ -38,6 +38,8 @@ export type SitePhotoKind =
 
 export type RenderingStatus = 'queued' | 'processing' | 'complete' | 'failed';
 
+export type PresentationShareStatus = 'active' | 'expired' | 'revoked';
+
 // -----------------------------------------------------------------------------
 // Row types (one per table)
 // -----------------------------------------------------------------------------
@@ -200,6 +202,21 @@ export interface SharedEstimateRow {
   updated_at: string;
 }
 
+// Phase 2 canonical presentation share (from 20260422_001_presentation_shares.sql).
+export interface PresentationShareRow {
+  id: string;
+  estimate_id: string;
+  project_id: string;
+  created_by: string | null;
+  token: string;
+  status: PresentationShareStatus;
+  expires_at: string | null;
+  revoked_at: string | null;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+}
+
 // -----------------------------------------------------------------------------
 // Helper to build Insert/Update types with sensible defaults.
 // DB default columns become optional on Insert; all columns optional on Update.
@@ -358,6 +375,14 @@ export interface Database {
         Insert: InsertOf<SharedEstimateRow> & { id: string };
         Update: UpdateOf<SharedEstimateRow>;
       };
+      presentation_shares: {
+        Row: PresentationShareRow;
+        Insert: InsertOf<
+          PresentationShareRow,
+          'created_by' | 'status' | 'expires_at' | 'revoked_at'
+        >;
+        Update: UpdateOf<PresentationShareRow>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -365,6 +390,7 @@ export interface Database {
       user_role: UserRole;
       project_status: ProjectStatus;
       estimate_status: EstimateStatus;
+      presentation_share_status: PresentationShareStatus;
     };
   };
 }

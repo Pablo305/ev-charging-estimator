@@ -1,6 +1,12 @@
 /**
- * AI rendering: composites chargers onto the project's satellite snapshot
+ * AI rendering: composites chargers onto the project's source site photo
  * using one of several configured image-generation providers.
+ *
+ * Schema reference (migration 20260418_005_media.sql, table `renderings`):
+ *   status in ('queued', 'processing', 'complete', 'failed')
+ *   columns: id, project_id, source_photo_id, requested_by, model_used,
+ *            prompt, status, storage_path, error, cost_usd, metadata,
+ *            created_at, updated_at
  *
  * Provider dispatch is controlled by process.env.AI_RENDER_PROVIDER and
  * gated by AI_RENDERING_ENABLED. A per-project cost cap
@@ -13,11 +19,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type RenderStatus = 'queued' | 'running' | 'completed' | 'failed';
+/** Matches the `renderings.status` check constraint. */
+export type RenderStatus = 'queued' | 'processing' | 'complete' | 'failed';
 
 export type RenderProvider =
   | 'gemini_2_5_flash_image'
-  | 'openai_dalle3'
+  | 'openai_gpt_image'
   | 'fal_nano_banana'
   | 'disabled';
 
@@ -31,20 +38,26 @@ export interface ChargerPlacement {
 
 export interface RenderSiteInput {
   projectId: string;
-  satellitePhotoId: string;
+  /** FK to `site_photos.id` — the base photo we're editing on top of. */
+  sourcePhotoId: string;
   chargerPlacements: ChargerPlacement[];
   chargerModel?: string;
+  /** FK to `profiles.id`; optional because public-share flows have no profile. */
+  requestedBy?: string | null;
 }
 
+/** Shape returned by this module. Mirrors the `renderings` table row. */
 export interface Rendering {
   id?: string;
   project_id: string;
-  satellite_photo_id: string;
-  provider: RenderProvider;
+  source_photo_id: string;
+  requested_by: string | null;
+  model_used: string | null;
+  prompt: string | null;
   status: RenderStatus;
-  cost_usd: number;
+  storage_path: string | null;
   error: string | null;
-  output_storage_path: string | null;
+  cost_usd: number;
   metadata: Record<string, unknown>;
   created_at?: string;
 }
@@ -54,6 +67,18 @@ type SupabaseLike = SupabaseClient | { from: unknown };
 const DEFAULT_COST_CAP_USD = 5;
 const PROVIDER_STUB_COST_USD = 0.05; // deliberate, tiny, so tests are stable
 
+/**
+ * Canonical model IDs per provider. Centralized so when the upstream
+ * catalog updates (e.g. OpenAI → gpt-image-2), we change one place.
+ * Phase 5 will add a proper model-resolver with rollout controls.
+ */
+export const PROVIDER_MODEL_ID: Record<Exclude<RenderProvider, 'disabled'>, string> = {
+  gemini_2_5_flash_image: 'gemini-2.5-flash-image',
+  // As of 2026-04-22 OpenAI's catalog lists gpt-image-2 as current.
+  openai_gpt_image: 'gpt-image-2',
+  fal_nano_banana: 'fal-ai/nano-banana',
+};
+
 function isEnabled(): boolean {
   return (process.env.AI_RENDERING_ENABLED ?? 'false').toLowerCase() === 'true';
 }
@@ -62,11 +87,14 @@ function resolveProvider(): RenderProvider {
   const raw = (process.env.AI_RENDER_PROVIDER ?? 'disabled').toLowerCase();
   if (
     raw === 'gemini_2_5_flash_image' ||
-    raw === 'openai_dalle3' ||
+    raw === 'openai_gpt_image' ||
     raw === 'fal_nano_banana'
   ) {
     return raw;
   }
+  // Legacy spelling: `openai_dalle3` used to mean "OpenAI image endpoint"
+  // back when DALL·E 3 was current. It now resolves to gpt-image-2.
+  if (raw === 'openai_dalle3') return 'openai_gpt_image';
   return 'disabled';
 }
 
@@ -115,22 +143,26 @@ async function sumPriorCost(
 
 interface ProviderDispatchInput {
   input: RenderSiteInput;
-  provider: RenderProvider;
+  provider: Exclude<RenderProvider, 'disabled'>;
 }
 
-/**
- * Provider-specific request envelopes. These are intentionally stubs so
- * the caller sees a well-shaped request shape, but real API calls are
- * left as TODOs pending wiring of each vendor's production endpoints.
- */
-function buildProviderRequest({ input, provider }: ProviderDispatchInput): {
+interface ProviderRequest {
   endpoint: string;
   headers: Record<string, string>;
   body: Record<string, unknown>;
-} {
+  prompt: string;
+  model: string;
+}
+
+/**
+ * Provider-specific request envelopes. Real API calls stay stubbed in
+ * Phase 1 — Phase 5 wires live dispatch after legal clearance.
+ */
+function buildProviderRequest({ input, provider }: ProviderDispatchInput): ProviderRequest {
   const prompt = `Composite ${input.chargerPlacements.length} ${
     input.chargerModel ?? 'EV charger'
-  } unit(s) onto the satellite image at the provided lat/lng positions. Keep ground-truth scale, shadows aligned to noon sun. Mark each with a subtle translucent blue pedestal.`;
+  } unit(s) onto the source image at the provided lat/lng positions. Keep ground-truth scale, shadows aligned to noon sun. Mark each with a subtle translucent blue pedestal.`;
+  const model = PROVIDER_MODEL_ID[provider];
 
   switch (provider) {
     case 'gemini_2_5_flash_image': {
@@ -148,28 +180,32 @@ function buildProviderRequest({ input, provider }: ProviderDispatchInput): {
             {
               parts: [
                 { text: prompt },
-                { fileData: { mimeType: 'image/jpeg', fileUri: '<satellite-signed-url>' } },
+                { fileData: { mimeType: 'image/jpeg', fileUri: '<source-signed-url>' } },
               ],
             },
           ],
           generationConfig: { temperature: 0.4 },
         },
+        prompt,
+        model,
       };
     }
-    case 'openai_dalle3': {
-      // TODO: wire openai_dalle3. Note: DALL·E 3 does not accept input images;
-      // real pipeline should swap to gpt-image-1 edit endpoint.
+    case 'openai_gpt_image': {
+      // TODO (Phase 5): wire live openai images.edit. Model resolves
+      // centrally via PROVIDER_MODEL_ID so catalog updates are one-line.
       return {
         endpoint: 'https://api.openai.com/v1/images/edits',
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}`,
         },
         body: {
-          model: 'gpt-image-1',
+          model,
           prompt,
           size: '1024x1024',
           n: 1,
         },
+        prompt,
+        model,
       };
     }
     case 'fal_nano_banana': {
@@ -182,14 +218,13 @@ function buildProviderRequest({ input, provider }: ProviderDispatchInput): {
         },
         body: {
           prompt,
-          image_url: '<satellite-signed-url>',
+          image_url: '<source-signed-url>',
           num_images: 1,
         },
+        prompt,
+        model,
       };
     }
-    case 'disabled':
-    default:
-      return { endpoint: '', headers: {}, body: {} };
   }
 }
 
@@ -204,17 +239,21 @@ export async function renderSiteWithChargers(
 ): Promise<Rendering> {
   const provider = resolveProvider();
   const enabled = isEnabled();
+  const requestedBy = input.requestedBy ?? null;
 
   if (!enabled || provider === 'disabled') {
     return insertRendering(supabase, {
       project_id: input.projectId,
-      satellite_photo_id: input.satellitePhotoId,
-      provider: 'disabled',
+      source_photo_id: input.sourcePhotoId,
+      requested_by: requestedBy,
+      model_used: null,
+      prompt: null,
       status: 'failed',
-      cost_usd: 0,
+      storage_path: null,
       error: 'AI rendering disabled',
-      output_storage_path: null,
+      cost_usd: 0,
       metadata: {
+        provider: 'disabled',
         chargerPlacements: input.chargerPlacements,
         chargerModel: input.chargerModel ?? null,
       },
@@ -227,13 +266,16 @@ export async function renderSiteWithChargers(
   if (prior >= costCap) {
     return insertRendering(supabase, {
       project_id: input.projectId,
-      satellite_photo_id: input.satellitePhotoId,
-      provider,
+      source_photo_id: input.sourcePhotoId,
+      requested_by: requestedBy,
+      model_used: null,
+      prompt: null,
       status: 'failed',
-      cost_usd: 0,
+      storage_path: null,
       error: 'budget_exceeded',
-      output_storage_path: null,
+      cost_usd: 0,
       metadata: {
+        provider,
         priorCostUsd: prior,
         costCapUsd: costCap,
         chargerPlacements: input.chargerPlacements,
@@ -247,13 +289,16 @@ export async function renderSiteWithChargers(
 
   return insertRendering(supabase, {
     project_id: input.projectId,
-    satellite_photo_id: input.satellitePhotoId,
-    provider,
+    source_photo_id: input.sourcePhotoId,
+    requested_by: requestedBy,
+    model_used: envelope.model,
+    prompt: envelope.prompt,
     status: 'queued',
-    cost_usd: PROVIDER_STUB_COST_USD,
+    storage_path: null,
     error: null,
-    output_storage_path: null,
+    cost_usd: PROVIDER_STUB_COST_USD,
     metadata: {
+      provider,
       endpoint: envelope.endpoint,
       requestBody: envelope.body,
       chargerPlacements: input.chargerPlacements,

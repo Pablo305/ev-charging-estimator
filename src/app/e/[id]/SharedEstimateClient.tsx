@@ -315,15 +315,47 @@ function StandardQuoteView({
 /*  Main Component                                                    */
 /* ------------------------------------------------------------------ */
 
-export function SharedEstimateClient({ record }: { record: SharedEstimateRecord }) {
+export interface ResolvedPreviewUrls {
+  satelliteStaticUrl?: string;
+  streetViewStaticUrl?: string;
+}
+
+export function SharedEstimateClient({
+  record,
+  previewUrls,
+}: {
+  record: SharedEstimateRecord;
+  /**
+   * Server-resolved preview URLs (built in `/e/[id]/page.tsx`). Built
+   * with the public browser key only — see `buildStreetViewStaticUrl`.
+   * Resolved server-side purely for stable SSR and to centralize the
+   * display-time URL-build call site.
+   */
+  previewUrls?: ResolvedPreviewUrls;
+}) {
   const output = record.output;
   const id = record.id;
 
   const equipment = useMemo(() => drawingsToEquipment(output.input), [output.input]);
 
+  const displayPreviewUrls: ResolvedPreviewUrls = previewUrls ?? {};
+
   const handleDownloadPdf = useCallback(async () => {
-    await exportEstimatePDFWithPreviews(output, record.previewAssets);
-  }, [output, record.previewAssets]);
+    // Pass server-resolved URLs into the PDF export so it doesn't try to
+    // rebuild them client-side (where the server key is unavailable).
+    // `exportEstimatePDFWithPreviews` prefers URLs already present on
+    // the `SharedPreviewAssets` shape over rebuilding from coordinates.
+    const pdfPreviewAssets = {
+      ...record.previewAssets,
+      satelliteStaticUrl:
+        displayPreviewUrls.satelliteStaticUrl ??
+        record.previewAssets?.satelliteStaticUrl,
+      streetViewStaticUrl:
+        displayPreviewUrls.streetViewStaticUrl ??
+        record.previewAssets?.streetViewStaticUrl,
+    };
+    await exportEstimatePDFWithPreviews(output, pdfPreviewAssets);
+  }, [output, record.previewAssets, displayPreviewUrls]);
 
   const { summary, metadata, lineItems, exclusions, manualReviewTriggers, input } = output;
 
@@ -646,12 +678,12 @@ export function SharedEstimateClient({ record }: { record: SharedEstimateRecord 
                 </section>
               )}
 
-              {record.previewAssets?.satelliteStaticUrl && (
+              {displayPreviewUrls.satelliteStaticUrl && (
                 <section className="lg-panel-heavy overflow-hidden print:border print:border-gray-200">
                   <h3 className="px-5 pt-5 text-sm font-semibold text-gray-900">Satellite Preview</h3>
                   {/* eslint-disable-next-line @next/next/no-img-element -- external Mapbox static URL */}
                   <img
-                    src={record.previewAssets.satelliteStaticUrl}
+                    src={displayPreviewUrls.satelliteStaticUrl}
                     alt="Satellite preview of site"
                     className="mt-3 w-full max-h-80 object-cover"
                   />
