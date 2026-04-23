@@ -85,7 +85,7 @@ export function PortalHero({ vm, aerialUrl }: PortalHeroProps) {
       {/* Centered hero content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 py-14 md:py-20">
         <h1
-          className="pp-section-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-5 max-w-4xl"
+          className="pp-section-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-5 max-w-5xl"
           style={{ textShadow: '0 2px 24px rgba(15, 23, 42, 0.35)' }}
         >
           EV Charging
@@ -122,7 +122,9 @@ export function PortalHero({ vm, aerialUrl }: PortalHeroProps) {
             <div
               key={stat.label}
               data-lead={stat.lead ? 'true' : undefined}
-              className="pp-hero-stat rounded-xl p-4 md:p-5"
+              className={`pp-hero-stat rounded-xl ${
+                stat.lead ? 'p-6 md:p-7' : 'p-4 md:p-5'
+              }`}
             >
               <p className="text-white/65 text-[0.65rem] uppercase tracking-[0.18em] font-medium">
                 {stat.label}

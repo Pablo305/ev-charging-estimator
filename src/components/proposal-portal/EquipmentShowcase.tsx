@@ -50,7 +50,7 @@ function buildChargerCards(vm: ProposalViewModel): ChargerCardData[] {
     const isDcfc =
       lower.includes('dcfc') ||
       lower.includes('dc fast') ||
-      lower.includes('supercharger') ||
+      lower.includes('fast charger') ||
       vm.charger.level === 'l3_dcfc';
 
     return {
